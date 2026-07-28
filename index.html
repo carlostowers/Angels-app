@@ -591,6 +591,65 @@ footer{background:rgba(243,247,251,.85);border-top:1px solid var(--line);padding
   </div>
 </div>
 
+<!-- TORNEO -->
+<div class="modal-overlay" id="tour-modal" style="display:none" onclick="closeTourModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-height:88vh;overflow-y:auto">
+    <div class="modal-title" id="tour-modal-title">Nuevo torneo</div>
+    <div class="modal-subtitle">Cambia solo lo que necesites. El resto se queda igual.</div>
+
+    <div class="form-block">
+      <label class="form-label">Nombre</label>
+      <input type="text" id="tf-name" class="form-input" placeholder="Ej: Colegio San Jose">
+    </div>
+
+    <div class="form-grid">
+      <div class="form-block">
+        <label class="form-label">Inicio</label>
+        <input type="date" id="tf-start" class="form-input">
+      </div>
+      <div class="form-block">
+        <label class="form-label">Fin</label>
+        <input type="date" id="tf-end" class="form-input">
+      </div>
+    </div>
+
+    <div class="form-block">
+      <label class="form-label">Peso del evento</label>
+      <div class="opt-grid" style="grid-template-columns:repeat(3,1fr)">
+        <button type="button" class="btn-option" id="tw-objetivo" onclick="setTourWeight('objetivo')">Objetivo</button>
+        <button type="button" class="btn-option" id="tw-preparatorio" onclick="setTourWeight('preparatorio')">Preparatorio</button>
+        <button type="button" class="btn-option" id="tw-rodaje" onclick="setTourWeight('rodaje')">Rodaje</button>
+      </div>
+      <div class="form-help" id="tf-weight-help">Objetivo dispara el taper. Preparatorio baja el miercoles. Rodaje no ajusta nada.</div>
+      <input type="hidden" id="tf-weight" value="rodaje">
+    </div>
+
+    <div class="form-block">
+      <label class="form-label">Lugar (opcional)</label>
+      <input type="text" id="tf-sub" class="form-input" placeholder="Ej: Gurabo">
+    </div>
+
+    <div class="form-block">
+      <label class="form-label">Nota (opcional)</label>
+      <input type="text" id="tf-notes" class="form-input" placeholder="Ej: conflicto de fecha con otro torneo">
+    </div>
+
+    <div class="form-block">
+      <label class="form-label">Fechas</label>
+      <div class="opt-grid" style="grid-template-columns:repeat(2,1fr)">
+        <button type="button" class="btn-option" id="tc-1" onclick="setTourConfirmed(true)">Confirmadas</button>
+        <button type="button" class="btn-option" id="tc-0" onclick="setTourConfirmed(false)">Tentativas</button>
+      </div>
+      <input type="hidden" id="tf-confirmed" value="0">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="submitTourModal()">Guardar</button>
+      <button class="btn-ghost" onclick="closeTourModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- PLAYER NOTE SLIDE-OVER -->
 <div class="slideover-backdrop" id="note-backdrop" onclick="closeNoteSlider()"></div>
 <div class="slideover-panel" id="note-panel">
@@ -2001,41 +2060,66 @@ function slugify(str){
   return String(str).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);
 }
-function newTournament(){ tournamentForm(null); }
-function editTournament(id){ tournamentForm(tournamentById(id)); }
-function tournamentForm(t){
-  var isNew = !t;
-  var name = prompt('Nombre del torneo:', t ? t.name : '');
-  if(name===null) return;
-  name = name.trim();
+var _editingTour = null;
+function newTournament(){ openTourModal(null); }
+function editTournament(id){ openTourModal(tournamentById(id)); }
+
+function setTourWeight(w){
+  document.getElementById('tf-weight').value = w;
+  ['objetivo','preparatorio','rodaje'].forEach(function(k){
+    var b = document.getElementById('tw-'+k);
+    if(b) b.classList.toggle('selected', k===w);
+  });
+  var h = document.getElementById('tf-weight-help');
+  if(h && EVENT_WEIGHT[w]) h.textContent = EVENT_WEIGHT[w].desc;
+}
+function setTourConfirmed(v){
+  document.getElementById('tf-confirmed').value = v ? '1' : '0';
+  var a = document.getElementById('tc-1'), b = document.getElementById('tc-0');
+  if(a) a.classList.toggle('selected', !!v);
+  if(b) b.classList.toggle('selected', !v);
+}
+function openTourModal(t){
+  _editingTour = t || null;
+  document.getElementById('tour-modal-title').textContent = t ? 'Editar torneo' : 'Nuevo torneo';
+  document.getElementById('tf-name').value  = t ? t.name : '';
+  document.getElementById('tf-start').value = t ? t.startDate : '';
+  document.getElementById('tf-end').value   = t ? t.endDate : '';
+  document.getElementById('tf-sub').value   = t ? (t.sub||'') : '';
+  document.getElementById('tf-notes').value = t ? (t.notes||'') : '';
+  setTourWeight(t ? t.weight : 'rodaje');
+  setTourConfirmed(t ? t.confirmed : false);
+  document.getElementById('tour-modal').style.display = 'flex';
+}
+function closeTourModal(ev){
+  if(ev && ev.target !== ev.currentTarget) return;
+  document.getElementById('tour-modal').style.display = 'none';
+  _editingTour = null;
+}
+function submitTourModal(){
+  var t    = _editingTour;
+  var name = (document.getElementById('tf-name').value||'').trim();
+  var sd   = document.getElementById('tf-start').value;
+  var ed   = document.getElementById('tf-end').value;
+  var w    = document.getElementById('tf-weight').value;
+  var sub  = (document.getElementById('tf-sub').value||'').trim();
+  var note = (document.getElementById('tf-notes').value||'').trim();
+  var conf = document.getElementById('tf-confirmed').value === '1';
+
   if(!name){ toast('El nombre no puede quedar vacio', true); return; }
-
-  var sd = prompt('Fecha de inicio (AAAA-MM-DD):', t ? t.startDate : '');
-  if(sd===null) return; sd = sd.trim();
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(sd)){ toast('Fecha de inicio invalida', true); return; }
-
-  var ed = prompt('Fecha de fin (AAAA-MM-DD):', t ? t.endDate : sd);
-  if(ed===null) return; ed = ed.trim();
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(ed)){ toast('Fecha de fin invalida', true); return; }
+  if(!sd || !ed){ toast('Faltan las fechas', true); return; }
   if(ed < sd){ toast('La fecha de fin no puede ser anterior al inicio', true); return; }
-
-  var w = prompt('Peso del evento — escribe objetivo, preparatorio o rodaje:', t ? t.weight : 'rodaje');
-  if(w===null) return; w = (w||'').trim().toLowerCase();
-  if(!EVENT_WEIGHT[w]){ toast('Peso invalido. Usa objetivo, preparatorio o rodaje', true); return; }
-
-  var sub = prompt('Lugar (opcional):', t ? t.sub : '');
-  if(sub===null) return;
-
-  var conf = confirm('Marcar las fechas como CONFIRMADAS?\n\nAceptar = confirmadas\nCancelar = tentativas');
+  if(!EVENT_WEIGHT[w]){ toast('Peso invalido', true); return; }
 
   saveTournament({
-    id: isNew ? (slugify(name)+'-'+sd.replace(/-/g,'')) : t.id,
-    name: name, sub: sub.trim() || null,
+    id: t ? t.id : (slugify(name)+'-'+sd.replace(/-/g,'')),
+    name: name, sub: sub || null,
     start_date: sd, end_date: ed,
     weight: w, kind: t ? t.kind : 'torneo',
-    confirmed: conf, notes: t ? (t.notes || null) : null,
+    confirmed: conf, notes: note || null,
     teams: ['ADCJVBoys'], color: t ? t.color : '#51B7E4'
   });
+  closeTourModal();
 }
 async function saveTournament(row){
   try {
