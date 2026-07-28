@@ -398,6 +398,7 @@ footer{background:rgba(243,247,251,.85);border-top:1px solid var(--line);padding
       <div class="nav-link" onclick="showPage('roster')">Roster</div>
       <div class="nav-link" id="nav-gameday" style="display:none" onclick="showPage('gameday')">Game Day</div>
       <div class="nav-link" id="nav-taper" style="display:none" onclick="showPage('taper')">Taper</div>
+      <div class="nav-link" id="nav-tournaments" style="display:none" onclick="showPage('tournaments')">Torneos</div>
       <div class="nav-link" onclick="showPage('records')">Historial</div>
       <div class="nav-link" onclick="showPage('import')">Datos</div>
     </div>
@@ -414,6 +415,7 @@ footer{background:rgba(243,247,251,.85);border-top:1px solid var(--line);padding
   <div class="nav-link" id="mob-roster" onclick="showPage('roster');closeMobileMenu()">Roster</div>
   <div class="nav-link" id="mob-gameday" style="display:none" onclick="showPage('gameday');closeMobileMenu()">Game Day</div>
   <div class="nav-link" id="mob-taper" style="display:none" onclick="showPage('taper');closeMobileMenu()">Taper</div>
+  <div class="nav-link" id="mob-tournaments" style="display:none" onclick="showPage('tournaments');closeMobileMenu()">Torneos</div>
   <div class="nav-link" id="mob-records" onclick="showPage('records');closeMobileMenu()">Historial</div>
   <div class="nav-link" id="mob-import" onclick="showPage('import');closeMobileMenu()">Datos</div>
   <div id="mob-logout" style="display:none;padding:10px 0;border-top:1px solid var(--line);margin-top:6px"><button onclick="doStaffLogout();closeMobileMenu()" style="background:rgba(255,93,108,0.12);border:1px solid rgba(255,93,108,0.3);color:var(--coral);border-radius:var(--r-md);padding:8px 18px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.06em;cursor:pointer;width:100%">CERRAR SESIÓN</button></div>
@@ -468,11 +470,6 @@ footer{background:rgba(243,247,251,.85);border-top:1px solid var(--line);padding
     <div class="panel-title"><span class="dot"></span>Carga de entrenamiento · 14 días</div>
     <div class="filter-tabs" id="load-chart-tabs"></div>
     <div class="chart-wrap"><canvas id="team-load-chart"></canvas></div>
-  </div>
-
-  <div class="panel" style="margin-bottom:1.4rem">
-    <div class="panel-title"><span class="dot" style="background:var(--sky);box-shadow:0 0 10px var(--sky)"></span>Modo Torneo</div>
-    <div class="tmode-row" id="tmode-row"></div>
   </div>
 
   <div class="stats-row" id="dash-stats"></div>
@@ -534,6 +531,13 @@ footer{background:rgba(243,247,251,.85);border-top:1px solid var(--line);padding
 </div>
 
 <!-- IMPORT / EXPORT -->
+<div class="page" id="page-tournaments">
+  <div class="eyebrow">Calendario</div>
+  <div class="page-title">Torneos</div>
+  <div class="page-sub">Anade y edita los eventos de la temporada sin tocar codigo</div>
+  <div id="tournaments-body"></div>
+</div>
+
 <div class="page" id="page-import">
   <div class="eyebrow">Gestión</div>
   <div class="page-title">Datos</div>
@@ -541,8 +545,8 @@ footer{background:rgba(243,247,251,.85);border-top:1px solid var(--line);padding
   <div class="panel" style="margin-bottom:1.2rem">
     <div class="panel-title"><span class="dot"></span>Exportar</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn-secondary" onclick="exportJSON()">⬇ Descargar JSON</button>
-      <button class="btn-secondary" onclick="exportCSV()">⬇ Descargar CSV</button>
+      <button class="btn-secondary" onclick="exportJSON()">Descargar JSON</button>
+      <button class="btn-secondary" onclick="exportCSV()">Descargar CSV</button>
     </div>
   </div>
   <div class="panel" style="margin-bottom:1.2rem">
@@ -580,8 +584,8 @@ footer{background:rgba(243,247,251,.85);border-top:1px solid var(--line);padding
       <textarea id="msg-textarea" class="form-textarea" rows="4" placeholder="Ej: Buen trabajo ayer. Descansa bien esta noche..."></textarea>
     </div>
     <div class="modal-actions">
-      <button class="btn-primary" onclick="saveCoachMessage()">✓ Guardar mensaje</button>
-      <button class="btn-ghost" onclick="clearCoachMessage()">🗑 Borrar</button>
+      <button class="btn-primary" onclick="saveCoachMessage()">Guardar mensaje</button>
+      <button class="btn-ghost" onclick="clearCoachMessage()">Borrar</button>
       <button class="btn-ghost" onclick="closeMsgModal()">Cancelar</button>
     </div>
   </div>
@@ -591,8 +595,8 @@ footer{background:rgba(243,247,251,.85);border-top:1px solid var(--line);padding
 <div class="slideover-backdrop" id="note-backdrop" onclick="closeNoteSlider()"></div>
 <div class="slideover-panel" id="note-panel">
   <div class="slideover-header">
-    <div class="slideover-title">💬 Mensaje del jugador</div>
-    <button class="slideover-close" onclick="closeNoteSlider()">✕</button>
+    <div class="slideover-title">Mensaje del jugador</div>
+    <button class="slideover-close" onclick="closeNoteSlider()"></button>
   </div>
   <div class="slideover-meta" id="note-meta"></div>
   <div class="slideover-body" id="note-body"></div>
@@ -689,9 +693,11 @@ async function saveTeamSettings() {
 
 // ============ STATE ============
 let DB = { players:[], entries:[] };
+let PRACTICE_DAYS = {};
 let currentPage = 'dashboard';
 let prevPage = 'dashboard';
 let currentFilter = { dash:'ALL', roster:'ALL', loadChart:'ALL' };
+let painOnly = false;
 let currentPlayerId = null;
 let teamLoadChart = null;
 let playerLoadChart = null;
@@ -707,10 +713,30 @@ let _metricsCache = { version:-1, byPlayer:{} };
 
 const TEAM_COLOR = {'ADCJVBoys':'#51B7E4'};
 const TEAM_ORDER = ['ADCJVBoys'];
-const TOURNAMENTS = [
-  // Temporada 2026-27: agrega aquí los torneos cuando estén confirmados.
-  // Ejemplo: { id:'usav-quals', name:'USAV Qualifier', sub:'Orlando, FL', startDate:'2027-01-16', endDate:'2027-01-18', teams:['ADCJVBoys'], color:'#51B7E4' }
-];
+// Los torneos viven en la tabla `tournaments` de Supabase.
+// Se administran desde la pagina Torneos (staff). No se editan aqui.
+let TOURNAMENTS = [];
+const EVENT_WEIGHT = {
+  objetivo:     { label:'Objetivo',     color:'#EB448F', desc:'Taper de 7 a 10 dias' },
+  preparatorio: { label:'Preparatorio', color:'#F5A524', desc:'Miercoles ligero' },
+  rodaje:       { label:'Rodaje',       color:'#51B7E4', desc:'Sin ajuste de carga' }
+};
+function normalizeTournament(t){
+  return {
+    id:t.id, name:t.name, sub:t.sub||'',
+    startDate:t.start_date, endDate:t.end_date,
+    teams:t.teams||['ADCJVBoys'], color:t.color||'#51B7E4',
+    weight:t.weight||'rodaje', kind:t.kind||'torneo',
+    confirmed:!!t.confirmed, notes:t.notes||''
+  };
+}
+function tournamentById(id){ return TOURNAMENTS.find(function(t){ return t.id===id; }) || null; }
+// Torneo objetivo mas cercano (alimenta el taper)
+function targetTournament(){
+  return upcomingTournaments()
+    .filter(function(t){ return t.weight==='objetivo'; })
+    .sort(function(a,b){ return a.startDate.localeCompare(b.startDate); })[0] || null;
+}
 // Solo torneos vigentes (que aún no terminaron) — defensivo para el countdown.
 function upcomingTournaments(){
   return TOURNAMENTS.filter(function(t){
@@ -733,18 +759,24 @@ async function patchPlayerPhones() {
   ));
 }
 async function loadAll() {
-  const [{ data: players }, { data: entries }] = await Promise.all([
+  const [{ data: players }, { data: entries }, { data: tours }, { data: pdays }] = await Promise.all([
     sb.from('players').select('*').order('team').order('name'),
-    sb.from('entries').select('*').order('date', { ascending: false })
+    sb.from('entries').select('*').order('date', { ascending: false }),
+    sb.from('tournaments').select('*').order('start_date'),
+    sb.from('practice_days').select('*').order('date', { ascending: false }).limit(400)
   ]);
   DB.players = players || [];
   DB.entries = (entries || []).map(normalizeEntry);
+  TOURNAMENTS = (tours || []).map(normalizeTournament);
+  PRACTICE_DAYS = {};
+  (pdays || []).forEach(function(r){ if(r.active) PRACTICE_DAYS[r.team+'|'+r.date] = true; });
   try { invalidateMetricsCache(); } catch(e) { /* cache may not be ready on first call; will init lazily */ }
 }
 function normalizeEntry(e) {
   return {
     id:e.id, playerId:e.player_id, date:e.date,
     sessionLabel:e.session_label, duration:e.duration, rpe:e.rpe,
+    roleInEvent:e.role_in_event, setsPlayed:e.sets_played,
     mood:e.mood, sleepQuality:e.sleep_quality, soreness:e.soreness, stress:e.stress,
     fatigue:e.fatigue, motivation:e.motivation,
     painConcern:e.pain_concern, painZones:e.pain_zones,
@@ -771,7 +803,10 @@ function initials(n){ return n.split(' ').slice(0,2).map(w=>w[0]||'').join('').t
 function isPlayerMode(){ return !!new URLSearchParams(window.location.search).get('player'); }
 function hexA(hex,a){ if(!hex) return 'rgba(81,183,228,'+a+')'; var h=String(hex).replace('#',''); if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; var r=parseInt(h.slice(0,2),16)||0,g=parseInt(h.slice(2,4),16)||0,b=parseInt(h.slice(4,6),16)||0; return 'rgba('+r+','+g+','+b+','+a+')'; }
 function playerEntries(pid){ return DB.entries.filter(e=>e.playerId===pid).sort((a,b)=>b.date.localeCompare(a.date)); }
-function internalLoad(e){ return (e.rpe||0)*(e.duration||0); }
+function internalLoad(e){
+  if(e.sessionLabel==='recuperacion') return 0;
+  return (e.rpe||0)*(e.duration||0);
+}
 function rpeClass(r){ return r>=8?'rpe-high':r>=5?'rpe-mid':'rpe-low'; }
 function rpeColor(r){ return r>=8?'var(--coral)':r>=5?'var(--amber)':'var(--mint)'; }
 function avClass(t){ return 'av-adc'; }
@@ -898,6 +933,7 @@ function sparklineSVG(pid){
 
 // ============ NAVIGATION ============
 function updateGameDayNav() {
+  try { updateTournamentsNav(); } catch(e){}
   const any = Object.values(TEAM_SETTINGS).some(t => t.tournamentMode);
   const btn = document.getElementById('nav-gameday');
   const mobBtn = document.getElementById('mob-gameday');
@@ -942,6 +978,7 @@ function showPage(name, pid) {
   else if (name==='taper') renderTaper();
   else if (name==='player' && pid) renderPlayerPage(pid);
   else if (name==='records') renderRecords();
+  else if (name==='tournaments') renderTournaments();
   window.scrollTo(0,0);
 }
 function goBack() { showPage(prevPage==='player'?'dashboard':prevPage); }
@@ -1030,7 +1067,7 @@ function renderDashboard(teamFilter) {
   });
   const badge=document.getElementById('alert-badge');
   badge.style.display=alertPlayers.length?'block':'none';
-  badge.textContent=alertPlayers.length+' ⚠';
+  badge.textContent=alertPlayers.length+' ';
 
   const alertTeams = tf==='ALL' ? TEAM_ORDER : [tf];
   const alertBlocks = alertTeams.map(team=>{
@@ -1038,7 +1075,7 @@ function renderDashboard(teamFilter) {
     const list=alertPlayers.filter(a=>a.p.team===team);
     if(!list.length) return '';
     return '<div class="alerts-box" style="background:linear-gradient(160deg,'+hexA(col,0.10)+','+hexA(col,0.03)+');border-color:'+hexA(col,0.32)+'">'+
-      '<div class="alerts-title" style="color:'+col+'">⚠ '+team+' — Alertas activas ('+list.length+')</div>'+
+      '<div class="alerts-title" style="color:'+col+'">'+team+' — Alertas activas ('+list.length+')</div>'+
       list.map(({p,last,reasons})=>
         '<div class="alert-item" style="border-bottom-color:'+hexA(col,0.12)+'"><div class="alert-dot" style="background:'+col+';box-shadow:0 0 9px '+col+'"></div>'+
         '<div><span style="font-weight:600;cursor:pointer" onclick="openPlayer(\''+p.id+'\')">'+htmlEscape(p.name)+'</span>'+
@@ -1063,7 +1100,7 @@ function renderDashboard(teamFilter) {
         '<div class="acwr-bar"><i style="width:'+barPct+'%;background:'+barCol+';box-shadow:0 0 8px '+barCol+'"></i></div>'+
         '<span class="acwr-chip '+z.cls+'">'+r.toFixed(2)+'</span></div>';
     }).join('')
-    : emptyState('📡','Sin datos suficientes','El ACWR necesita al menos 4 días con check-ins en los últimos 28 días por jugador.');
+    : emptyState('','Sin datos suficientes','El ACWR necesita al menos 4 días con check-ins en los últimos 28 días por jugador.');
 
   // --- Monotonía board (usa cache de métricas)
   const monoRows=DB.players.map(p=>({p, m:getMetrics(p.id).monotony})).filter(x=>x.m&&x.m.mono!=null).sort((a,b)=>b.m.mono-a.m.mono);
@@ -1077,7 +1114,7 @@ function renderDashboard(teamFilter) {
         '<span style="font-family:var(--mono);font-size:10.5px;color:var(--faint)">strain '+(m.strain!=null?Math.round(m.strain).toLocaleString():'—')+'</span>'+
         '<span class="acwr-chip '+chip+'">'+m.mono.toFixed(2)+'</span></div>';
     }).join('')
-    : emptyState('📊','Sin variación medible','La monotonía requiere check-ins en varios días de la última semana.');
+    : emptyState('','Sin variación medible','La monotonía requiere check-ins en varios días de la última semana.');
 
   // --- Load chart con tabs
   document.getElementById('load-chart-tabs').innerHTML=['ALL',...TEAM_ORDER].map(t=>
@@ -1085,11 +1122,8 @@ function renderDashboard(teamFilter) {
   ).join('');
   renderTeamLoadChart();
 
-  // --- Modo torneo
-  document.getElementById('tmode-row').innerHTML=TEAM_ORDER.map(t=>
-    '<div class="tmode-item"><span style="color:'+TEAM_COLOR[t]+'">'+t+'</span>'+
-    '<label class="switch"><input type="checkbox" '+(TEAM_SETTINGS[t].tournamentMode?'checked':'')+' onchange="toggleTournament(\''+t+'\',this.checked)"><span class="slider"></span></label></div>'
-  ).join('');
+  // --- Modo torneo: ahora vive junto al toggle de practica
+  renderPracticeToggle();
 
   // --- Stats por equipo
   const teamsToShow=tf==='ALL'?TEAM_ORDER:[tf];
@@ -1112,8 +1146,16 @@ function renderDashboard(teamFilter) {
   document.getElementById('dash-team-tabs').innerHTML=['ALL',...TEAM_ORDER].map(t=>
     '<div class="filter-tab '+(tf===t?'active':'')+'" onclick="renderDashboard(\''+t+'\')">'+(t==='ALL'?'Todos':t)+'</div>'
   ).join('');
-  const players=DB.players.filter(p=>tf==='ALL'||p.team===tf);
-  document.getElementById('dash-players').innerHTML=players.map(p=>podCard(p,false)).join('')||emptyState('👥','Sin jugadores','No hay jugadores en este filtro.');
+  let players=DB.players.filter(p=>tf==='ALL'||p.team===tf);
+  if(painOnly) players=players.filter(p=>hasPainFlag(p.id));
+  const painCount=DB.players.filter(p=>hasPainFlag(p.id)).length;
+  if(isStaff()){
+    document.getElementById('dash-team-tabs').innerHTML +=
+      '<div class="filter-tab '+(painOnly?'active':'')+'" onclick="togglePainOnly()">Con dolor'+(painCount?' ('+painCount+')':'')+'</div>';
+  }
+  document.getElementById('dash-players').innerHTML=players.map(p=>podCard(p,false)).join('')||
+    emptyState('', painOnly?'Sin jugadores con dolor':'Sin jugadores',
+      painOnly?'Ningun jugador reporto dolor 2 o mayor en su ultimo check-in.':'No hay jugadores en este filtro.');
   attachTilt();
 }
 function setLoadChartTeam(t){ currentFilter.loadChart=t; renderDashboard(); }
@@ -1121,9 +1163,52 @@ function toggleTournament(team, on){
   TEAM_SETTINGS[team].tournamentMode=on;
   saveTeamSettings();
   updateGameDayNav();
-  toast(on?'🏆 Modo Torneo activado para '+team:'Modo Torneo desactivado para '+team);
+  renderPracticeToggle();
+  toast(on?'Modo Torneo activado':'Modo Torneo desactivado');
 }
 
+// Dolor preocupante >= 2 en el ultimo check-in.
+function hasPainFlag(pid){
+  var e = playerEntries(pid)[0];
+  return !!(e && (e.painConcern||0) >= 2);
+}
+function togglePainOnly(){ painOnly = !painOnly; renderDashboard(); }
+
+// Badge de dias sin check-in. Verde 0-1, ambar 2, rojo 3+.
+function staleBadge(pid){
+  if(!isStaff()) return '';
+  var n = practiceDaysSinceCheckin(pid);
+  if(n===null || n<=1) return '';
+  var col = n>=3 ? 'var(--coral)' : 'var(--amber)';
+  return '<span style="display:inline-block;margin-left:7px;padding:2px 7px;border-radius:999px;'+
+    'font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;'+
+    'color:'+col+';border:1px solid '+col+';white-space:nowrap">'+n+'D SIN CHECK-IN</span>';
+}
+// Registro descriptivo, visible solo para staff. La app no diagnostica
+// ni clasifica gravedad: solo guarda lo que el staff escribe.
+function injuryBadge(p){
+  if(!isStaff() || !p.injury_note) return '';
+  return '<span style="display:inline-block;margin-left:7px;padding:2px 7px;border-radius:999px;'+
+    'font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--coral);'+
+    'border:1px solid var(--coral);white-space:nowrap" title="'+htmlEscape(p.injury_note)+'">RESTRICCION</span>';
+}
+async function editInjury(pid){
+  if(!isStaff()) return;
+  var p = DB.players.find(function(x){ return x.id===pid; });
+  if(!p) return;
+  var v = prompt('Lesion o restriccion (deja vacio para borrar):', p.injury_note||'');
+  if(v===null) return;
+  v = v.trim();
+  try {
+    const { error } = await sb.from('players')
+      .update({ injury_note: v||null, injury_updated_at: new Date().toISOString() })
+      .eq('id', pid);
+    if(error) throw error;
+    await loadAll();
+    if(currentPage==='player') renderPlayerPage(pid); else renderDashboard();
+    toast(v ? 'Restriccion guardada' : 'Restriccion eliminada');
+  } catch(e){ toast('Error: '+(e.message||e), true); }
+}
 function podCard(p, rosterMode){
   const entries=playerEntries(p.id);
   const last=entries[0];
@@ -1140,10 +1225,10 @@ function podCard(p, rosterMode){
   if(rosterMode){
     const link=window.location.origin+window.location.pathname+'?player='+p.id;
     foot='<div style="display:flex;flex-direction:column;gap:7px;margin-top:.8rem">'+
-      '<button class="card-link-btn wa" onclick="sendWhatsApp(\''+p.id+'\',event)">📲 Enviar link por WhatsApp</button>'+
-      '<button class="card-link-btn" onclick="copyLink(\''+p.id+'\',event)">🔗 Copiar link del jugador</button>'+
-      '<button class="card-link-btn" onclick="openMsgModal(\''+p.id+'\',event)">✉️ Mensaje del coach'+(p.coach_message?' ●':'')+'</button>'+
-      '<div style="font-family:var(--mono);font-size:10px;color:var(--faint);text-align:center">'+(p.phone?'📞 '+htmlEscape(p.phone):'Sin teléfono registrado')+'</div></div>';
+      '<button class="card-link-btn wa" onclick="sendWhatsApp(\''+p.id+'\',event)">Enviar link por WhatsApp</button>'+
+      '<button class="card-link-btn" onclick="copyLink(\''+p.id+'\',event)">Copiar link del jugador</button>'+
+      '<button class="card-link-btn" onclick="openMsgModal(\''+p.id+'\',event)">Mensaje del coach'+(p.coach_message?' ●':'')+'</button>'+
+      '<div style="font-family:var(--mono);font-size:10px;color:var(--faint);text-align:center">'+(p.phone?''+htmlEscape(p.phone):'Sin teléfono registrado')+'</div></div>';
   } else {
     foot='<div class="pod-foot">'+wd('mood')+wd('sleepQuality')+wd('soreness')+wd('stress')+
       (last?'<span class="rpe-pill '+rpeClass(last.rpe)+'" style="margin-left:auto">RPE '+last.rpe+'</span>':'<span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--faint)">sin check-in</span>')+'</div>';
@@ -1152,7 +1237,7 @@ function podCard(p, rosterMode){
     '<div class="pod-top">'+
       '<div class="avatar '+avClass(p.team)+'">'+initials(p.name)+'</div>'+
       '<div class="pod-id"><div class="pod-name">'+htmlEscape(p.name)+'</div>'+
-      '<div class="pod-meta">#'+p.number+' · '+htmlEscape(p.position)+' · <span class="badge '+bdgClass(p.team)+'">'+p.team+'</span></div></div>'+
+      '<div class="pod-meta">#'+p.number+' · '+htmlEscape(p.position)+' · <span class="badge '+bdgClass(p.team)+'">'+p.team+'</span>'+staleBadge(p.id)+injuryBadge(p)+'</div></div>'+
       (score!=null?'<div style="text-align:center"><div style="font-family:var(--mono);font-size:19px;font-weight:700;color:'+(score>=8?'var(--mint)':score>=5?'var(--amber)':'var(--coral)')+'">'+score+'</div><div style="font-family:var(--mono);font-size:8px;color:var(--faint);letter-spacing:.16em">LISTO</div></div>':'')+
     '</div>'+
     (rosterMode?'':'<div class="pod-stats"><div class="pod-nums">'+
@@ -1641,7 +1726,7 @@ function renderTaper(teamFilter){
     }).join('');
     var flagsPanel = '<div class="panel" style="margin-bottom:1.4rem">'+
       '<div class="panel-title"><span class="dot" style="background:var(--mint);box-shadow:0 0 10px var(--mint)"></span>Banderas por jugador</div>'+
-      (rows.length ? rowsHtml : emptyState('🎯','Sin jugadores','No hay jugadores con datos para este filtro.'))+
+      (rows.length ? rowsHtml : emptyState('','Sin jugadores','No hay jugadores con datos para este filtro.'))+
       '</div>';
 
     // --- Alertas
@@ -1745,11 +1830,11 @@ function renderRoster(teamFilter){
   const teamsShown=tf==='ALL'?TEAM_ORDER:[tf];
   document.getElementById('roster-bulk').innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.2rem">'+
     teamsShown.map(t=>
-      '<button class="btn-secondary" onclick="copyAllLinks(\''+t+'\')">📋 Copiar links '+t+'</button>'+
-      '<button class="btn-secondary" onclick="openTeamWhatsApp(\''+t+'\')" style="color:#3ddc84">📲 WhatsApp '+t+'</button>'
+      '<button class="btn-secondary" onclick="copyAllLinks(\''+t+'\')">Copiar links '+t+'</button>'+
+      '<button class="btn-secondary" onclick="openTeamWhatsApp(\''+t+'\')" style="color:#3ddc84">WhatsApp '+t+'</button>'
     ).join('')+'</div>';
   const players=DB.players.filter(p=>tf==='ALL'||p.team===tf);
-  document.getElementById('roster-players').innerHTML=players.map(p=>podCard(p,true)).join('')||emptyState('👥','Sin jugadores','No hay jugadores en este filtro.');
+  document.getElementById('roster-players').innerHTML=players.map(p=>podCard(p,true)).join('')||emptyState('','Sin jugadores','No hay jugadores en este filtro.');
   attachTilt();
 }
 
@@ -1764,11 +1849,11 @@ function buildTeamLinksText(team) {
   const baseUrl = window.location.origin + window.location.pathname;
   const players = DB.players.filter(p => p.team === team);
   const lines = players.map((p, i) => (i+1)+'. '+p.name+' (#'+p.number+')\n'+baseUrl+'?player='+p.id);
-  return '📋 Links de check-in Angels '+team+'\n\n'+lines.join('\n\n');
+  return 'Links de check-in Angels '+team+'\n\n'+lines.join('\n\n');
 }
 function copyAllLinks(team) {
   navigator.clipboard.writeText(buildTeamLinksText(team))
-    .then(()=>toast('📋 Links de '+team+' copiados al portapapeles'))
+    .then(()=>toast('Links de '+team+' copiados al portapapeles'))
     .catch(()=>toast('Error al copiar. Inténtalo de nuevo.',true));
 }
 function openTeamWhatsApp(team) {
@@ -1779,48 +1864,270 @@ function sendWhatsApp(pid, event) {
   const p = DB.players.find(x=>x.id===pid);
   if (!p) return;
   const phone = cleanPhone(p.phone);
-  if (!phone) { toast('⚠️ Este jugador no tiene teléfono registrado', true); return; }
+  if (!phone) { toast('Este jugador no tiene teléfono registrado', true); return; }
   const link = window.location.origin+window.location.pathname+'?player='+p.id;
-  const msg = 'Hola '+p.name.split(' ')[0]+' 👋\nAquí tu link de check-in Angels 🏐\n'+link;
+  const msg = 'Hola '+p.name.split(' ')[0]+' \nAquí tu link de check-in Angels \n'+link;
   window.open('https://wa.me/1'+phone+'?text='+encodeURIComponent(msg),'_blank');
 }
 function copyLink(pid, event){
   if(event) event.stopPropagation();
   const link=window.location.origin+window.location.pathname+'?player='+pid;
-  navigator.clipboard.writeText(link).then(()=>toast('🔗 Link copiado')).catch(()=>toast('Error al copiar',true));
+  navigator.clipboard.writeText(link).then(()=>toast('Link copiado')).catch(()=>toast('Error al copiar',true));
+}
+
+// ============ INFORME DEL DIA ============
+// Texto plano listo para pegar en el WhatsApp del staff.
+function dailyReportText(){
+  var t = today();
+  var players = DB.players.slice().sort(function(a,b){ return (parseInt(a.number)||0)-(parseInt(b.number)||0); });
+  var done = [], missing = [], pain = [], vwis = [];
+
+  players.forEach(function(p){
+    var e = DB.entries.find(function(x){ return x.playerId===p.id && x.date===t; });
+    if(e){
+      done.push(p);
+      if((e.painConcern||0) >= 2){
+        var z = (e.painZones && e.painZones.length) ? ' (' + e.painZones.join(', ') + ')' : '';
+        pain.push('#'+p.number+' '+p.name+' — dolor '+e.painConcern+z);
+      }
+    } else missing.push(p);
+    var v = vwi(p.id);
+    if(v!=null) vwis.push(v);
+  });
+
+  var avg = vwis.length ? Math.round(vwis.reduce(function(a,b){return a+b;},0)/vwis.length) : null;
+  var L = [];
+  L.push('ANGELS JV — informe del ' + formatDateLong(t));
+  L.push('');
+  L.push('Check-ins: ' + done.length + '/' + players.length);
+  if(avg!=null) L.push('Bienestar promedio (VWI): ' + avg);
+  L.push('');
+  if(missing.length){
+    L.push('Sin check-in (' + missing.length + '):');
+    missing.forEach(function(p){ L.push('  #'+p.number+' '+p.name); });
+  } else L.push('Todos completaron el check-in.');
+  if(pain.length){
+    L.push('');
+    L.push('Alertas de dolor (' + pain.length + '):');
+    pain.forEach(function(x){ L.push('  '+x); });
+  }
+  var inj = DB.players.filter(function(p){ return p.injury_note; });
+  if(inj.length){
+    L.push('');
+    L.push('Restricciones activas:');
+    inj.forEach(function(p){ L.push('  #'+p.number+' '+p.name+' — '+p.injury_note); });
+  }
+  return L.join('\n');
+}
+function copyDailyReport(){
+  var txt = dailyReportText();
+  navigator.clipboard.writeText(txt)
+    .then(function(){ toast('Informe copiado'); })
+    .catch(function(){
+      var ta = document.createElement('textarea');
+      ta.value = txt; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); toast('Informe copiado'); }
+      catch(e){ toast('No se pudo copiar', true); }
+      document.body.removeChild(ta);
+    });
+}
+
+// ============ TORNEOS (CRUD) ============
+function updateTournamentsNav(){
+  var show = isStaff() ? '' : 'none';
+  var a = document.getElementById('nav-tournaments');
+  var b = document.getElementById('mob-tournaments');
+  if(a) a.style.display = show ? 'flex' : 'none';
+  if(b) b.style.display = show ? 'block' : 'none';
+}
+function tWeightPill(w){
+  var m = EVENT_WEIGHT[w] || EVENT_WEIGHT.rodaje;
+  return '<span style="display:inline-block;padding:2px 9px;border-radius:999px;font-family:var(--mono);'+
+    'font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:'+m.color+
+    ';border:1px solid '+m.color+'">'+m.label+'</span>';
+}
+function renderTournaments(){
+  var slot = document.getElementById('tournaments-body');
+  if(!slot) return;
+  if(!isStaff()){ slot.innerHTML = emptyState('','Solo staff','Inicia sesion para administrar el calendario.'); return; }
+
+  var rows = TOURNAMENTS.map(function(t){
+    var d = daysUntil(t.startDate);
+    var when = (d==null) ? '' : (d>0 ? 'faltan '+d+' dias' : (d===0 ? 'hoy' : 'terminado'));
+    var warn = t.confirmed ? '' :
+      '<span style="font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--amber);'+
+      'border:1px solid var(--amber);border-radius:999px;padding:2px 8px;margin-left:7px">SIN CONFIRMAR</span>';
+    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:13px 4px;border-bottom:1px solid rgba(81,183,228,.09)">'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-weight:700;font-size:14.5px">'+htmlEscape(t.name)+warn+'</div>'+
+        '<div style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:3px">'+
+          formatTournamentRange(t.startDate,t.endDate)+(when?' &middot; '+when:'')+
+          (t.sub?' &middot; '+htmlEscape(t.sub):'')+
+        '</div>'+
+        (t.notes?'<div style="font-size:11.5px;color:var(--amber);margin-top:5px;line-height:1.5">'+htmlEscape(t.notes)+'</div>':'')+
+        '<div style="margin-top:7px">'+tWeightPill(t.weight)+'</div>'+
+      '</div>'+
+      '<div style="display:flex;flex-direction:column;gap:6px">'+
+        '<button class="btn-secondary" style="padding:6px 12px;font-size:12px" onclick="editTournament(\''+t.id+'\')">Editar</button>'+
+        '<button class="btn-secondary" style="padding:6px 12px;font-size:12px;color:var(--coral);border-color:rgba(255,107,107,.35)" onclick="deleteTournament(\''+t.id+'\')">Borrar</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  var tgt = targetTournament();
+  var tgtHTML = '';
+  if(tgt){
+    var pend = !tgt.confirmed ?
+      '<div style="font-size:12.5px;color:var(--amber);margin-top:8px;line-height:1.6">'+
+      'Las fechas todavia no estan confirmadas. El taper se calcula sobre el rango completo '+
+      'hasta que ajustes start_date y end_date.</div>' : '';
+    tgtHTML = '<div class="panel" style="margin-bottom:1.2rem">'+
+      '<div class="panel-title"><span class="dot" style="background:#EB448F;box-shadow:0 0 10px #EB448F"></span>Torneo objetivo</div>'+
+      '<div style="font-weight:700;font-size:16px">'+htmlEscape(tgt.name)+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11.5px;color:var(--dim);margin-top:4px">'+
+        formatTournamentRange(tgt.startDate,tgt.endDate)+'</div>'+
+      pend+
+    '</div>';
+  }
+
+  slot.innerHTML = tgtHTML+
+    '<div style="margin-bottom:1.2rem"><button class="btn-primary" onclick="newTournament()">Anadir torneo</button></div>'+
+    '<div class="panel">'+
+      '<div class="panel-title"><span class="dot"></span>Calendario ('+TOURNAMENTS.length+')</div>'+
+      (rows || emptyState('','Sin torneos','Anade el primer evento de la temporada.'))+
+    '</div>';
+}
+function slugify(str){
+  return String(str).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);
+}
+function newTournament(){ tournamentForm(null); }
+function editTournament(id){ tournamentForm(tournamentById(id)); }
+function tournamentForm(t){
+  var isNew = !t;
+  var name = prompt('Nombre del torneo:', t ? t.name : '');
+  if(name===null) return;
+  name = name.trim();
+  if(!name){ toast('El nombre no puede quedar vacio', true); return; }
+
+  var sd = prompt('Fecha de inicio (AAAA-MM-DD):', t ? t.startDate : '');
+  if(sd===null) return; sd = sd.trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(sd)){ toast('Fecha de inicio invalida', true); return; }
+
+  var ed = prompt('Fecha de fin (AAAA-MM-DD):', t ? t.endDate : sd);
+  if(ed===null) return; ed = ed.trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(ed)){ toast('Fecha de fin invalida', true); return; }
+  if(ed < sd){ toast('La fecha de fin no puede ser anterior al inicio', true); return; }
+
+  var w = prompt('Peso del evento — escribe objetivo, preparatorio o rodaje:', t ? t.weight : 'rodaje');
+  if(w===null) return; w = (w||'').trim().toLowerCase();
+  if(!EVENT_WEIGHT[w]){ toast('Peso invalido. Usa objetivo, preparatorio o rodaje', true); return; }
+
+  var sub = prompt('Lugar (opcional):', t ? t.sub : '');
+  if(sub===null) return;
+
+  var conf = confirm('Marcar las fechas como CONFIRMADAS?\n\nAceptar = confirmadas\nCancelar = tentativas');
+
+  saveTournament({
+    id: isNew ? (slugify(name)+'-'+sd.replace(/-/g,'')) : t.id,
+    name: name, sub: sub.trim() || null,
+    start_date: sd, end_date: ed,
+    weight: w, kind: t ? t.kind : 'torneo',
+    confirmed: conf, notes: t ? (t.notes || null) : null,
+    teams: ['ADCJVBoys'], color: t ? t.color : '#51B7E4'
+  });
+}
+async function saveTournament(row){
+  try {
+    const { error } = await sb.from('tournaments').upsert(row);
+    if(error) throw error;
+    await loadAll();
+    renderTournaments();
+    try { updateTaperNav(); } catch(e){}
+    toast('Torneo guardado');
+  } catch(e){ toast('Error al guardar: '+(e.message||e), true); }
+}
+async function deleteTournament(id){
+  var t = tournamentById(id);
+  if(!t) return;
+  if(!confirm('Borrar "'+t.name+'"? Esta accion no se puede deshacer.')) return;
+  try {
+    const { error } = await sb.from('tournaments').delete().eq('id', id);
+    if(error) throw error;
+    await loadAll();
+    renderTournaments();
+    toast('Torneo eliminado');
+  } catch(e){ toast('Error al borrar: '+(e.message||e), true); }
 }
 
 // ============ RECORDATORIO CHECK-IN ============
 var reminderExpanded = false;
 // Toggle "Practicamos hoy" — persistido por fecha en localStorage.
 // Si el día está marcado como sin práctica, el recordatorio no aparece.
-function noPracticeKey(){ return 'adc_nopractice_' + today(); }
-function isPracticeDay(){
-  try { return localStorage.getItem(noPracticeKey()) !== '1'; }
-  catch(e){ return true; }
+// Persistido en Supabase (tabla practice_days), no en localStorage:
+// asi el estado es el mismo en todos los dispositivos del staff.
+// DEFAULT OFF: con dos practicas semanales, la mayoria de los dias no hay
+// entrenamiento. Un panel encendido por defecto genera expectativa falsa.
+const PRACTICE_TEAM = 'ADCJVBoys';
+function isPracticeDayOn(dateStr){
+  return !!PRACTICE_DAYS[PRACTICE_TEAM + '|' + (dateStr || today())];
 }
-function togglePracticeDay(){
+function isPracticeDay(){ return isPracticeDayOn(today()); }
+async function togglePracticeDay(){
+  var d = today(), key = PRACTICE_TEAM + '|' + d, on = !isPracticeDay();
+  if(on) PRACTICE_DAYS[key] = true; else delete PRACTICE_DAYS[key];
+  renderPracticeToggle(); renderReminder();
   try {
-    if(isPracticeDay()) localStorage.setItem(noPracticeKey(), '1');
-    else localStorage.removeItem(noPracticeKey());
-  } catch(e){}
-  renderPracticeToggle();
-  renderReminder();
+    const { error } = await sb.from('practice_days')
+      .upsert({ team:PRACTICE_TEAM, date:d, active:on }, { onConflict:'team,date' });
+    if(error) throw error;
+  } catch(e){
+    if(on) delete PRACTICE_DAYS[key]; else PRACTICE_DAYS[key] = true;
+    renderPracticeToggle(); renderReminder();
+    toast('No se pudo guardar el estado de practica', true);
+  }
+}
+// Dias de practica o partido registrados, del mas reciente al mas viejo.
+function practiceDatesDesc(){
+  return Object.keys(PRACTICE_DAYS)
+    .filter(function(k){ return k.indexOf(PRACTICE_TEAM+'|')===0; })
+    .map(function(k){ return k.split('|')[1]; })
+    .sort().reverse();
+}
+// Cuenta dias de practica desde el ultimo check-in del jugador.
+// Solo cuenta dias marcados como practica: contar dias naturales pondria
+// a todo el roster en rojo de forma permanente.
+function practiceDaysSinceCheckin(pid){
+  var ents = playerEntries(pid);
+  if(!ents.length) return null;
+  var last = ents[0].date, t = today();
+  return practiceDatesDesc().filter(function(d){ return d > last && d <= t; }).length;
+}
+function pillBtn(txt, on, onclick, hexOn){
+  var col = on ? 'var(--mint)' : 'var(--dim)';
+  var bg  = on ? 'var(--mint-soft)' : 'rgba(27,42,107,.05)';
+  if(on && hexOn){ col = hexOn; bg = hexA(hexOn, .12); }
+  return '<button onclick="'+onclick+'" style="display:inline-flex;align-items:center;gap:9px;'+
+    'background:'+bg+';border:1px solid '+hexA(on?(hexOn||'#34e3a5'):'#64748B',0.35)+';color:'+col+';'+
+    'border-radius:999px;padding:9px 18px;font-family:var(--disp);font-size:13px;font-weight:700;'+
+    'letter-spacing:.04em;cursor:pointer;white-space:nowrap">'+txt+'</button>';
 }
 function renderPracticeToggle(){
   var slot = document.getElementById('dash-practice-toggle');
   if(!slot || !isStaff()) { if(slot) slot.innerHTML=''; return; }
   var on = isPracticeDay();
-  var col = on ? 'var(--mint)' : 'var(--dim)';
-  var bg  = on ? 'var(--mint-soft)' : 'rgba(27,42,107,.05)';
-  var icon = on ? '✅' : '🚫';
-  var txt  = on ? 'Practicamos hoy' : 'Hoy no hay práctica';
-  slot.innerHTML = '<div style="margin-bottom:1.2rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap">'+
-    '<button onclick="togglePracticeDay()" style="display:inline-flex;align-items:center;gap:9px;background:'+bg+';border:1px solid '+hexA(on?'#34e3a5':'#64748B',0.35)+';color:'+col+';border-radius:999px;padding:9px 18px;font-family:var(--disp);font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer">'+
-      '<span style="font-size:15px">'+icon+'</span>'+txt+
-    '</button>'+
-    '<span style="font-family:var(--mono);font-size:11px;color:var(--faint)">'+(on?'El recordatorio de check-in está activo':'El recordatorio está oculto para hoy')+'</span>'+
-  '</div>';
+  var tmode = !!(TEAM_SETTINGS[PRACTICE_TEAM] && TEAM_SETTINGS[PRACTICE_TEAM].tournamentMode);
+  slot.innerHTML =
+    '<div style="margin-bottom:1.2rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+      pillBtn(on ? 'Practicamos hoy' : 'Hoy no hay práctica', on, 'togglePracticeDay()')+
+      pillBtn(tmode ? 'Modo Torneo activado' : 'Modo Torneo', tmode,
+              'toggleTournament(\''+PRACTICE_TEAM+'\','+(!tmode)+')', '#EB448F')+
+      pillBtn('Copiar informe del día', false, 'copyDailyReport()')+
+    '</div>'+
+    '<div style="margin-bottom:1.2rem;font-family:var(--mono);font-size:11px;color:var(--faint);line-height:1.7">'+
+      (on ? 'El recordatorio de check-in está activo' : 'El recordatorio está oculto para hoy')+
+      (tmode ? ' &middot; los jugadores ven el check-in de Game Day' : '')+
+    '</div>';
 }
 function playersWithoutCheckinToday(teamFilter){
   var t = today();
@@ -1843,7 +2150,7 @@ function renderReminder(teamFilter){
   }
   var label = tf==='ALL' ? 'todos los equipos' : tf;
   if(!reminderExpanded){
-    slot.innerHTML = '<div style="margin-bottom:1.2rem"><button class="reminder-toggle" onclick="reminderExpanded=true;renderReminder()">📢 '+missing.length+' jugadores sin check-in hoy ('+label+') — Enviar recordatorio</button></div>';
+    slot.innerHTML = '<div style="margin-bottom:1.2rem"><button class="reminder-toggle" onclick="reminderExpanded=true;renderReminder()">'+missing.length+' jugadores sin check-in hoy ('+label+') — Enviar recordatorio</button></div>';
     return;
   }
   var byTeam = {};
@@ -1859,16 +2166,16 @@ function renderReminder(teamFilter){
       rows += '<div class="reminder-row">'+
         '<span class="rr-team" style="color:'+col+'">'+team+'</span>'+
         '<span class="rr-name">'+htmlEscape(p.name)+'</span>'+
-        (p.phone ? '<button class="wa-btn" onclick="sendReminder(\''+p.id+'\')">📲 WhatsApp</button>' : '<span style="color:var(--faint);font-size:11px">Sin tel.</span>')+
+        (p.phone ? '<button class="wa-btn" onclick="sendReminder(\''+p.id+'\')">WhatsApp</button>' : '<span style="color:var(--faint);font-size:11px">Sin tel.</span>')+
       '</div>';
     });
   });
   slot.innerHTML = '<div class="reminder-box">'+
     '<div class="reminder-header">'+
-      '<div class="rh-title">📢 Recordatorio de check-in</div>'+
+      '<div class="rh-title">Recordatorio de check-in</div>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-        '<button class="wa-btn" onclick="sendBulkReminder()" style="font-size:13px;padding:8px 14px">📲 Enviar a todos ('+missing.filter(function(p){return !!p.phone;}).length+')</button>'+
-        '<button class="reminder-toggle" onclick="reminderExpanded=false;renderReminder()" style="padding:8px 12px;font-size:12px">✕ Cerrar</button>'+
+        '<button class="wa-btn" onclick="sendBulkReminder()" style="font-size:13px;padding:8px 14px">Enviar a todos ('+missing.filter(function(p){return !!p.phone;}).length+')</button>'+
+        '<button class="reminder-toggle" onclick="reminderExpanded=false;renderReminder()" style="padding:8px 12px;font-size:12px">Cerrar</button>'+
       '</div>'+
     '</div>'+
     '<div style="font-size:12px;color:var(--dim);margin-bottom:.7rem">'+missing.length+' jugadores de '+label+' aún no registran hoy ('+today()+')</div>'+
@@ -1879,18 +2186,18 @@ function sendReminder(pid){
   var p = DB.players.find(function(x){ return x.id===pid; });
   if(!p) return;
   var phone = cleanPhone(p.phone);
-  if(!phone){ toast('⚠ Sin teléfono registrado',true); return; }
+  if(!phone){ toast('Sin teléfono registrado',true); return; }
   var link = window.location.origin + window.location.pathname + '?player=' + p.id;
-  var msg = '¡Hola ' + p.name.split(' ')[0] + '! 🏐\n\nRecuerda llenar tu check-in de hoy en Angels Performance OS.\n\nToma 1 minuto → ' + link;
+  var msg = '¡Hola ' + p.name.split(' ')[0] + '! \n\nRecuerda llenar tu check-in de hoy en Angels Performance OS.\n\nToma 1 minuto → ' + link;
   window.open('https://wa.me/1' + phone + '?text=' + encodeURIComponent(msg), '_blank');
 }
 function sendBulkReminder(){
   var tf = currentFilter.dash;
   var missing = playersWithoutCheckinToday(tf).filter(function(p){ return !!p.phone; });
-  if(!missing.length){ toast('⚠ Todos los jugadores ya tienen check-in o no tienen teléfono',true); return; }
+  if(!missing.length){ toast('Todos los jugadores ya tienen check-in o no tienen teléfono',true); return; }
   var idx = 0;
   function sendNext(){
-    if(idx >= missing.length){ toast('✓ Recordatorios enviados a ' + missing.length + ' jugadores'); return; }
+    if(idx >= missing.length){ toast('Recordatorios enviados a ' + missing.length + ' jugadores'); return; }
     sendReminder(missing[idx].id);
     idx++;
     setTimeout(sendNext, 800);
@@ -1906,7 +2213,7 @@ function renderGameDay(teamFilter) {
   if(!tabsEl||!contentEl) return;
   if(!tournamentTeams.length) {
     tabsEl.innerHTML='';
-    contentEl.innerHTML=emptyState('🏆','Game Day inactivo','Activa Modo Torneo en el Dashboard para ver el ranking de jugadores listos para competir.');
+    contentEl.innerHTML=emptyState('','Game Day inactivo','Activa Modo Torneo en el Dashboard para ver el ranking de jugadores listos para competir.');
     return;
   }
   const activeTeam=teamFilter||(tournamentTeams.includes(_gamedayTeam)?_gamedayTeam:tournamentTeams[0]);
@@ -1918,14 +2225,14 @@ function renderGameDay(teamFilter) {
     const scoreB=readinessScore(playerEntries(b.id))??-1;
     return scoreB-scoreA;
   });
-  if(!sorted.length){contentEl.innerHTML=emptyState('👥','Sin jugadores','Este equipo no tiene jugadores registrados todavía.');return;}
-  contentEl.innerHTML='<div class="gold-banner">🏆 Modo Torneo activo — ranking por score "Listo para jugar"</div>'+
+  if(!sorted.length){contentEl.innerHTML=emptyState('','Sin jugadores','Este equipo no tiene jugadores registrados todavía.');return;}
+  contentEl.innerHTML='<div class="gold-banner">Modo Torneo activo — ranking por score "Listo para jugar"</div>'+
     sorted.map((p,i)=>{
       const entries=playerEntries(p.id);
       const last=entries[0];
       const score=readinessScore(entries);
       const col=score==null?'#64748B':score>=8?'#34e3a5':score>=5?'#51B7E4':'#ff5d6c';
-      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+      const medal=i===0?'':i===1?'':i===2?'':'#'+(i+1);
       const r=acwr(p.id); const z=acwrZone(r);
       return '<div class="gameday-card'+(i===0?' top1':'')+'">'+
         '<div class="gameday-rank">'+medal+'</div>'+
@@ -1949,7 +2256,7 @@ function renderGameDay(teamFilter) {
 function renderPlayerPage(pid) {
   currentPlayerId=pid;
   const p=DB.players.find(x=>x.id===pid);
-  if(!p){document.getElementById('player-content').innerHTML=emptyState('🔍','Jugador no encontrado','Verifica que el link sea correcto.');return;}
+  if(!p){document.getElementById('player-content').innerHTML=emptyState('','Jugador no encontrado','Verifica que el link sea correcto.');return;}
   try { renderTournamentCountdown('player-countdown', p.team); } catch(e){ console.log('player countdown:', e); }
   const entries=playerEntries(pid);
   const last=entries[0];
@@ -1966,12 +2273,13 @@ function renderPlayerPage(pid) {
     '<td class="tnum">'+internalLoad(e)+'</td>'+
     '<td class="tnum">'+(e.mood??'—')+' / '+(e.sleepQuality??'—')+' / '+(e.soreness??'—')+' / '+(e.stress??'—')+'</td>'+
     '<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;color:var(--dim)">'+htmlEscape(e.notes||'')+'</td>'+
-    '<td>'+(e.playerNote?'<button class="note-btn" data-name="'+htmlEscape(p.name)+'" data-date="'+e.date+'" data-note="'+htmlEscape(e.playerNote)+'" style="background:var(--sky-soft);border:1px solid rgba(81,183,228,.35);color:var(--sky);border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer" title="Ver mensaje">💬</button>':'<span style="color:var(--faint)">—</span>')+'</td>'+
-    (isStaff()?'<td style="white-space:nowrap"><button onclick="editEntryDate(\''+e.id+'\',\''+e.date+'\')" class="edit-date-btn" title="Corregir fecha" style="margin-right:5px">✏️</button><button onclick="deleteEntry(\''+e.id+'\')" style="background:var(--coral-soft);border:1px solid rgba(255,93,108,.35);color:var(--coral);border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer" title="Eliminar">🗑</button></td>':'<td></td>')+
+    '<td>'+(e.playerNote?'<button class="note-btn" data-name="'+htmlEscape(p.name)+'" data-date="'+e.date+'" data-note="'+htmlEscape(e.playerNote)+'" style="background:var(--sky-soft);border:1px solid rgba(81,183,228,.35);color:var(--sky);border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer" title="Ver mensaje"></button>':'<span style="color:var(--faint)">—</span>')+'</td>'+
+    (isStaff()?'<td style="white-space:nowrap"><button onclick="editEntryDate(\''+e.id+'\',\''+e.date+'\')" class="edit-date-btn" title="Corregir fecha" style="margin-right:5px"></button><button onclick="deleteEntry(\''+e.id+'\')" style="background:var(--coral-soft);border:1px solid rgba(255,93,108,.35);color:var(--coral);border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer" title="Eliminar"></button></td>':'<td></td>')+
     '</tr>'
   ).join('');
 
-  const formHTML = isTournament ? buildGameDayForm() : buildPracticeForm();
+  const recovery = !isTournament && recoveryDue(pid);
+  const formHTML = isTournament ? buildGameDayForm() : (recovery ? buildRecoveryForm() : buildPracticeForm());
 
   document.getElementById('player-content').innerHTML=
     '<div class="pp-hero">'+
@@ -1985,7 +2293,7 @@ function renderPlayerPage(pid) {
         (last?'<span class="badge" style="font-size:12px;padding:5px 13px;background:rgba(27,42,107,.06);color:var(--dim)">Últ: '+last.date+'</span>':'')+
       '</div></div></div>'+
     (coachMsg?'<div class="coach-banner"><strong>Mensaje de tu coach</strong>'+htmlEscape(coachMsg)+'</div>':'')+
-    (isTournament?'<div class="gold-banner">🏆 Modo Torneo activado — Check-in Game Day</div>':'')+
+    (isTournament?'<div class="gold-banner">Modo Torneo activado — Check-in Game Day</div>':'')+
     formHTML+
     (isStaff()?
       '<div class="chart-row">'+
@@ -1993,9 +2301,15 @@ function renderPlayerPage(pid) {
         '<div class="panel"><div class="panel-title"><span class="dot"></span>Carga · 8 semanas</div><div class="heatmap" id="hm-grid"></div>'+
         '<div class="hm-legend"><span>Menos</span><i style="background:rgba(27,42,107,.05)"></i><i style="background:rgba(81,183,228,.22)"></i><i style="background:rgba(81,183,228,.45)"></i><i style="background:rgba(81,183,228,.7)"></i><i style="background:#51B7E4"></i><span>Más</span></div></div>'+
       '</div>':'')+
+    (isStaff()?'<div class="form-section">'+
+      '<div class="form-section-title">Lesion o restriccion</div>'+
+      '<p style="font-size:13px;color:var(--dim);margin-bottom:1rem;line-height:1.6">'+
+        (p.injury_note?htmlEscape(p.injury_note):'Sin restricciones registradas.')+'</p>'+
+      '<button class="btn-secondary" onclick="editInjury(\''+pid+'\')">'+(p.injury_note?'Editar':'Anadir')+'</button>'+
+    '</div>':'')+
     '<div class="form-section">'+
       '<div class="form-section-title">Últimas entradas</div>'+
-      (entries.length===0?emptyState('📋','Sin check-ins','Este jugador todavía no ha registrado ningún check-in diario.'):
+      (entries.length===0?emptyState('','Sin check-ins','Este jugador todavía no ha registrado ningún check-in diario.'):
         '<div class="table-wrap"><table class="data">'+
         '<thead><tr><th>Fecha</th><th>'+(isTournament?'Juegos':'Min')+'</th><th>RPE</th><th>Carga</th><th>M/S/D/E</th><th>Notas</th><th>Msg</th><th></th></tr></thead>'+
         '<tbody>'+histRows+'</tbody></table></div>')+
@@ -2014,7 +2328,7 @@ function renderPlayerPage(pid) {
 // Radar de wellness: último check-in vs promedio 7 días
 function renderRadar(entries){
   const canvas=document.getElementById('radar-chart');
-  if(!canvas||!entries.length){ if(canvas) canvas.parentElement.innerHTML=emptyState('📡','Sin datos','El radar aparece con el primer check-in.'); return; }
+  if(!canvas||!entries.length){ if(canvas) canvas.parentElement.innerHTML=emptyState('','Sin datos','El radar aparece con el primer check-in.'); return; }
   const last=entries[0];
   const week=entries.filter(e=>e.date>=daysAgoStr(6));
   const avg=k=>{ const v=week.map(e=>e[k]).filter(x=>x!=null); return v.length?v.reduce((a,b)=>a+b,0)/v.length:null; };
@@ -2155,6 +2469,57 @@ function painConcernField(label) {
     '</div>'+
   '</div>';
 }
+// --- Campos Fase 0 -------------------------------------------------
+const SESSION_TYPES = [
+  ['tecnica','Tecnica'], ['fisico','Fisico'],
+  ['scrimmage','Scrimmage'], ['partido','Partido']
+];
+function sessionTypeField(preset) {
+  return '<div class="form-block">'+
+    '<label class="form-label">Tipo de sesion</label>'+
+    '<div class="opt-grid" style="grid-template-columns:repeat(4,1fr)">'+
+      SESSION_TYPES.map(function(st){
+        var sel = (preset && preset===st[0]) ? ' selected' : '';
+        return '<button type="button" class="btn-option'+sel+'" onclick="selectOption(this,\'sessionType\',\''+st[0]+'\')">'+st[1]+'</button>';
+      }).join('')+
+    '</div>'+
+    '<div class="form-help">Sin este dato la carga no es comparable entre semanas</div>'+
+    '<input type="hidden" id="f-sessionType" value="'+(preset||'')+'">'+
+  '</div>';
+}
+const ROLES = [['titular','Titular'],['reserva','Reserva'],['mixto','Mixto']];
+function roleField() {
+  return '<div class="form-block">'+
+    '<label class="form-label">Tu rol hoy</label>'+
+    '<div class="opt-grid" style="grid-template-columns:repeat(3,1fr)">'+
+      ROLES.map(function(r){
+        return '<button type="button" class="btn-option" onclick="selectOption(this,\'roleInEvent\',\''+r[0]+'\')">'+r[1]+'</button>';
+      }).join('')+
+    '</div>'+
+    '<div class="form-help">Un titular y un reserva no cargan igual en el mismo torneo</div>'+
+    '<input type="hidden" id="f-roleInEvent" value="">'+
+  '</div>';
+}
+// Un set de voleibol juvenil ronda los 20 minutos de juego real.
+// Se usa para convertir sets en minutos y que la carga interna
+// (RPE x minutos) sea comparable entre practica y partido.
+const MIN_PER_SET = 20;
+function setsField() {
+  return '<div class="form-block">'+
+    '<label class="form-label">Sets jugados hoy</label>'+
+    '<input type="number" id="f-setsPlayed" class="form-input" placeholder="Ej: 6" min="0" max="15" oninput="syncDurationFromSets()">'+
+    '<div class="form-help" id="sets-help">Cuenta los sets en los que estuviste en cancha</div>'+
+  '</div>';
+}
+function syncDurationFromSets(){
+  var sets = parseInt(document.getElementById('f-setsPlayed')?.value||'');
+  var dur  = document.getElementById('f-duration');
+  var help = document.getElementById('sets-help');
+  if(!dur) return;
+  if(isNaN(sets) || sets < 0){ dur.value=''; if(help) help.textContent='Cuenta los sets en los que estuviste en cancha'; return; }
+  dur.value = sets * MIN_PER_SET;
+  if(help) help.textContent = 'Equivale a ' + (sets*MIN_PER_SET) + ' minutos de juego. Puedes ajustarlo abajo.';
+}
 function notesField(label, placeholder) {
   return '<div class="form-block">'+
     '<label class="form-label">'+label+'</label>'+
@@ -2178,6 +2543,7 @@ function buildPracticeForm() {
           '<input type="number" id="f-duration" class="form-input" value="80" min="0" step="5">'+
         '</div>'+
       '</div>'+
+      sessionTypeField()+
       rpeField('Esfuerzo percibido (RPE)','1 = muy fácil, 10 = esfuerzo máximo')+
       wellnessField('mood','Ánimo hoy','Cómo te sientes emocionalmente',['1 Muy mal','2 Mal','3 Normal','4 Bien','5 Muy bien'])+
       wellnessField('sleepQuality','Calidad de sueño','Cómo dormiste la noche anterior',['1 Muy mal','2 Mal','3 Normal','4 Bien','5 Excelente'])+
@@ -2188,20 +2554,53 @@ function buildPracticeForm() {
       painConcernField()+
       notesField('Notas libres (opcional)','Ej: rodilla cargada, cansancio de torneo…')+
       playerNoteField('Mensaje al coach (opcional)','¿Algo que quieras decirle al coach?')+
-      '<div class="save-row"><button type="submit" id="save-btn" class="btn-primary">✓ Guardar check-in</button></div>'+
+      '<div class="save-row"><button type="submit" id="save-btn" class="btn-primary">Guardar check-in</button></div>'+
+    '</form></div>';
+}
+// El lunes despues de un fin de semana de torneo es donde se decide
+// si el equipo llega entero. Se ofrece cuando el jugador registro un
+// partido en los ultimos 3 dias y todavia no hizo check-in hoy.
+function recoveryDue(pid){
+  var t = today(), lim = daysAgoStr(3);
+  var ents = playerEntries(pid);
+  if(ents.some(function(e){ return e.date===t; })) return false;
+  return ents.some(function(e){
+    return e.sessionLabel==='partido' && e.date < t && e.date >= lim;
+  });
+}
+function buildRecoveryForm() {
+  return '<div class="form-section">'+
+    '<div class="form-section-title">Check-in de recuperacion</div>'+
+    '<p style="font-size:13px;color:var(--dim);margin-bottom:1.2rem;line-height:1.6">'+
+      'Jugaste hace poco. Cuentanos como amaneciste hoy — no hay entrenamiento que registrar.</p>'+
+    '<form id="checkin-form">'+
+      '<div class="form-grid">'+ dateChipBlock('Fecha') +'</div>'+
+      wellnessField('fatigue','Fatiga hoy','Como se siente tu cuerpo despues de jugar',['1 Muy cansado','2 Bastante','3 Normal','4 Bien','5 Muy fresco'])+
+      wellnessField('soreness','Dolor muscular','Dolor general de musculos',['1 Muy fuerte','2 Fuerte','3 Moderado','4 Leve','5 Sin dolor'])+
+      wellnessField('sleepQuality','Calidad de sueño','Como dormiste anoche',['1 Muy mal','2 Mal','3 Normal','4 Bien','5 Excelente'])+
+      wellnessField('mood','Ánimo hoy','Como te sientes emocionalmente',['1 Muy mal','2 Mal','3 Normal','4 Bien','5 Muy bien'])+
+      painConcernField()+
+      playerNoteField('Mensaje al coach (opcional)','¿Algo que quieras decirle al coach?')+
+      '<input type="hidden" id="f-sessionType" value="recuperacion">'+
+      '<input type="hidden" id="f-duration" value="1">'+
+      '<input type="hidden" id="f-rpe" value="1">'+
+      '<div class="save-row"><button type="submit" id="save-btn" class="btn-primary">Guardar recuperacion</button></div>'+
     '</form></div>';
 }
 function buildGameDayForm() {
   return '<div class="form-section" style="border-color:rgba(235,68,143,.3)">'+
-    '<div class="form-section-title gold">🏆 Check-in Game Day</div>'+
+    '<div class="form-section-title gold">Check-in Game Day</div>'+
     '<p style="font-size:13px;color:var(--dim);margin-bottom:1.2rem;line-height:1.6">Responde cómo te sentiste después de los juegos de hoy.</p>'+
     '<form id="checkin-form">'+
       '<div class="form-grid">'+
         dateChipBlock('Fecha del día')+
-        '<div class="form-block">'+
-          '<label class="form-label">Juegos jugados hoy</label>'+
-          '<input type="number" id="f-duration" class="form-input" placeholder="Ej: 2" min="0" max="20">'+
-        '</div>'+
+        setsField()+
+      '</div>'+
+      roleField()+
+      '<div class="form-block">'+
+        '<label class="form-label">Minutos en cancha</label>'+
+        '<input type="number" id="f-duration" class="form-input" placeholder="Se calcula de los sets" min="0" step="5">'+
+        '<div class="form-help">Se calcula solo a partir de los sets. Ajustalo si hace falta.</div>'+
       '</div>'+
       rpeField('Esfuerzo del día (RPE)','1 = muy fácil, 10 = máximo esfuerzo en los juegos')+
       wellnessField('mood','Confianza en el juego','¿Qué tanto te sentiste confiado hoy?',['1 Sin confianza','2 Poca','3 Normal','4 Bastante','5 Muy confiado'])+
@@ -2213,7 +2612,7 @@ function buildGameDayForm() {
       painConcernField('Nivel de preocupación por dolor')+
       notesField('Notas del día de juego (opcional)','Ej: me dolió la rodilla en el segundo juego…')+
       playerNoteField('Mensaje al coach (opcional)','¿Algo que quieras decir sobre los juegos de hoy?')+
-      '<div class="save-row"><button type="submit" id="save-btn" class="btn-primary gold-btn">🏆 Guardar check-in Game Day</button></div>'+
+      '<div class="save-row"><button type="submit" id="save-btn" class="btn-primary gold-btn">Guardar check-in Game Day</button></div>'+
     '</form></div>';
 }
 
@@ -2244,10 +2643,19 @@ function initCheckinForm(pid, isTournament) {
 
 async function saveEntry(pid) {
   const rpe=parseInt(document.getElementById('f-rpe')?.value||'0');
-  if(!rpe){toast('⚠ Selecciona un RPE antes de guardar',true);return;}
+  const _rec=(document.getElementById('f-sessionType')?.value)==='recuperacion';
+  if(!rpe&&!_rec){toast('Selecciona un RPE antes de guardar',true);return;}
+  const isRecovery=(document.getElementById('f-sessionType')?.value)==='recuperacion';
+  const durVal=parseInt(document.getElementById('f-duration')?.value||'0');
+  if(!isRecovery&&(!durVal||durVal<=0)){toast('Indica la duracion antes de guardar',true);return;}
+  const dateVal=document.getElementById('f-date')?.value||today();
+  if(dateVal>today()){toast('No se permiten fechas futuras',true);return;}
+  const sessVal=document.getElementById('f-sessionType')?.value||'';
+  const isGameDay=!!document.getElementById('f-setsPlayed');
+  if(!isGameDay&&!isRecovery&&!sessVal){toast('Selecciona el tipo de sesion',true);return;}
   const moodVal=parseInt(document.getElementById('f-mood')?.value||'0');
   const sleepVal=parseInt(document.getElementById('f-sleepQuality')?.value||'0');
-  if(!moodVal||!sleepVal){toast('⚠ Completa al menos Ánimo y Sueño',true);return;}
+  if(!moodVal||!sleepVal){toast('Completa al menos Ánimo y Sueño',true);return;}
   const btn=document.getElementById('save-btn');
   const originalBtnText=btn?btn.textContent:null;
   if(btn){btn.disabled=true;btn.textContent='Guardando…';}
@@ -2256,7 +2664,12 @@ async function saveEntry(pid) {
   const entry={
     id:uid(), player_id:pid,
     date:document.getElementById('f-date')?.value||today(),
-    session_label:null,
+    session_label:(document.getElementById('f-sessionType')?.value)||(document.getElementById('f-setsPlayed')?'partido':null),
+    role_in_event:document.getElementById('f-roleInEvent')?.value||null,
+    sets_played:(function(){
+      var v=parseInt(document.getElementById('f-setsPlayed')?.value);
+      return isNaN(v)?null:v;
+    })(),
     duration:parseInt(document.getElementById('f-duration')?.value)||0,
     rpe, mood:moodVal, sleep_quality:sleepVal,
     soreness:parseInt(document.getElementById('f-soreness')?.value)||null,
@@ -2270,12 +2683,12 @@ async function saveEntry(pid) {
   };
   const{error}=await sb.from('entries').insert(entry);
   if(error){
-    toast('✗ Error: '+error.message,true);
-    if(btn){btn.disabled=false;btn.textContent=originalBtnText||'✓ Guardar check-in';}
+    toast('Error: '+error.message,true);
+    if(btn){btn.disabled=false;btn.textContent=originalBtnText||'Guardar check-in';}
     return;
   }
   await loadAll();
-  toast('✓ Check-in guardado');
+  toast('Check-in guardado');
   renderPlayerPage(pid);
 }
 
@@ -2284,7 +2697,7 @@ async function deleteEntry(entryId){
   const{error}=await sb.from('entries').delete().eq('id',entryId);
   if(error){toast('Error al eliminar: '+error.message,true);return;}
   await loadAll();
-  toast('🗑 Entrada eliminada');
+  toast('Entrada eliminada');
   if(currentPage==='player'&&currentPlayerId) renderPlayerPage(currentPlayerId);
   else if(currentPage==='records') renderRecords();
   else renderDashboard();
@@ -2295,12 +2708,12 @@ async function editEntryDate(entryId, currentDate){
   var nueva=prompt('Corregir fecha del check-in (AAAA-MM-DD):', currentDate||today());
   if(!nueva) return;
   nueva=nueva.trim();
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(nueva)){ toast('⚠ Formato inválido. Usa AAAA-MM-DD',true); return; }
-  if(nueva>today()){ toast('⚠ No se permiten fechas futuras',true); return; }
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(nueva)){ toast('Formato inválido. Usa AAAA-MM-DD',true); return; }
+  if(nueva>today()){ toast('No se permiten fechas futuras',true); return; }
   const{error}=await sb.from('entries').update({date:nueva}).eq('id',entryId);
   if(error){ toast('Error al actualizar: '+error.message,true); return; }
   await loadAll();
-  toast('✓ Fecha corregida');
+  toast('Fecha corregida');
   if(currentPage==='player'&&currentPlayerId) renderPlayerPage(currentPlayerId);
   else if(currentPage==='records') renderRecords();
   else renderDashboard();
@@ -2328,7 +2741,7 @@ async function saveCoachMessage(){
   const{error}=await sb.from('players').update({coach_message:txt||null}).eq('id',msgModalPid);
   if(error){toast('Error: '+error.message,true);return;}
   const p=DB.players.find(x=>x.id===msgModalPid); if(p) p.coach_message=txt||null;
-  toast('✓ Mensaje guardado');
+  toast('Mensaje guardado');
   document.getElementById('msg-modal').style.display='none';
   if(currentPage==='roster') renderRoster();
   else if(currentPage==='dashboard') renderDashboard();
@@ -2339,7 +2752,7 @@ async function clearCoachMessage(){
   const{error}=await sb.from('players').update({coach_message:null}).eq('id',msgModalPid);
   if(error){toast('Error: '+error.message,true);return;}
   const p=DB.players.find(x=>x.id===msgModalPid); if(p) p.coach_message=null;
-  toast('🗑 Mensaje borrado');
+  toast('Mensaje borrado');
   document.getElementById('msg-modal').style.display='none';
   if(currentPage==='roster') renderRoster();
   else if(currentPage==='dashboard') renderDashboard();
@@ -2383,7 +2796,7 @@ function renderRecords(){
   const total=entries.length;
   const display=entries.slice(0,200);
   const container=document.getElementById('records-table');
-  if(display.length===0){ container.innerHTML=emptyState('🔍','Sin resultados','Ajusta los filtros o registra el primer check-in.'); return; }
+  if(display.length===0){ container.innerHTML=emptyState('','Sin resultados','Ajusta los filtros o registra el primer check-in.'); return; }
   const rows=display.map(e=>{
     const p=DB.players.find(x=>x.id===e.playerId)||{name:'',team:''};
     return '<tr>'+
@@ -2398,8 +2811,8 @@ function renderRecords(){
       '<td class="tnum">'+(e.soreness??'—')+'</td>'+
       '<td class="tnum">'+(e.stress??'—')+'</td>'+
       '<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;color:var(--dim)">'+htmlEscape(e.notes||'')+'</td>'+
-      '<td>'+(e.playerNote?'<button class="note-btn" data-name="'+htmlEscape(p.name||'')+'" data-date="'+e.date+'" data-note="'+htmlEscape(e.playerNote)+'" style="background:var(--sky-soft);border:1px solid rgba(81,183,228,.35);color:var(--sky);border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer">💬</button>':'<span style="color:var(--faint)">—</span>')+'</td>'+
-      '<td style="white-space:nowrap">'+(isStaff()?'<button onclick="editEntryDate(\''+e.id+'\',\''+e.date+'\')" class="edit-date-btn" title="Corregir fecha" style="margin-right:5px">✏️</button><button onclick="deleteEntry(\''+e.id+'\')" style="background:var(--coral-soft);border:1px solid rgba(255,93,108,.35);color:var(--coral);border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer">🗑</button>':'')+'</td>'+
+      '<td>'+(e.playerNote?'<button class="note-btn" data-name="'+htmlEscape(p.name||'')+'" data-date="'+e.date+'" data-note="'+htmlEscape(e.playerNote)+'" style="background:var(--sky-soft);border:1px solid rgba(81,183,228,.35);color:var(--sky);border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer"></button>':'<span style="color:var(--faint)">—</span>')+'</td>'+
+      '<td style="white-space:nowrap">'+(isStaff()?'<button onclick="editEntryDate(\''+e.id+'\',\''+e.date+'\')" class="edit-date-btn" title="Corregir fecha" style="margin-right:5px"></button><button onclick="deleteEntry(\''+e.id+'\')" style="background:var(--coral-soft);border:1px solid rgba(255,93,108,.35);color:var(--coral);border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer"></button>':'')+'</td>'+
     '</tr>';
   }).join('');
   container.innerHTML='<div class="table-wrap"><table class="data">'+
@@ -2418,7 +2831,7 @@ function exportJSON(){
   }))},null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download='angels-'+today()+'.json'; a.click();
-  toast('✓ JSON exportado');
+  toast('JSON exportado');
 }
 function exportCSV(){
   const headers=['date','player','team','number','rpe','duration','load','mood','sleep','soreness','stress','fatigue','motivation','pain_concern','pain_zones','notes','player_note'];
@@ -2430,7 +2843,7 @@ function exportCSV(){
   const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download='angels-'+today()+'.csv'; a.click();
-  toast('✓ CSV exportado');
+  toast('CSV exportado');
 }
 function importJSON(ev){
   const file=ev.target.files[0]; if(!file) return;
@@ -2442,7 +2855,7 @@ function importJSON(ev){
       const{error}=await sb.from('entries').upsert(data.entries);
       if(error){toast('Error: '+error.message,true);return;}
       await loadAll();
-      toast('✓ '+data.entries.length+' entradas importadas');
+      toast(''+data.entries.length+' entradas importadas');
       renderDashboard();
     } catch(err){ toast('Error al leer JSON: '+err.message,true); }
   };
@@ -2477,13 +2890,13 @@ window.addEventListener('appinstalled', function(){
 function installBannerHTML(){
   if(isStandalone() || sessionStorage.getItem('adc-install-dismissed')) return '';
   if(deferredInstallPrompt){
-    return '<div class="install-banner"><div class="ib-icon">📱</div>'+
+    return '<div class="install-banner"><div class="ib-icon"></div>'+
       '<div class="ib-txt"><b>Instala Angels Performance OS</b> en tu pantalla de inicio para acceso rápido y uso offline.</div>'+
       '<button onclick="doInstall()">Instalar app</button>'+
       '<button class="ib-close" onclick="dismissInstall()" title="Cerrar">×</button></div>';
   }
   if(isIOS()){
-    return '<div class="install-banner"><div class="ib-icon">📱</div>'+
+    return '<div class="install-banner"><div class="ib-icon"></div>'+
       '<div class="ib-txt"><b>Añade la app a tu pantalla de inicio:</b> toca <b>Compartir</b> → <b>Añadir a pantalla de inicio</b>.</div>'+
       '<button class="ib-close" onclick="dismissInstall()" title="Cerrar">×</button></div>';
   }
