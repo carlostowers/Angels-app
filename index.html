@@ -1934,11 +1934,11 @@ function copyDailyReport(){
 
 // ============ TORNEOS (CRUD) ============
 function updateTournamentsNav(){
-  var show = isStaff() ? '' : 'none';
+  var on = isStaff();
   var a = document.getElementById('nav-tournaments');
   var b = document.getElementById('mob-tournaments');
-  if(a) a.style.display = show ? 'flex' : 'none';
-  if(b) b.style.display = show ? 'block' : 'none';
+  if(a) a.style.display = on ? 'flex' : 'none';
+  if(b) b.style.display = on ? 'block' : 'none';
 }
 function tWeightPill(w){
   var m = EVENT_WEIGHT[w] || EVENT_WEIGHT.rodaje;
