@@ -17,7 +17,8 @@
 <script>
 // Modo jugador: ocultar la UI del staff antes del primer pintado (sin flash).
 (function() {
-  if (new URLSearchParams(window.location.search).get('player')) {
+  var q = new URLSearchParams(window.location.search);
+  if (q.get('t') || q.get('player')) {
     var style = document.createElement('style');
     style.textContent = '#main-nav{display:none!important}#mobile-menu{display:none!important}' +
       '#page-dashboard,#page-roster,#page-records,#page-import,#page-gameday,#page-taper,#page-tournaments{display:none!important}' +
@@ -1031,6 +1032,9 @@ async function saveTeamSettings() {
 // ============ ESTADO ============
 let DB = { players:[], entries:[] };
 let PRACTICE_DAYS = {};
+let PLAYER_TOKEN = null;      // token del enlace personal (solo modo jugador)
+let PLAYER_ID = null;         // id que devuelve el servidor a partir del token
+let TEAM_CHECKIN_DAYS = {};   // "pid|fecha" -> true. Solo el hecho, nunca el contenido.
 let currentPage = 'dashboard';
 let prevPage = 'dashboard';
 let currentFilter = { dash:'ALL', roster:'ALL', loadChart:'ALL' };
@@ -1110,6 +1114,41 @@ async function loadAll() {
   (results[3].data || []).forEach(function(r){ if(r.active) PRACTICE_DAYS[r.team+'|'+r.date] = true; });
   try { invalidateMetricsCache(); } catch(e) {}
 }
+// El modo jugador no lee las tablas: pide su paquete al servidor, que filtra
+// por token y devuelve solo lo suyo mas el minimo del equipo.
+async function loadPlayerData(){
+  try {
+    const res = await sb.rpc('player_bootstrap', { p_token: PLAYER_TOKEN });
+    if(res.error || !res.data) return false;
+    applyBootstrap(res.data);
+    return true;
+  } catch(e){ console.error('bootstrap', e); return false; }
+}
+function applyBootstrap(b){
+  var me = b.player || null;
+  DB.players = (b.roster || []).map(function(r){
+    return (me && r.id === me.id) ? Object.assign({}, r, me) : r;
+  });
+  PLAYER_ID = me ? me.id : null;
+  DB.entries = (b.entries || []).map(normalizeEntry);
+  TEAM_CHECKIN_DAYS = {};
+  (b.checkins || []).forEach(function(c){ TEAM_CHECKIN_DAYS[c.player_id + '|' + c.date] = true; });
+  PRACTICE_DAYS = {};
+  (b.practice_days || []).forEach(function(r){ if(r.active) PRACTICE_DAYS[r.team + '|' + r.date] = true; });
+  TOURNAMENTS = (b.tournaments || []).map(normalizeTournament);
+  (b.team_settings || []).forEach(function(row){
+    if(TEAM_SETTINGS[row.team] !== undefined) TEAM_SETTINGS[row.team].tournamentMode = row.tournament_mode;
+  });
+  try { invalidateMetricsCache(); } catch(e) {}
+}
+async function refreshData(){
+  return PLAYER_TOKEN ? loadPlayerData() : loadAll();
+}
+// En modo jugador solo se sabe QUIEN registro y QUE DIA, nunca el contenido.
+function hasCheckinOn(pid, date){
+  if(PLAYER_TOKEN) return !!TEAM_CHECKIN_DAYS[pid + '|' + date];
+  return DB.entries.some(function(e){ return e.playerId===pid && e.date===date; });
+}
 function normalizeEntry(e) {
   return {
     id:e.id, playerId:e.player_id, date:e.date,
@@ -1142,7 +1181,11 @@ function htmlEscape(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').repl
 function attrEscape(s){ return htmlEscape(s).replace(/\n/g,'&#10;'); }
 function csvEscape(s){ s=(s==null?'':s).toString().replace(/"/g,'""'); return /[",\n]/.test(s)?'"'+s+'"':s; }
 function initials(n){ return String(n||'').split(' ').slice(0,2).map(function(w){ return w[0]||''; }).join('').toUpperCase(); }
-function isPlayerMode(){ return !!new URLSearchParams(window.location.search).get('player'); }
+function urlParam(k){ return new URLSearchParams(window.location.search).get(k); }
+// El enlace personal viaja como ?t=<token>. El formato viejo (?player=<id>)
+// ya no da acceso: los ids eran adivinables y la lectura era publica.
+function playerTokenFromURL(){ return urlParam('t'); }
+function isPlayerMode(){ return !!(urlParam('t') || urlParam('player')); }
 function hexA(hex,a){
   if(!hex) return 'rgba(81,183,228,'+a+')';
   var h=String(hex).replace('#','');
@@ -1466,9 +1509,7 @@ function playersWithoutCheckinToday(teamFilter){
   var t = today();
   var players = DB.players;
   if(teamFilter && teamFilter!=='ALL') players = players.filter(function(p){ return p.team===teamFilter; });
-  return players.filter(function(p){
-    return !DB.entries.some(function(e){ return e.playerId===p.id && e.date===t; });
-  });
+  return players.filter(function(p){ return !hasCheckinOn(p.id, t); });
 }
 
 // ============ SVG ============
@@ -1581,19 +1622,34 @@ function showPage(name, pid) {
 }
 function goBack() { showPage(prevPage==='player'?'dashboard':prevPage); }
 function openPlayer(pid) { showPage('player', pid); }
-function checkURLPlayer() {
-  const pid = new URLSearchParams(window.location.search).get('player');
-  if (!pid) return false;
+function enterPlayerShell(){
+  document.body.classList.remove('staff-shell');
   document.body.classList.add('player-shell');
   var nav = document.getElementById('main-nav');
   if(nav) nav.style.display = 'none';
-  playerView = 'hoy';
-  showPage('player', pid);
-  return true;
+  var mm = document.getElementById('mobile-menu');
+  if(mm) mm.style.display = 'none';
+}
+function showInvalidLink(legacy){
+  enterPlayerShell();
+  var bar = document.getElementById('pbar');
+  if(bar) bar.style.display = 'none';
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('page-player').classList.add('active');
+  document.getElementById('player-topbar').innerHTML = '';
+  document.getElementById('player-content').innerHTML =
+    '<div class="empty" style="padding-top:60px">'+
+      '<div class="ic"></div>'+
+      '<b>'+(legacy ? 'Este enlace ya no funciona' : 'Enlace no válido')+'</b>'+
+      '<p>'+(legacy
+        ? 'Los enlaces cambiaron para proteger mejor la información. Pídele al coach que te reenvíe el tuyo.'
+        : 'Revisa que hayas abierto el enlace completo, tal como te llegó. Si sigue sin funcionar, pídele al coach que te lo reenvíe.')+
+      '</p></div>';
 }
 
 // ============ ARRANQUE ============
 async function init() {
+  PLAYER_TOKEN = playerTokenFromURL();
   if (isPlayerMode()) { await startApp(); return; }
   // Antes de resolver la sesion: sin esto el rail se pinta encima del
   // contenido durante el primer segundo.
@@ -1611,6 +1667,24 @@ async function init() {
 }
 async function startApp() {
   showLoading(true);
+
+  // --- Modo jugador: todo llega del servidor filtrado por token
+  if (isPlayerMode()) {
+    if (!PLAYER_TOKEN) { showLoading(false); showInvalidLink(true); return; }
+    var ok = false;
+    try { ok = await loadPlayerData(); }
+    catch(e) { console.error(e); }
+    showLoading(false);
+    if (!ok || !PLAYER_ID) { showInvalidLink(false); return; }
+    enterPlayerShell();
+    playerView = 'hoy';
+    updateGameDayNav();
+    updateTaperNav();
+    showPage('player', PLAYER_ID);
+    return;
+  }
+
+  // --- Staff
   await loadTeamSettings();
   try {
     if(isStaff()) { await seedPlayersIfNeeded(); await patchPlayerPhones(); }
@@ -1619,12 +1693,8 @@ async function startApp() {
   showLoading(false);
   updateGameDayNav();
   updateTaperNav();
-  if (!checkURLPlayer()) {
-    document.body.classList.add('staff-shell');
-    renderDashboard();
-  } else {
-    document.body.classList.remove('staff-shell');
-  }
+  document.body.classList.add('staff-shell');
+  renderDashboard();
 }
 function showLoading(v) {
   var el = document.getElementById('loading');
@@ -2074,19 +2144,21 @@ async function attemptSave(){
 
   var lastError = null;
   for(var attempt=0; attempt<3; attempt++){
-    // Antes de reintentar, comprobar si el intento anterior si escribio y solo
-    // se perdio la respuesta. Evita duplicados con la red inestable.
-    if(attempt>0){
+    // Solo el staff escribe directo en la tabla. Antes de reintentar comprueba
+    // si el intento anterior si escribio y solo se perdio la respuesta.
+    // En modo jugador no hace falta: la funcion del servidor ignora un id
+    // repetido, asi que reintentar nunca duplica.
+    if(attempt>0 && !PLAYER_TOKEN){
       try{
         const chk = await sb.from('entries').select('id').eq('id', _pendingEntry.id).limit(1);
-        // Comprobar el id devuelto, no solo que la respuesta traiga filas: dar
-        // por guardado algo que no lo esta seria peor que reintentar de mas.
         var yaEsta = !!(chk.data && chk.data.some && chk.data.some(function(r){ return r && r.id === _pendingEntry.id; }));
         if(yaEsta){ lastError = null; break; }
       }catch(e){}
     }
     try{
-      const res = await sb.from('entries').insert(_pendingEntry);
+      const res = PLAYER_TOKEN
+        ? await sb.rpc('player_submit_checkin', { p_token: PLAYER_TOKEN, p_entry: _pendingEntry })
+        : await sb.from('entries').insert(_pendingEntry);
       if(res.error) throw new Error(res.error.message);
       lastError = null;
       break;
@@ -2111,7 +2183,7 @@ async function attemptSave(){
 
   var saved = _pendingEntry, pid = _pendingPid;
   _pendingEntry = null;
-  await loadAll();
+  await refreshData();
   var m = getMetrics(pid);
   lastSavedSummary = {
     pid: pid,
@@ -2450,7 +2522,7 @@ function playerEquipoView(p){
   var mates = DB.players.filter(function(x){ return x.team===p.team; })
     .sort(function(a,b){ return (parseInt(a.number)||0)-(parseInt(b.number)||0); });
   var doneIds = {};
-  DB.entries.forEach(function(e){ if(e.date===refDate) doneIds[e.playerId]=true; });
+  mates.forEach(function(x){ if(hasCheckinOn(x.id, refDate)) doneIds[x.id] = true; });
   var done = mates.filter(function(x){ return doneIds[x.id]; }).length;
   var pct = mates.length ? Math.round(done/mates.length*100) : 0;
   var col = pct>=90 ? '#34e3a5' : pct>=60 ? '#51B7E4' : '#FF8C00';
@@ -2996,12 +3068,20 @@ function cleanPhone(phone) {
   if(!phone) return '';
   return String(phone).replace(/\D/g,'').replace(/^1/,'');
 }
+// El enlace personal se arma con el token del jugador, no con su id.
 function playerLink(pid){
-  return window.location.origin + window.location.pathname + '?player=' + pid;
+  var p = DB.players.find(function(x){ return x.id===pid; });
+  var base = window.location.origin + window.location.pathname;
+  return (p && p.access_token) ? (base + '?t=' + p.access_token) : null;
+}
+function requireLink(pid){
+  var l = playerLink(pid);
+  if(!l) toast('Este jugador no tiene enlace generado. Recarga la página.', true);
+  return l;
 }
 function buildTeamLinksText(team) {
   return DB.players.filter(function(p){ return p.team===team; })
-    .map(function(p){ return p.name + ': ' + playerLink(p.id); }).join('\n');
+    .map(function(p){ return p.name + ': ' + (playerLink(p.id) || '(sin enlace)'); }).join('\n');
 }
 function copyAllLinks(team) { copyText(buildTeamLinksText(team), 'Links copiados'); }
 function openTeamWhatsApp(team) {
@@ -3011,14 +3091,17 @@ function sendWhatsApp(pid, event) {
   if(event) event.stopPropagation();
   var p = DB.players.find(function(x){ return x.id===pid; });
   if(!p) return;
+  var l = requireLink(pid);
+  if(!l) return;
   var phone = cleanPhone(p.phone);
-  var msg = 'Hola ' + firstName(p.name) + '. Este es tu link personal de check-in de Angels Performance OS:\n\n' + playerLink(pid);
+  var msg = 'Hola ' + firstName(p.name) + '. Este es tu link personal de check-in de Angels Performance OS. Es solo tuyo, no lo compartas:\n\n' + l;
   if(!phone){ window.open('https://wa.me/?text='+encodeURIComponent(msg), '_blank'); return; }
   window.open('https://wa.me/1'+phone+'?text='+encodeURIComponent(msg), '_blank');
 }
 function copyLink(pid, event){
   if(event) event.stopPropagation();
-  copyText(playerLink(pid), 'Link copiado');
+  var l = requireLink(pid);
+  if(l) copyText(l, 'Link copiado');
 }
 
 /* ---------- Informe del dia ---------- */
@@ -3103,7 +3186,9 @@ function sendReminder(pid){
   if(!p) return;
   var phone = cleanPhone(p.phone);
   if(!phone){ toast('Sin teléfono registrado',true); return; }
-  var msg = 'Hola ' + firstName(p.name) + '. Recuerda llenar tu check-in de hoy en Angels Performance OS.\n\n' + playerLink(pid);
+  var l = requireLink(pid);
+  if(!l) return;
+  var msg = 'Hola ' + firstName(p.name) + '. Recuerda llenar tu check-in de hoy en Angels Performance OS.\n\n' + l;
   window.open('https://wa.me/1' + phone + '?text=' + encodeURIComponent(msg), '_blank');
 }
 function sendBulkReminder(){
@@ -3534,7 +3619,14 @@ function renderRecords(){
    EXPORTAR / IMPORTAR
    ========================================================================= */
 function exportJSON(){
-  const payload={players:DB.players,entries:DB.entries.map(function(e){
+  // El respaldo nunca debe llevar los tokens de acceso: un JSON compartido
+  // por error entregaria el enlace personal de todo el roster.
+  const playersSafe = DB.players.map(function(p){
+    var c = Object.assign({}, p);
+    delete c.access_token;
+    return c;
+  });
+  const payload={players:playersSafe,entries:DB.entries.map(function(e){
     return {
       id:e.id,player_id:e.playerId,date:e.date,session_label:e.sessionLabel,
       role_in_event:e.roleInEvent,sets_played:e.setsPlayed,
