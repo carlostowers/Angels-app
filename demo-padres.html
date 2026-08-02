@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#F3F7FB">
+<title>Angels Performance OS — para las familias</title>
+<meta name="description" content="Qué es la herramienta de control de carga de ADC Angels, qué se le pide a tu hijo y qué se hace con la información.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#F3F7FB; --bg1:#FFFFFF; --bg3:#F1F5F9;
+  --line:rgba(81,183,228,0.16); --line-strong:rgba(81,183,228,0.3);
+  --sky:#51B7E4; --sky-soft:rgba(81,183,228,0.14);
+  --pink:#EB448F;
+  --mint:#34e3a5; --mint-soft:rgba(52,227,165,0.14);
+  --amber:#FF8C00; --amber-soft:rgba(255,140,0,0.14);
+  --coral:#ff5d6c; --coral-soft:rgba(255,93,108,0.12);
+  --text:#1B2A6B; --dim:#64748B; --faint:#9BA8C4;
+  --disp:'Barlow Condensed',Impact,sans-serif;
+  --body:'Barlow',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  --r-md:14px; --r-lg:20px; --r-xl:26px;
+  --shadow:0 10px 40px rgba(27,42,107,0.12);
+  --shadow-sm:0 3px 14px rgba(27,42,107,0.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);background:var(--bg0);color:var(--text);font-size:16px;line-height:1.6;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 90% 50% at 50% -10%, rgba(81,183,228,.16) 0%, transparent 65%),
+             radial-gradient(ellipse 45% 35% at 105% 60%, rgba(235,68,143,.06) 0%, transparent 60%)}
+.wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:0 20px 70px}
+
+/* ---------- tipografía ---------- */
+h1{font-family:var(--disp);font-size:38px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;
+  line-height:1.02;margin-bottom:14px}
+h2{font-family:var(--disp);font-size:27px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;
+  line-height:1.1;margin-bottom:12px}
+h3{font-family:var(--disp);font-size:19px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  margin-bottom:9px}
+p{margin-bottom:14px}
+p:last-child{margin-bottom:0}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--sky);margin-bottom:10px}
+.lead{font-size:18px;line-height:1.62;color:var(--dim)}
+strong{font-weight:700;color:var(--text)}
+section{padding:44px 0;border-top:1px solid var(--line)}
+section:first-of-type{border-top:none}
+
+/* ---------- portada ---------- */
+header{text-align:center;padding:46px 0 8px}
+.mark{width:76px;height:76px;margin:0 auto 20px;display:block}
+.kicker{font-family:var(--mono);font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--faint);margin-bottom:16px}
+.hero-note{display:inline-block;margin-top:20px;font-size:13.5px;color:var(--dim);
+  background:var(--bg1);border:1px solid var(--line);border-radius:999px;padding:9px 18px;
+  box-shadow:var(--shadow-sm)}
+
+/* ---------- tarjetas ---------- */
+.card{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px;
+  box-shadow:var(--shadow-sm);margin-bottom:14px}
+.card:last-child{margin-bottom:0}
+.card-t{font-family:var(--disp);font-size:17px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.card p{font-size:15px;color:var(--dim)}
+.grid{display:grid;gap:14px}
+@media(min-width:640px){.grid.two{grid-template-columns:1fr 1fr}}
+
+.pill-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.pill{font-family:var(--mono);font-size:11px;letter-spacing:.06em;background:var(--bg3);
+  border:1px solid var(--line);border-radius:999px;padding:6px 13px;color:var(--dim);white-space:nowrap}
+
+/* ---------- teléfono ---------- */
+.phone-stage{display:flex;flex-direction:column;align-items:center;gap:16px}
+.phone{width:100%;max-width:352px;background:#0d1636;border-radius:40px;padding:11px;
+  box-shadow:0 26px 60px rgba(27,42,107,.28);position:relative}
+.phone-screen{background:var(--bg0);border-radius:30px;overflow:hidden;position:relative;
+  min-height:600px;display:flex;flex-direction:column}
+.notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:98px;height:20px;
+  background:#0d1636;border-radius:0 0 14px 14px;z-index:5}
+.screen-pad{padding:36px 17px 16px;flex:1;display:flex;flex-direction:column}
+
+.p-hello{font-family:var(--disp);font-size:25px;font-weight:800;letter-spacing:.02em;
+  text-transform:uppercase;line-height:1.05}
+.p-date{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faint);margin-top:5px}
+.streak{display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;
+  background:rgba(235,68,143,.1);border:1px solid rgba(235,68,143,.3);flex-shrink:0}
+.streak b{font-family:var(--mono);font-size:12px;color:var(--pink)}
+.streak span{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--pink)}
+
+.halo-card{position:relative;overflow:hidden;border-radius:var(--r-xl);padding:18px 16px 16px;
+  background:linear-gradient(160deg,#FFFFFF,#F7FBFF);border:1px solid var(--line-strong);
+  box-shadow:var(--shadow);margin-top:14px}
+.halo-eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint)}
+.halo-body{display:flex;align-items:center;gap:16px;margin-top:12px}
+.ring{position:relative;flex-shrink:0}
+.ring svg{display:block;transform:rotate(-90deg)}
+.ring-val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-val b{font-family:var(--mono);font-size:28px;font-weight:700;line-height:1}
+.ring-val span{font-family:var(--mono);font-size:8px;letter-spacing:.18em;color:var(--faint);margin-top:4px}
+.halo-word{font-family:var(--disp);font-size:22px;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;line-height:1}
+.halo-msg{font-size:12.5px;line-height:1.5;color:var(--dim);margin-top:7px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}
+.chip{font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--dim);background:var(--bg3);
+  border:1px solid var(--line);border-radius:999px;padding:4px 9px}
+
+.cta{width:100%;margin-top:13px;border:none;cursor:pointer;text-align:left;border-radius:21px;
+  padding:16px 18px;background:linear-gradient(120deg,var(--pink),var(--sky));display:flex;
+  align-items:center;gap:12px;box-shadow:0 12px 30px rgba(235,68,143,.26)}
+.cta b{display:block;font-family:var(--disp);font-size:20px;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;color:#fff;line-height:1}
+.cta i{display:block;font-style:normal;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;
+  color:rgba(255,255,255,.92);margin-top:6px}
+.cta-arrow{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.24);display:flex;
+  align-items:center;justify-content:center;flex-shrink:0}
+
+.wk-head{margin-top:17px;display:flex;justify-content:space-between;font-family:var(--mono);
+  font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:8px}
+.wk div{display:flex;flex-direction:column;align-items:center;gap:5px}
+.wk i{display:block;width:100%;height:32px;border-radius:10px;border:1px solid var(--line);background:var(--bg3)}
+.wk i.on{background:linear-gradient(160deg,var(--sky),var(--pink));border-color:transparent}
+.wk i.now{box-shadow:0 0 0 2px var(--sky)}
+.wk span{font-family:var(--mono);font-size:8px;color:var(--faint);text-transform:uppercase}
+
+.coach{margin-top:15px;border-radius:var(--r-lg);padding:13px 15px;background:var(--sky-soft);
+  border:1px solid var(--line-strong)}
+.coach .t{font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--sky)}
+.coach .b{font-size:12.5px;line-height:1.55;margin-top:6px}
+
+/* ---------- wizard ---------- */
+.wz-head{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.wz-back{width:32px;height:32px;flex-shrink:0;border-radius:50%;border:1px solid var(--line-strong);
+  background:var(--bg1);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.wz-back[disabled]{opacity:.3;cursor:default}
+.wz-track{flex:1;height:4px;border-radius:4px;background:var(--bg3);overflow:hidden}
+.wz-track i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--sky),var(--pink));
+  transition:width .35s cubic-bezier(.2,.7,.3,1)}
+.wz-count{font-family:var(--mono);font-size:10.5px;color:var(--dim);white-space:nowrap}
+.wz-q{font-family:var(--disp);font-size:25px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;line-height:1.05}
+.wz-sub{font-size:12.5px;color:var(--dim);margin-top:7px;margin-bottom:18px;line-height:1.5}
+.f-label{display:block;font-family:var(--disp);font-size:13px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;margin-bottom:8px;margin-top:14px}
+.f-label:first-child{margin-top:0}
+.f-help{font-size:11px;color:var(--faint);margin-top:7px;line-height:1.45}
+.opts{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+.opts.three{grid-template-columns:repeat(3,1fr)}
+.opts.four{grid-template-columns:repeat(4,1fr)}
+.opt{background:var(--bg1);border:1px solid var(--line-strong);color:var(--dim);border-radius:var(--r-md);
+  padding:12px 6px;font-family:var(--body);font-size:12.5px;font-weight:600;cursor:pointer;line-height:1.25;
+  min-height:48px;transition:all .15s;text-align:center}
+.opt.sel{background:linear-gradient(135deg,rgba(81,183,228,.22),rgba(235,68,143,.14));border-color:var(--sky);
+  color:var(--text);font-weight:700}
+.rpe{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.rpe button{background:var(--bg1);border:1px solid var(--line-strong);color:var(--dim);border-radius:var(--r-md);
+  padding:13px 2px;font-family:var(--mono);font-size:15px;font-weight:700;cursor:pointer;transition:all .15s}
+.rpe button.lo{background:var(--mint-soft);border-color:var(--mint);color:#0f9f6e}
+.rpe button.mid{background:var(--amber-soft);border-color:var(--amber);color:var(--amber)}
+.rpe button.hi{background:var(--coral-soft);border-color:var(--coral);color:var(--coral)}
+.zones{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.zone{background:var(--bg1);border:1px solid var(--line);color:var(--dim);border-radius:999px;
+  padding:9px 4px;font-size:11.5px;font-weight:600;cursor:pointer}
+.zone.sel{background:var(--coral-soft);border-color:var(--coral);color:var(--coral);font-weight:700}
+.f-input{width:100%;background:var(--bg3);border:1px solid var(--line-strong);border-radius:var(--r-md);
+  padding:11px 13px;color:var(--text);font-size:14px;font-family:var(--body);outline:none}
+textarea.f-input{resize:none;line-height:1.5}
+.wz-nav{margin-top:20px}
+.btn-main{width:100%;background:linear-gradient(120deg,var(--pink),var(--sky));color:#fff;border:none;
+  border-radius:var(--r-md);padding:14px;font-family:var(--disp);font-size:15px;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 8px 22px rgba(235,68,143,.24)}
+.btn-soft{width:100%;background:var(--bg1);color:var(--dim);border:1px solid var(--line-strong);
+  border-radius:var(--r-md);padding:13px;font-family:var(--disp);font-size:14px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-top:9px}
+
+/* ---------- confirmación ---------- */
+.done{text-align:center;padding:26px 0 0}
+.done-mark{width:112px;height:112px;margin:0 auto}
+.done-t{font-family:var(--disp);font-size:28px;font-weight:800;text-transform:uppercase;
+  letter-spacing:.03em;margin-top:12px;line-height:1}
+.done-s{font-size:13px;color:var(--dim);margin-top:9px;line-height:1.55}
+.done-cards{display:flex;gap:8px;margin-top:18px}
+.done-c{flex:1;border-radius:16px;padding:12px 10px;text-align:left}
+.done-c .l{font-family:var(--mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase}
+.done-c b{font-family:var(--mono);font-size:21px;display:block;margin-top:6px}
+.done-next{margin-top:13px;border-radius:16px;padding:14px;background:var(--bg1);border:1px solid var(--line);
+  text-align:left;box-shadow:var(--shadow-sm)}
+.done-next .l{font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+.done-next p{font-size:12.5px;line-height:1.55;margin-top:6px;margin-bottom:0}
+
+/* ---------- cronómetro ---------- */
+.timer{display:flex;align-items:center;gap:12px;background:var(--bg1);border:1px solid var(--line-strong);
+  border-radius:999px;padding:11px 20px;box-shadow:var(--shadow-sm);font-size:13.5px;color:var(--dim);
+  max-width:352px;width:100%;justify-content:center;text-align:center}
+.timer b{font-family:var(--mono);font-size:19px;color:var(--sky)}
+.timer.done b{color:var(--mint)}
+
+/* ---------- tabla de privacidad ---------- */
+.who{border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--bg1);
+  box-shadow:var(--shadow-sm)}
+.who-row{display:grid;grid-template-columns:1fr;gap:0;border-bottom:1px solid var(--line)}
+.who-row:last-child{border-bottom:none}
+.who-h{background:var(--bg3);padding:13px 17px;font-family:var(--disp);font-size:15px;font-weight:800;
+  letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:9px}
+.who-b{padding:14px 17px}
+.who-b ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+.who-b li{display:flex;gap:10px;font-size:14.5px;line-height:1.5;color:var(--dim)}
+.who-b li svg{flex-shrink:0;margin-top:3px}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+/* ---------- no hace ---------- */
+.nope{display:flex;gap:12px;align-items:flex-start;padding:15px 0;border-bottom:1px solid var(--line)}
+.nope:last-child{border-bottom:none}
+.nope svg{flex-shrink:0;margin-top:2px}
+.nope b{display:block;font-size:15.5px;margin-bottom:3px}
+.nope span{font-size:14px;color:var(--dim);line-height:1.55}
+
+/* ---------- FAQ ---------- */
+details{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:9px;
+  box-shadow:var(--shadow-sm);overflow:hidden}
+summary{padding:15px 17px;cursor:pointer;font-weight:600;font-size:15.5px;list-style:none;
+  display:flex;align-items:center;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'';width:9px;height:9px;border-right:2px solid var(--faint);
+  border-bottom:2px solid var(--faint);transform:rotate(45deg);flex-shrink:0;transition:transform .2s}
+details[open] summary::after{transform:rotate(-135deg)}
+details .body{padding:0 17px 16px;font-size:14.5px;color:var(--dim);line-height:1.62}
+
+.closing{background:linear-gradient(150deg,rgba(81,183,228,.1),rgba(235,68,143,.07));
+  border:1px solid var(--line-strong);border-radius:var(--r-xl);padding:26px;text-align:center}
+.closing h2{margin-bottom:10px}
+.closing p{color:var(--dim);font-size:15.5px}
+footer{text-align:center;padding:30px 0 0;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--faint);border-top:1px solid var(--line);margin-top:44px}
+
+@media(max-width:420px){
+  .wrap{padding:0 15px 60px}
+  h1{font-size:31px}
+  h2{font-size:23px}
+  .lead{font-size:16.5px}
+  .phone{padding:8px;border-radius:34px}
+  .phone-screen{border-radius:26px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header>
+  <svg class="mark" viewBox="0 0 100 100" aria-label="Angels">
+    <defs>
+      <linearGradient id="mg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#51B7E4"/><stop offset="100%" stop-color="#EB448F"/>
+      </linearGradient>
+    </defs>
+    <ellipse cx="50" cy="26" rx="25" ry="9" fill="none" stroke="url(#mg)" stroke-width="6"/>
+    <path d="M50 42 L72 88 L50 76 L28 88 Z" fill="url(#mg)"/>
+  </svg>
+  <div class="kicker">ADC Angels · JV Boys · Temporada 2026-27</div>
+  <h1>Para las familias</h1>
+  <p class="lead">Este año el equipo usa una herramienta para llevar control de la carga de entrenamiento y del estado físico de los muchachos. Aquí les explico qué es, qué se le pide a su hijo y qué se hace con esa información.</p>
+  <div class="hero-note">Se lee en cinco minutos. Pueden probar la app ustedes mismos más abajo.</div>
+</header>
+
+<section>
+  <div class="eyebrow">Por qué</div>
+  <h2>El problema que queremos evitar</h2>
+  <p>La temporada es densa: torneos casi todos los fines de semana desde agosto, más liga escolar con dos juegos semanales desde septiembre, y el campeonato nacional Buzzer Beater del 4 al 22 de noviembre.</p>
+  <p>En voleibol juvenil, la mayoría de las lesiones no llegan de golpe. Llegan después de varias semanas de acumular más carga de la que el cuerpo alcanza a recuperar, con señales que estaban ahí antes: se duerme mal, la rodilla molesta desde hace días, el cansancio no se va con el fin de semana. El muchacho de 15 años rara vez lo dice, porque no quiere perderse el juego.</p>
+  <p><strong>La app existe para que esas señales no se pierdan.</strong> Que quede escrito, día a día, cómo llega cada jugador, para que el cuerpo técnico pueda ajustar antes de que algo se convierta en lesión.</p>
+</section>
+
+<section>
+  <div class="eyebrow">Qué se le pide a su hijo</div>
+  <h2>Un check-in corto, los días de práctica o juego</h2>
+
+  <div class="grid two">
+    <div class="card">
+      <div class="card-t"><span class="dot" style="background:var(--sky)"></span>Cuánto tarda</div>
+      <p>Seis pantallas, unos <strong>60 segundos</strong>. Casi todo es tocar un botón. Lo pueden cronometrar ustedes mismos en el demo de aquí abajo.</p>
+    </div>
+    <div class="card">
+      <div class="card-t"><span class="dot" style="background:var(--pink)"></span>Cuándo</div>
+      <p>Solo los días que hay práctica o partido. No es diario. Si un día se le pasa, puede registrarlo al día siguiente.</p>
+    </div>
+    <div class="card">
+      <div class="card-t"><span class="dot" style="background:var(--mint)"></span>Cómo entra</div>
+      <p>Con un enlace personal que recibe por WhatsApp. <strong>No tiene que crear cuenta, ni usuario, ni contraseña.</strong> Abre el enlace y ya está adentro.</p>
+    </div>
+    <div class="card">
+      <div class="card-t"><span class="dot" style="background:var(--amber)"></span>Qué se le pregunta</div>
+      <p>Cuánto duró el entrenamiento y qué tan duro estuvo, cómo durmió, cómo se siente el cuerpo, y si le duele algo.</p>
+      <div class="pill-row">
+        <span class="pill">Sueño</span><span class="pill">Fatiga</span><span class="pill">Dolor muscular</span>
+        <span class="pill">Ánimo</span><span class="pill">Estrés</span><span class="pill">Ganas de entrenar</span>
+        <span class="pill">Dolor y zona</span><span class="pill">Esfuerzo del día</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Pruébelo</div>
+  <h2>Así se ve desde el teléfono de su hijo</h2>
+  <p class="lead" style="margin-bottom:26px">Esto es la app de verdad, con un jugador inventado y datos de ejemplo. Nada de lo que toque aquí se guarda en ningún lado. Complete el check-in y verá cuánto le tomó.</p>
+
+  <div class="phone-stage">
+    <div class="timer" id="timer">
+      <span id="timer-txt">Toque <b style="font-size:13.5px;color:var(--pink)">Check-in de hoy</b> para empezar</span>
+    </div>
+
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="phone-screen">
+        <div class="screen-pad" id="screen"></div>
+      </div>
+    </div>
+
+    <div style="font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);text-align:center">
+      Demostración · datos ficticios · no se guarda nada
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Privacidad</div>
+  <h2>Quién ve qué</h2>
+  <p class="lead" style="margin-bottom:22px">Es la pregunta que más me han hecho, y con razón. Esto es exactamente cómo está montado.</p>
+
+  <div class="who">
+    <div class="who-row">
+      <div class="who-h"><span class="dot" style="background:var(--sky)"></span>Su hijo</div>
+      <div class="who-b">
+        <ul>
+          <li><svg width="15" height="15" viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#34e3a5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sus propias respuestas y su propio historial de carga</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#34e3a5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>De sus compañeros, únicamente si ya hicieron el check-in del día o no. Nada más.</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="#ff5d6c" stroke-width="2.6" stroke-linecap="round"/></svg><span><strong>No puede obtener</strong> el sueño, el dolor, las lesiones ni la carga de ningún compañero. No es solo que la pantalla no se lo muestre: con su enlace, el servidor no entrega esa información.</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="who-row">
+      <div class="who-h"><span class="dot" style="background:var(--pink)"></span>El entrenador</div>
+      <div class="who-b">
+        <ul>
+          <li><svg width="15" height="15" viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#34e3a5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Ve el equipo completo. Es la única persona con cuenta y contraseña en el sistema.</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#34e3a5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Los mensajes que su hijo escriba en "mensaje al coach" los lee solo él</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="who-row">
+      <div class="who-h"><span class="dot" style="background:var(--mint)"></span>Ustedes, las familias</div>
+      <div class="who-b">
+        <ul>
+          <li><svg width="15" height="15" viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#34e3a5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Pueden pedirme en cualquier momento todo lo registrado de su hijo, y se lo entrego</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#34e3a5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Pueden pedir que se borre, y se borra</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#34e3a5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Si prefieren que su hijo no participe, no participa. No afecta su lugar en el equipo.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-t"><span class="dot" style="background:var(--amber)"></span>Sobre el enlace personal</div>
+    <p>El enlace de su hijo lleva un código largo y aleatorio, imposible de adivinar. Ese código es lo que el sistema usa para saber quién es y para entregarle solo lo suyo. Conviene tratarlo como una contraseña: que no lo comparta ni lo publique.</p>
+    <p>Si en algún momento creen que se filtró, o simplemente quieren cambiarlo, díganmelo. Lo cambio en un minuto y el enlace anterior deja de funcionar.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-t"><span class="dot" style="background:var(--sky)"></span>Qué se guarda y dónde</div>
+    <p>Solo lo que su hijo contesta en el check-in, más su nombre, número y posición. No se pide dirección, ni documentos, ni datos médicos más allá de "me duele el hombro". La información se guarda en un servicio de base de datos en la nube y se usa únicamente para el manejo deportivo del equipo. No se comparte con terceros ni se usa para nada comercial.</p>
+    <p>El acceso está restringido del lado del servidor, no solo dentro de la app: sin el enlace personal de un jugador, o sin la cuenta del entrenador, no se puede recuperar ningún dato de bienestar.</p>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Límites</div>
+  <h2>Lo que la app no hace</h2>
+  <p class="lead" style="margin-bottom:20px">Me parece tan importante decir esto como lo otro.</p>
+
+  <div class="nope">
+    <svg width="19" height="19" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#ff5d6c" stroke-width="2"/><path d="M6 6l8 8" stroke="#ff5d6c" stroke-width="2" stroke-linecap="round"/></svg>
+    <div><b>No diagnostica nada</b><span>No dice si hay lesión ni de qué tipo. Si su hijo reporta dolor varios días, lo que hace la app es mostrármelo para que yo lo hable con él y, si hace falta, ustedes lo lleven a evaluar. La app no sustituye a un médico ni a un fisioterapeuta.</span></div>
+  </div>
+  <div class="nope">
+    <svg width="19" height="19" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#ff5d6c" stroke-width="2"/><path d="M6 6l8 8" stroke="#ff5d6c" stroke-width="2" stroke-linecap="round"/></svg>
+    <div><b>No decide entrenamientos ni alineaciones</b><span>No genera recomendaciones automáticas. Registra y presenta información; las decisiones de carga y de quién juega las sigue tomando el cuerpo técnico, como siempre.</span></div>
+  </div>
+  <div class="nope">
+    <svg width="19" height="19" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#ff5d6c" stroke-width="2"/><path d="M6 6l8 8" stroke="#ff5d6c" stroke-width="2" stroke-linecap="round"/></svg>
+    <div><b>No evalúa rendimiento</b><span>No mide qué tan bueno es su hijo jugando. No hay puntuación de habilidad ni ranking de talento. Mide cómo llega su cuerpo, que es otra cosa.</span></div>
+  </div>
+  <div class="nope">
+    <svg width="19" height="19" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#ff5d6c" stroke-width="2"/><path d="M6 6l8 8" stroke="#ff5d6c" stroke-width="2" stroke-linecap="round"/></svg>
+    <div><b>No los vigila</b><span>No usa GPS, ni cámara, ni micrófono, ni lee nada del teléfono. Solo guarda lo que su hijo escribe a propósito en el formulario.</span></div>
+  </div>
+  <div class="nope">
+    <svg width="19" height="19" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#ff5d6c" stroke-width="2"/><path d="M6 6l8 8" stroke="#ff5d6c" stroke-width="2" stroke-linecap="round"/></svg>
+    <div><b>No castiga la honestidad</b><span>Reportar dolor o cansancio no le quita minutos de juego por sí solo. Al contrario: el muchacho que avisa a tiempo es el que llega entero a noviembre. Si el sistema se convierte en algo que los muchachos sienten que les cuesta admitir, deja de servir.</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Dudas frecuentes</div>
+  <h2>Preguntas</h2>
+
+  <details>
+    <summary>¿Mi hijo necesita un teléfono propio?</summary>
+    <div class="body">No necesariamente. El enlace se puede abrir desde cualquier teléfono o computadora, incluida la de ustedes. Lo importante es que conteste él, porque las respuestas son sobre cómo se siente.</div>
+  </details>
+  <details>
+    <summary>¿Y si no tiene datos o hay mala señal en la cancha?</summary>
+    <div class="body">La app está preparada para eso: si falla la conexión al enviar, no se pierde lo contestado. Se queda en pantalla y se puede reintentar cuando vuelva la señal. También puede llenarlo más tarde ese mismo día, o al día siguiente marcando la fecha de ayer.</div>
+  </details>
+  <details>
+    <summary>¿Qué pasa si contesta cualquier cosa por salir del paso?</summary>
+    <div class="body">Pasa, y es normal. Por eso el formulario es corto: mientras menos fricción, más honesto tiende a ser. Además, los patrones se notan con el tiempo — un jugador que siempre contesta lo mismo destaca, y eso lo hablo con él. La herramienta funciona con la conversación al lado, no en lugar de ella.</div>
+  </details>
+  <details>
+    <summary>¿Puedo ver lo que mi hijo escribe en "mensaje al coach"?</summary>
+    <div class="body">Sí, si lo piden. Ese campo existe para que puedan decirme cosas del día — que llegaron tarde, que algo les molestó en el entrenamiento. No es un espacio confidencial frente a ustedes: es un canal directo conmigo. Si su hijo me escribe algo que me preocupe por su bienestar, se lo comunico a ustedes.</div>
+  </details>
+  <details>
+    <summary>¿Y si mi hijo comparte su enlace o lo pierde?</summary>
+    <div class="body">No pasa nada grave: el enlace solo da acceso a lo de él, no a lo del equipo. Aun así, avísenme y le genero uno nuevo; el anterior deja de servir en el momento.</div>
+  </details>
+  <details>
+    <summary>¿Cuánto tiempo se guarda la información?</summary>
+    <div class="body">Durante la temporada, para poder ver la evolución. Al terminar, si ustedes quieren que se borre la de su hijo, se borra. Si no dicen nada, se conserva como historial deportivo del equipo.</div>
+  </details>
+  <details>
+    <summary>¿Esto tiene costo para las familias?</summary>
+    <div class="body">No. Ninguno.</div>
+  </details>
+  <details>
+    <summary>¿Puedo decir que no?</summary>
+    <div class="body">Sí, sin problema y sin consecuencias. Si prefieren que su hijo no participe, simplemente no le mando el enlace y seguimos como hasta ahora. No cambia su lugar en el equipo, ni sus minutos, ni nada.</div>
+  </details>
+</section>
+
+<section style="border-top:none;padding-top:10px">
+  <div class="closing">
+    <h2>Cualquier duda, hablemos</h2>
+    <p>Prefiero contestar diez preguntas ahora que descubrir en octubre que alguien no estaba cómodo con esto. Escríbanme por WhatsApp o búsquenme en la práctica.</p>
+  </div>
+  <footer>Angels Performance OS · ADC Angels JV Boys</footer>
+</section>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ---------- datos del jugador de ejemplo ----------
+  var DEMO = { name:'Mateo', number:7, pos:'OH', halo:78, streak:5 };
+  var DOW = ['lun','mar','mié','jue','vie','sáb','dom'];
+  var WEEK = [1,0,1,0,1,0,0]; // 1 = registrado
+
+  var A = {};            // respuestas
+  var step = 0;
+  var t0 = null, tick = null, elapsed = 0;
+  var screen = document.getElementById('screen');
+
+  function el(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function haloColor(h){
+    if(h==null) return '#9BA8C4';
+    if(h>=75) return '#34e3a5';
+    if(h>=60) return '#51B7E4';
+    if(h>=45) return '#FF8C00';
+    return '#ff5d6c';
+  }
+  function haloWord(h){
+    if(h==null) return 'Sin datos';
+    if(h>=75) return 'Disponible';
+    if(h>=60) return 'Aceptable';
+    if(h>=45) return 'Precaución';
+    return 'Cuidado';
+  }
+  function ring(h, size, sw){
+    var r=(size-sw)/2, c=size/2, circ=2*Math.PI*r, col=haloColor(h);
+    var pct = h!=null ? Math.max(0,Math.min(100,h))/100 : 0;
+    return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">'+
+      '<circle cx="'+c+'" cy="'+c+'" r="'+r+'" fill="none" stroke="rgba(27,42,107,0.07)" stroke-width="'+sw+'"/>'+
+      '<circle cx="'+c+'" cy="'+c+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="'+sw+'" '+
+      'stroke-linecap="round" stroke-dasharray="'+circ.toFixed(1)+'" stroke-dashoffset="'+(circ*(1-pct)).toFixed(1)+'" '+
+      'style="transition:stroke-dashoffset .9s cubic-bezier(.2,.7,.3,1)"/></svg>';
+  }
+  function fechaLarga(){
+    var d = new Date();
+    var dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+    var mes = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    return dias[d.getDay()]+' '+d.getDate()+' de '+mes[d.getMonth()];
+  }
+
+  // ---------- cronómetro ----------
+  function startTimer(){
+    if(t0) return;
+    t0 = Date.now();
+    tick = setInterval(function(){
+      elapsed = Math.round((Date.now()-t0)/1000);
+      var tt = el('timer-txt');
+      if(tt) tt.innerHTML = 'Llevas <b>'+elapsed+'s</b> contestando';
+    }, 500);
+  }
+  function stopTimer(){
+    if(tick){ clearInterval(tick); tick = null; }
+    if(t0){ elapsed = Math.round((Date.now()-t0)/1000); t0 = null; }
+    var box = el('timer'), tt = el('timer-txt');
+    if(box) box.className = 'timer done';
+    if(tt) tt.innerHTML = 'Le tomó <b>'+elapsed+' segundos</b>';
+  }
+  function resetTimer(){
+    if(tick){ clearInterval(tick); tick = null; }
+    t0 = null; elapsed = 0;
+    var box = el('timer'), tt = el('timer-txt');
+    if(box) box.className = 'timer';
+    if(tt) tt.innerHTML = 'Toque <b style="font-size:13.5px;color:var(--pink)">Check-in de hoy</b> para empezar';
+  }
+
+  // ---------- pantalla de inicio ----------
+  function viewHome(){
+    var done = !!A.guardado;
+    var h = done ? A.halo : DEMO.halo;
+    var col = haloColor(h);
+    var msg = done
+      ? 'Tu check-in de hoy ya está registrado. El staff lo tiene en el tablero.'
+      : 'Esto es lo que dice tu último check-in, del jueves 30 de julio.';
+
+    var wk = '';
+    for(var i=0;i<7;i++){
+      var on = WEEK[i] || (i===6 && done);
+      var now = (i===6) ? ' now' : '';
+      wk += '<div><i class="'+(on?'on':'')+now+'"></i><span>'+DOW[i]+'</span></div>';
+    }
+
+    var cta = done
+      ? '<div style="margin-top:13px;border-radius:21px;padding:15px 17px;background:var(--mint-soft);'+
+        'border:1px solid rgba(52,227,165,.34);display:flex;align-items:center;gap:11px">'+
+        '<svg width="19" height="19" viewBox="0 0 20 20" style="flex-shrink:0"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#34e3a5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+        '<div style="flex:1;min-width:0"><b style="font-size:13.5px;display:block">Check-in de hoy enviado</b>'+
+        '<span style="font-family:var(--mono);font-size:9.5px;color:var(--dim)">Racha '+(DEMO.streak+1)+' · el staff ya lo vio</span></div></div>'+
+        '<button class="btn-soft" onclick="DEMOAPP.restart()" style="margin-top:11px">Probar otra vez</button>'
+      : '<button class="cta" onclick="DEMOAPP.start()">'+
+        '<span style="flex:1;min-width:0"><b>Check-in de hoy</b><i>6 pasos · unos 60 segundos</i></span>'+
+        '<span class="cta-arrow"><svg width="12" height="13" viewBox="0 0 13 14"><path d="M2 2l7 5-7 5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>';
+
+    screen.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px">'+
+        '<div style="flex:1;min-width:0">'+
+          '<div class="p-hello">Hola, '+DEMO.name+'</div>'+
+          '<div class="p-date">'+fechaLarga()+'</div>'+
+        '</div>'+
+        '<div class="streak"><b>'+(done?DEMO.streak+1:DEMO.streak)+'</b><span>racha</span></div>'+
+      '</div>'+
+
+      '<div class="halo-card">'+
+        '<div class="halo-eyebrow">Tu halo de hoy</div>'+
+        '<div class="halo-body">'+
+          '<div class="ring">'+ring(h,104,9)+
+            '<div class="ring-val"><b style="color:'+col+'">'+h+'</b><span>/ 100</span></div></div>'+
+          '<div style="min-width:0;flex:1">'+
+            '<div class="halo-word" style="color:'+col+'">'+haloWord(h)+'</div>'+
+            '<div class="halo-msg">'+msg+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div class="chips"><span class="chip">#'+DEMO.number+' · '+DEMO.pos+'</span>'+
+        '<span class="chip">'+(done?'Check-in de hoy listo':'Check-in pendiente')+'</span></div>'+
+      '</div>'+
+
+      cta +
+
+      '<div class="wk-head"><span>Tu semana</span><span>'+(done?'4 de 4 días':'3 de 4 días')+'</span></div>'+
+      '<div class="wk">'+wk+'</div>'+
+
+      '<div class="coach"><div class="t">Del staff, para ti</div>'+
+      '<div class="b">Buen trabajo en el bloqueo el martes. Duerme temprano hoy que mañana hay doble turno.</div></div>';
+  }
+
+  // ---------- definición de los pasos (los mismos de la app real) ----------
+  function opt(key, val, label){
+    var sel = (A[key]===val) ? ' sel' : '';
+    var arg = (typeof val === 'number') ? val : '\''+val+'\'';
+    return '<button class="opt'+sel+'" onclick="DEMOAPP.pick(\''+key+'\','+arg+')">'+label+'</button>';
+  }
+  function wellness(key, label, help, labels){
+    var b = '';
+    for(var i=0;i<labels.length;i++) b += opt(key, i+1, labels[i]);
+    return '<label class="f-label">'+label+'</label><div class="opts">'+b+'</div>'+
+           '<div class="f-help">'+help+'</div>';
+  }
+  function rpeField(){
+    var b = '';
+    for(var i=1;i<=10;i++){
+      var cls = A.rpe===i ? (i>=8?' class="hi"':i>=5?' class="mid"':' class="lo"') : '';
+      b += '<button'+cls+' onclick="DEMOAPP.pick(\'rpe\','+i+')">'+i+'</button>';
+    }
+    return '<label class="f-label">Esfuerzo percibido (RPE)</label><div class="rpe">'+b+'</div>'+
+           '<div class="f-help">1 = muy fácil, 10 = esfuerzo máximo</div>';
+  }
+  function zonesField(){
+    var z = ['Hombro','Codo','Muñeca','Espalda','Cadera','Rodilla','Tobillo','Pie'];
+    var sel = A.zonas || [];
+    var b = z.map(function(n){
+      return '<button class="zone'+(sel.indexOf(n)>=0?' sel':'')+'" onclick="DEMOAPP.zone(\''+n+'\')">'+n+'</button>';
+    }).join('');
+    return '<label class="f-label">Zonas de dolor (opcional)</label><div class="zones">'+b+'</div>';
+  }
+
+  function steps(){
+    return [
+      { q:'¿Qué día registras?', s:'Casi siempre es hoy. Si se te pasó ayer, también puedes.',
+        html:function(){
+          return '<label class="f-label">Fecha</label>'+
+            '<div class="opts three">'+opt('dia','hoy','Hoy')+opt('dia','ayer','Ayer')+opt('dia','otra','Otra')+'</div>'+
+            '<label class="f-label">Duración (minutos)</label>'+
+            '<input class="f-input" type="number" value="80" inputmode="numeric">'+
+            '<label class="f-label">Tipo de sesión</label>'+
+            '<div class="opts">'+opt('sesion','tecnica','Técnica')+opt('sesion','fisico','Físico')+
+            opt('sesion','scrimmage','Scrimmage')+opt('sesion','partido','Partido')+'</div>'+
+            '<div class="f-help">Sin este dato la carga no es comparable entre semanas</div>';
+        }, req:['dia','sesion'] },
+
+      { q:'¿Qué tan duro estuvo?', s:'Del 1 (muy fácil) al 10 (esfuerzo máximo).',
+        html:rpeField, req:['rpe'] },
+
+      { q:'¿Cómo llegas hoy?', s:'Ánimo y sueño de anoche.',
+        html:function(){
+          return wellness('animo','Ánimo hoy','Cómo te sientes emocionalmente',
+                   ['1 Muy mal','2 Mal','3 Normal','4 Bien','5 Muy bien'])+
+                 wellness('sueno','Calidad de sueño','Cómo dormiste la noche anterior',
+                   ['1 Muy mal','2 Mal','3 Normal','4 Bien','5 Excelente']);
+        }, req:['animo','sueno'] },
+
+      { q:'¿Cómo está el cuerpo?', s:'Músculos, cabeza y energía.',
+        html:function(){
+          return wellness('musculos','Dolor muscular','Dolor general de músculos',
+                   ['1 Muy fuerte','2 Fuerte','3 Moderado','4 Leve','5 Sin dolor'])+
+                 wellness('estres','Estrés','Qué tan estresado te sientes',
+                   ['1 Muy alto','2 Alto','3 Normal','4 Bajo','5 Muy bajo'])+
+                 wellness('fatiga','Fatiga general','Cómo se siente tu cuerpo hoy',
+                   ['1 Muy cansado','2 Bastante','3 Normal','4 Bien','5 Muy fresco'])+
+                 wellness('ganas','Ganas de entrenar','Qué tantas ganas tienes ahora',
+                   ['1 Sin ganas','2 Pocas','3 Normal','4 Con ganas','5 Súper motivado']);
+        }, req:['musculos','estres','fatiga','ganas'] },
+
+      { q:'¿Te duele algo?', s:'Sé honesto: esto es lo que evita lesiones.',
+        html:function(){
+          return '<label class="f-label">Dolor preocupante</label>'+
+            '<div class="opts four">'+opt('dolor',0,'0 Ninguno')+opt('dolor',1,'1 Leve')+
+            opt('dolor',2,'2 Moderado')+opt('dolor',3,'3 Fuerte')+'</div>'+ zonesField();
+        }, req:[] },
+
+      { q:'¿Algo más?', s:'Opcional. El coach lo lee.',
+        html:function(){
+          return '<label class="f-label">Notas libres (opcional)</label>'+
+            '<textarea class="f-input" rows="2" placeholder="Ej: rodilla cargada, cansancio de torneo…"></textarea>'+
+            '<label class="f-label">Mensaje al coach (opcional)</label>'+
+            '<textarea class="f-input" rows="3" placeholder="¿Algo que quieras decirle al coach?"></textarea>';
+        }, req:[] }
+    ];
+  }
+
+  function viewStep(){
+    var S = steps(), cur = S[step];
+    var last = (step === S.length-1);
+    screen.innerHTML =
+      '<div class="wz-head">'+
+        '<button class="wz-back" onclick="DEMOAPP.prev()"'+(step===0?' disabled':'')+'>'+
+          '<svg width="8" height="13" viewBox="0 0 9 14"><path d="M7 1L2 7l5 6" fill="none" stroke="#64748B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'+
+        '<div class="wz-track"><i style="width:'+((step+1)/S.length*100)+'%"></i></div>'+
+        '<span class="wz-count">'+(step+1)+'/'+S.length+'</span>'+
+      '</div>'+
+      '<div class="wz-q">'+cur.q+'</div>'+
+      '<div class="wz-sub">'+cur.s+'</div>'+
+      '<div>'+cur.html()+'</div>'+
+      '<div class="wz-nav">'+
+        (last ? '<button class="btn-main" onclick="DEMOAPP.save()">Guardar check-in</button>'
+              : '<button class="btn-main" onclick="DEMOAPP.next()">Siguiente</button>')+
+      '</div>';
+  }
+
+  function complete(i){
+    var cur = steps()[i];
+    for(var k=0;k<cur.req.length;k++){
+      if(A[cur.req[k]] === undefined) return false;
+    }
+    return true;
+  }
+
+  function viewDone(){
+    var h = A.halo;
+    var col = haloColor(h);
+    screen.innerHTML =
+      '<div class="done">'+
+        '<svg class="done-mark" viewBox="0 0 100 100">'+
+          '<defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1">'+
+          '<stop offset="0%" stop-color="#51B7E4"/><stop offset="100%" stop-color="#EB448F"/></linearGradient></defs>'+
+          '<ellipse cx="50" cy="26" rx="25" ry="9" fill="none" stroke="url(#dg)" stroke-width="6"/>'+
+          '<path d="M50 42 L72 88 L50 76 L28 88 Z" fill="url(#dg)"/></svg>'+
+        '<div class="done-t">Listo, '+DEMO.name+'</div>'+
+        '<div class="done-s">Tu carga de hoy quedó registrada. El staff ya la tiene en el tablero.</div>'+
+        '<div class="done-cards">'+
+          '<div class="done-c" style="background:rgba(235,68,143,.09);border:1px solid rgba(235,68,143,.28)">'+
+            '<div class="l" style="color:var(--pink)">Racha</div><b style="color:var(--pink)">'+(DEMO.streak+1)+'</b></div>'+
+          '<div class="done-c" style="background:var(--sky-soft);border:1px solid var(--line-strong)">'+
+            '<div class="l" style="color:var(--sky)">Carga de hoy</div><b style="color:var(--sky)">'+A.carga+'</b></div>'+
+          '<div class="done-c" style="background:'+col+'1a;border:1px solid '+col+'4d">'+
+            '<div class="l" style="color:'+col+'">Halo</div><b style="color:'+col+'">'+h+'</b></div>'+
+        '</div>'+
+        '<div class="done-next"><div class="l">Qué viene</div>'+
+          '<p>Mañana hay torneo: Colegio San José (Gurabo).</p></div>'+
+        '<button class="btn-main" style="margin-top:18px" onclick="DEMOAPP.home()">Volver al inicio</button>'+
+        '<button class="btn-soft" onclick="DEMOAPP.restart()">Probarlo otra vez</button>'+
+      '</div>';
+  }
+
+  // ---------- API pública del demo ----------
+  window.DEMOAPP = {
+    start: function(){
+      A = {}; step = 0;
+      resetTimer(); startTimer();
+      viewStep();
+    },
+    restart: function(){ A = {}; step = 0; resetTimer(); viewHome(); },
+    home: function(){ viewHome(); },
+    prev: function(){ if(step>0){ step--; viewStep(); } },
+    next: function(){
+      if(!complete(step)){ shake(); return; }
+      var S = steps();
+      if(step < S.length-1){ step++; viewStep(); }
+    },
+    pick: function(key, val){
+      A[key] = val;
+      viewStep();
+      // Auto-avance como en la app real, salvo en el paso de dolor:
+      // ahí hay que dejar tiempo para marcar la zona.
+      if(key === 'dolor') return;
+      var S = steps();
+      if(step < S.length-1 && complete(step)){
+        setTimeout(function(){
+          if(complete(step) && step < S.length-1){ step++; viewStep(); }
+        }, 300);
+      }
+    },
+    zone: function(n){
+      if(!A.zonas) A.zonas = [];
+      var i = A.zonas.indexOf(n);
+      if(i>=0) A.zonas.splice(i,1); else A.zonas.push(n);
+      viewStep();
+    },
+    save: function(){
+      stopTimer();
+      // Mismo cálculo que la app: sueño 25, fatiga 25, ánimo 15, estrés 15,
+      // dolor muscular 10, ganas 10, menos 8 por cada punto de dolor.
+      function n(v){ return ((v||3)-1)/4*100; }
+      var base = n(A.sueno)*.25 + n(A.fatiga)*.25 + n(A.animo)*.15 +
+                 n(A.estres)*.15 + n(A.musculos)*.10 + n(A.ganas)*.10;
+      var halo = Math.round(base - (A.dolor||0)*8);
+      A.halo = Math.max(0, Math.min(100, halo));
+      A.carga = ((A.rpe||0) * 80).toLocaleString();
+      A.guardado = true;
+      viewDone();
+    }
+  };
+
+  function shake(){
+    screen.style.transform = 'translateX(-4px)';
+    setTimeout(function(){ screen.style.transform = 'translateX(4px)'; }, 70);
+    setTimeout(function(){ screen.style.transform = ''; }, 140);
+  }
+
+  viewHome();
+})();
+</script>
+</body>
+</html>
