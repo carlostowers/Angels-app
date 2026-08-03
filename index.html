@@ -18,6 +18,10 @@
 // Modo jugador: ocultar la UI del staff antes del primer pintado (sin flash).
 (function() {
   var q = new URLSearchParams(window.location.search);
+  if (q.get('t')) {
+    var ml = document.querySelector('link[rel="manifest"]');
+    if (ml && ml.parentNode) ml.parentNode.removeChild(ml);
+  }
   if (q.get('t') || q.get('player')) {
     var style = document.createElement('style');
     style.textContent = '#main-nav{display:none!important}#mobile-menu{display:none!important}' +
@@ -1630,6 +1634,36 @@ function enterPlayerShell(){
   var mm = document.getElementById('mobile-menu');
   if(mm) mm.style.display = 'none';
 }
+// Se llego a la app instalada sin enlace personal. Casi siempre es un jugador
+// cuyo icono se guardo antes de esta correccion.
+function showNoTokenScreen(){
+  enterPlayerShell();
+  var bar = document.getElementById('pbar');
+  if(bar) bar.style.display = 'none';
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('page-player').classList.add('active');
+  document.getElementById('player-topbar').innerHTML = '';
+  document.getElementById('player-content').innerHTML =
+    '<div class="empty" style="padding-top:54px">'+
+      '<div class="ic"></div>'+
+      '<b>Abre tu enlace personal</b>'+
+      '<p>Este icono se guardó sin tu enlace. Bórralo de la pantalla de inicio, '+
+      'abre el enlace que te dio el coach o escanea tu código QR, y vuelve a añadirlo desde ahí.</p>'+
+      '<button class="btn-ghost" style="margin-top:20px" onclick="staffFromShell()">Soy el entrenador</button>'+
+    '</div>';
+}
+function staffFromShell(){
+  var bar = document.getElementById('pbar');
+  if(bar) bar.style.display = '';
+  document.body.classList.remove('player-shell');
+  document.body.classList.add('staff-shell');
+  var nav = document.getElementById('main-nav');
+  if(nav) nav.style.display = '';
+  document.getElementById('player-content').innerHTML = '';
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('page-dashboard').classList.add('active');
+  showLoginModal(true);
+}
 function showInvalidLink(legacy){
   enterPlayerShell();
   var bar = document.getElementById('pbar');
@@ -1660,10 +1694,13 @@ async function init() {
       _staffSession = res.data.session;
       setLogoutBtn(true);
       await startApp();
-    } else {
-      showLoginModal(true);
+      return;
     }
-  } catch(e) { showLoginModal(true); }
+  } catch(e) {}
+  // Sin sesion y abierto desde un icono instalado: es un jugador cuyo icono
+  // no lleva el enlace. El login del staff seria la respuesta equivocada.
+  if (isStandalone()) { showNoTokenScreen(); return; }
+  showLoginModal(true);
 }
 async function startApp() {
   showLoading(true);
@@ -4082,6 +4119,17 @@ window.addEventListener('appinstalled', function(){
 });
 function installBannerHTML(){
   if(isStandalone() || _installDismissed) return '';
+  if(PLAYER_TOKEN){
+    // Nada de prompt del navegador aqui: el icono tiene que guardarse desde
+    // esta direccion para que conserve el enlace personal.
+    var pasos = isIOS()
+      ? 'toca <b>Compartir</b> y luego <b>Añadir a pantalla de inicio</b>'
+      : 'abre el menú del navegador y elige <b>Añadir a pantalla de inicio</b>';
+    return '<div class="install-banner"><div class="ib-icon"></div>'+
+      '<div class="ib-txt"><b>Guárdala en tu pantalla de inicio:</b> '+pasos+'. '+
+      'Hazlo desde aquí, con tu enlace abierto, para que el icono te reconozca.</div>'+
+      '<button class="ib-close" onclick="dismissInstall()" title="Cerrar">&times;</button></div>';
+  }
   if(deferredInstallPrompt){
     return '<div class="install-banner"><div class="ib-icon"></div>'+
       '<div class="ib-txt"><b>Instala Angels Performance OS</b> en tu pantalla de inicio para abrirlo de un toque.</div>'+
