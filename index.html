@@ -407,9 +407,10 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opac
 body.player-shell .pbar{display:flex;}
 body.player-shell{padding-bottom:calc(82px + var(--sab));}
 body.player-shell .page{padding-top:calc(18px + var(--sat));}
-.pbar button{flex:1;background:transparent;border:1px solid transparent;border-radius:14px;padding:10px 4px;
-  font-family:var(--disp);font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--dim);cursor:pointer;}
+.pbar button{flex:1;background:transparent;border:1px solid transparent;border-radius:14px;padding:10px 2px;
+  font-family:var(--disp);font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--dim);cursor:pointer;white-space:nowrap;min-width:0;}
+@media(max-width:360px){ .pbar button{font-size:11px;letter-spacing:.02em;} }
 .pbar button.on{background:var(--bg1);border-color:var(--line-strong);color:var(--text);box-shadow:var(--shadow-sm);}
 
 /* ===== STAFF: ACCIONES DE HOY ===== */
@@ -852,7 +853,8 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
 <div class="pbar" id="pbar">
   <button id="pb-hoy" class="on" onclick="setPlayerView('hoy')">Hoy</button>
   <button id="pb-carga" onclick="setPlayerView('carga')">Mi carga</button>
-  <button id="pb-equipo" onclick="setPlayerView('equipo')">Mi equipo</button>
+  <button id="pb-torneos" onclick="setPlayerView('torneos')">Torneos</button>
+  <button id="pb-equipo" onclick="setPlayerView('equipo')">Equipo</button>
 </div>
 
 <footer>
@@ -874,6 +876,19 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
       <button class="btn-primary" onclick="saveCoachMessage()">Guardar mensaje</button>
       <button class="btn-ghost" onclick="clearCoachMessage()">Borrar</button>
       <button class="btn-ghost" onclick="closeMsgModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- YA HAY REGISTRO DE ESE DIA -->
+<div class="modal-overlay" id="dup-modal" style="display:none" onclick="closeDupModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:420px">
+    <div class="modal-title">Ya registraste este día</div>
+    <div class="modal-subtitle" id="dup-detail"></div>
+    <div class="modal-actions" style="flex-direction:column;gap:9px">
+      <button class="btn-primary" style="width:100%" onclick="dupChoose('replace')">Reemplazar el anterior</button>
+      <button class="btn-secondary" style="width:100%" onclick="dupChoose('add')">Fue otra sesión, añadir</button>
+      <button class="btn-ghost" style="width:100%" onclick="closeDupModal()">Cancelar</button>
     </div>
   </div>
 </div>
@@ -1411,6 +1426,14 @@ function isAlert(e) {
   if((e.painConcern||0)>=2) r.push('Dolor preocupante');
   return r.length?r:null;
 }
+// Marca las entradas rellenadas en un dia distinto al que registran. Ayuda a
+// distinguir el habito real del relleno a posteriori.
+function lateBadge(e){
+  if(!e || !e.createdAt) return '';
+  var d = String(e.createdAt).slice(0,10);
+  if(!d || d === e.date) return '';
+  return '<span class="badge b-warn" style="margin-left:6px" title="Registrado el '+d+'">TARDE</span>';
+}
 function hasPainFlag(pid){
   var e = playerEntries(pid)[0];
   return !!(e && (e.painConcern||0) >= 2);
@@ -1838,7 +1861,11 @@ function painConcernField(label) {
     '<div class="form-block" style="margin-top:.9rem;margin-bottom:0">'+
       '<label class="form-label">Zonas de dolor (opcional)</label>'+
       '<div class="zones-grid" id="pain-zones-grid">'+
-        ['Hombro','Codo','Muñeca','Espalda','Cadera','Rodilla','Tobillo','Pie'].map(function(z){
+        // De la cabeza a los pies, para que se recorra rapido con la vista.
+        // Muslo, pantorrilla, ingle y talon son las de mas carga en voleibol
+        // y antes no tenian donde marcarse.
+        ['Hombro','Codo','Muñeca','Espalda','Cadera','Ingle',
+         'Muslo','Rodilla','Pantorrilla','Tobillo','Talón','Pie'].map(function(z){
           return '<button type="button" class="btn-zone" onclick="toggleZone(this,\''+z+'\')">'+z+'</button>';
         }).join('')+
       '</div>'+
@@ -2142,6 +2169,34 @@ function initCheckinForm(pid) {
    de red no borra lo que el jugador escribio: el formulario se queda intacto
    y se ofrece reintentar. */
 var _pendingEntry = null, _pendingPid = null, _saving = false;
+var _pendingReplace = false;
+var _dupChoice = null, _dupPid = null, _dupKeepId = null;
+
+// Un check-in repetido del mismo dia duplica la carga de ese dia en silencio.
+// Puede ser un error (creyo que no se guardo) o legitimo (practica de manana
+// y partido de tarde), asi que se pregunta en vez de decidir por el jugador.
+function existingEntryOn(pid, fecha){
+  return DB.entries.filter(function(e){ return e.playerId===pid && e.date===fecha; })[0] || null;
+}
+function openDupModal(pid, keepId, dup){
+  _dupPid = pid; _dupKeepId = keepId || null;
+  var det = 'Ya hay un registro del ' + formatDateLong(dup.date).toLowerCase() + ': ' +
+    (dup.sessionLabel || 'sesión') + ', RPE ' + (dup.rpe||'—') +
+    (dup.duration ? ', ' + dup.duration + ' minutos' : '') + '.';
+  document.getElementById('dup-detail').textContent = det;
+  document.getElementById('dup-modal').style.display = 'flex';
+}
+function closeDupModal(ev){
+  if(ev && ev.target !== ev.currentTarget) return;
+  document.getElementById('dup-modal').style.display = 'none';
+  _dupChoice = null; _dupPid = null; _dupKeepId = null;
+}
+function dupChoose(kind){
+  var pid = _dupPid, keepId = _dupKeepId;
+  document.getElementById('dup-modal').style.display = 'none';
+  _dupChoice = kind;
+  saveEntry(pid, keepId);
+}
 
 function collectEntry(pid){
   var val = function(id){ var el=document.getElementById(id); return el ? el.value : ''; };
@@ -2186,6 +2241,12 @@ async function saveEntry(pid, keepId) {
   const sleepVal=parseInt(val('f-sleepQuality')||'0');
   if(!moodVal||!sleepVal){ toast('Completa al menos Ánimo y Sueño',true); return; }
 
+  // Ya hay algo registrado en esa fecha: preguntar antes de duplicar.
+  var dup = existingEntryOn(pid, dateVal);
+  if(dup && !_dupChoice){ openDupModal(pid, keepId, dup); return; }
+  _pendingReplace = (_dupChoice === 'replace');
+  _dupChoice = null; _dupPid = null; _dupKeepId = null;
+
   _pendingEntry = collectEntry(pid);
   // Al reintentar se conserva el id original: si el primer intento si llego a
   // escribir y solo se perdio la respuesta, no se crea una entrada duplicada.
@@ -2216,9 +2277,20 @@ async function attemptSave(){
       }catch(e){}
     }
     try{
-      const res = PLAYER_TOKEN
-        ? await sb.rpc('player_submit_checkin', { p_token: PLAYER_TOKEN, p_entry: _pendingEntry })
-        : await sb.from('entries').insert(_pendingEntry);
+      var res;
+      if(PLAYER_TOKEN){
+        res = await sb.rpc('player_submit_checkin', {
+          p_token: PLAYER_TOKEN, p_entry: _pendingEntry, p_replace: _pendingReplace
+        });
+      } else {
+        // El staff escribe directo: si toca reemplazar, borra lo de ese dia
+        // de ese jugador antes de insertar.
+        if(_pendingReplace){
+          await sb.from('entries').delete()
+            .eq('player_id', _pendingEntry.player_id).eq('date', _pendingEntry.date);
+        }
+        res = await sb.from('entries').insert(_pendingEntry);
+      }
       if(res.error) throw new Error(res.error.message);
       lastError = null;
       break;
@@ -2242,7 +2314,7 @@ async function attemptSave(){
   }
 
   var saved = _pendingEntry, pid = _pendingPid;
-  _pendingEntry = null;
+  _pendingEntry = null; _pendingReplace = false;
   await refreshData();
   var m = getMetrics(pid);
   lastSavedSummary = {
@@ -2306,7 +2378,7 @@ function leaveCheckin(v){
 function setPlayerView(v, force){
   if(!force && !leaveCheckin(v)) return;
   playerView = v;
-  ['hoy','carga','equipo'].forEach(function(k){
+  ['hoy','carga','torneos','equipo'].forEach(function(k){
     var b=document.getElementById('pb-'+k);
     if(b) b.classList.toggle('on', k===v);
   });
@@ -2331,6 +2403,7 @@ function renderPlayerApp(pid){
   if(playerView==='checkin')      slot.innerHTML = playerCheckinView(p);
   else if(playerView==='done')    slot.innerHTML = playerDoneView(p);
   else if(playerView==='carga')   slot.innerHTML = playerCargaView(p);
+  else if(playerView==='torneos') slot.innerHTML = playerTorneosView(p);
   else if(playerView==='equipo')  slot.innerHTML = playerEquipoView(p);
   else                            slot.innerHTML = playerHomeView(p);
 
@@ -2572,6 +2645,69 @@ function baselineRow(label, recent, base, higherIsBetter){
       '<b style="color:'+col+'">'+(delta>0?'+':'')+delta+'%</b></div>'+
     '<div class="baseline-track"><i style="width:'+pct+'%;background:'+col+'"></i></div>'+
   '</div>';
+}
+
+/* ---------- Torneos ----------
+   El calendario del equipo, el mismo que ve el staff. No hay nada sensible:
+   nombre, fechas, lugar y si estan confirmadas. */
+function playerTorneosView(p){
+  var hoy = today();
+  var futuros = TOURNAMENTS.filter(function(t){ return t.endDate >= hoy; })
+    .sort(function(a,b){ return a.startDate.localeCompare(b.startDate); });
+  var pasados = TOURNAMENTS.filter(function(t){ return t.endDate < hoy; })
+    .sort(function(a,b){ return b.startDate.localeCompare(a.startDate); }).slice(0,6);
+
+  function card(t){
+    var d = daysUntil(t.startDate);
+    var dFin = daysUntil(t.endDate);
+    var etiqueta, col;
+    if(dFin!=null && dFin<0){ etiqueta='Terminado'; col='var(--faint)'; }
+    else if(d!=null && d<=0){ etiqueta='En curso'; col='var(--mint)'; }
+    else if(d===1){ etiqueta='Mañana'; col='var(--coral)'; }
+    else if(d!=null && d<=7){ etiqueta='Esta semana'; col='var(--amber)'; }
+    else { etiqueta='Próximo'; col='var(--sky)'; }
+    var num = (dFin!=null && dFin<0) ? '—' : (d!=null ? Math.max(0,d) : '—');
+    var peso = EVENT_WEIGHT[t.weight] ? EVENT_WEIGHT[t.weight].label : '';
+    return '<div style="display:flex;align-items:center;gap:14px;padding:15px 16px;background:var(--bg1);'+
+      'border:1px solid var(--line);border-left:3px solid '+t.color+';border-radius:var(--r-lg);'+
+      'box-shadow:var(--shadow-sm)">'+
+      '<div style="text-align:center;min-width:50px;flex-shrink:0">'+
+        '<div style="font-family:var(--mono);font-size:26px;font-weight:700;line-height:1;color:'+t.color+'">'+num+'</div>'+
+        '<div style="font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-top:3px">'+
+          ((dFin!=null && dFin<0) ? '' : 'días') + '</div>'+
+      '</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-family:var(--disp);font-size:16px;font-weight:800;letter-spacing:.03em;line-height:1.15">'+htmlEscape(t.name)+'</div>'+
+        '<div style="font-size:12px;color:var(--dim);margin-top:4px">'+
+          formatTournamentRange(t.startDate,t.endDate)+(t.sub?' · '+htmlEscape(t.sub):'')+'</div>'+
+        '<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:8px">'+
+          '<span style="font-family:var(--mono);font-size:9.5px;font-weight:700;color:'+col+'">'+etiqueta+'</span>'+
+          (peso?'<span class="halo-chip">'+peso+'</span>':'')+
+          (t.confirmed?'':'<span class="halo-chip" style="color:var(--amber);border-color:rgba(255,140,0,.34)">Fechas tentativas</span>')+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  var cuerpo;
+  if(!futuros.length && !pasados.length){
+    cuerpo = emptyState('Sin torneos en el calendario','Cuando el coach añada los eventos de la temporada, aparecerán aquí.');
+  } else {
+    cuerpo = '';
+    if(futuros.length){
+      cuerpo += '<div style="display:flex;flex-direction:column;gap:10px">'+futuros.map(card).join('')+'</div>';
+    } else {
+      cuerpo += emptyState('No hay eventos próximos','El calendario de lo que viene aparecerá aquí.');
+    }
+    if(pasados.length){
+      cuerpo += '<div class="week-head" style="margin-top:24px"><span>Ya jugados</span><span>'+pasados.length+'</span></div>'+
+        '<div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;opacity:.72">'+pasados.map(card).join('')+'</div>';
+    }
+  }
+
+  return '<div style="font-family:var(--disp);font-size:27px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;line-height:1">Torneos</div>'+
+    '<div style="font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-top:6px">Calendario del equipo</div>'+
+    '<div style="margin-top:18px">'+cuerpo+'</div>';
 }
 
 /* ---------- Mi equipo ----------
@@ -2848,6 +2984,39 @@ function renderKPIs(tf){
   '</div>';
 }
 
+// Mensajes que los jugadores escribieron hoy en "mensaje al coach". Es un
+// canal directo y antes quedaba enterrado detras de un boton en la tabla.
+function todaysNotes(){
+  var t = today(), out = [];
+  DB.entries.forEach(function(e){
+    if(e.date !== t) return;
+    if(!e.playerNote || !String(e.playerNote).trim()) return;
+    var p = DB.players.find(function(x){ return x.id===e.playerId; });
+    if(p) out.push({ p:p, e:e });
+  });
+  return out;
+}
+function openNotesList(){
+  var list = todaysNotes();
+  if(!list.length) return;
+  var titulo = document.querySelector('#note-panel .slideover-title');
+  if(titulo) titulo.textContent = 'Mensajes de hoy';
+  document.getElementById('note-meta').textContent =
+    formatDateLong(today()) + ' · ' + list.length + (list.length===1?' mensaje':' mensajes');
+  var body = document.getElementById('note-body');
+  body.style.whiteSpace = 'normal';
+  body.innerHTML = list.map(function(x){
+    return '<div style="padding:14px 0;border-bottom:1px solid var(--line)">'+
+      '<div style="font-family:var(--disp);font-size:15.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase">'+htmlEscape(x.p.name)+'</div>'+
+      '<div style="font-family:var(--mono);font-size:10px;color:var(--faint);margin:4px 0 9px">#'+htmlEscape(x.p.number)+' · '+htmlEscape(x.p.position)+'</div>'+
+      '<div style="font-size:14.5px;line-height:1.65;white-space:pre-wrap">'+htmlEscape(x.e.playerNote)+'</div>'+
+      '<button class="card-link-btn" style="margin-top:11px" onclick="closeNoteSlider();openPlayer(\''+x.p.id+'\')">Ver perfil</button>'+
+    '</div>';
+  }).join('');
+  document.getElementById('note-backdrop').classList.add('open');
+  document.getElementById('note-panel').classList.add('open');
+}
+
 /* ---------- Acciones de hoy ----------
    Lista corta de lo que requiere decision. Describe lo observado y abre la
    herramienta correspondiente. No propone conducta de entrenamiento: las
@@ -2888,6 +3057,17 @@ function renderActions(tf){
   }).join('');
 
   var extra = '';
+  // Lo primero: si alguien te escribio, eso se lee antes que ningun numero.
+  var notas = todaysNotes();
+  if(notas.length){
+    extra += '<div class="act-card" style="border-color:rgba(81,183,228,.45)">'+
+      '<div class="act-top"><div class="an"><b>'+notas.length+' jugador'+(notas.length===1?'':'es')+' te escribió'+(notas.length===1?'':'ron')+' hoy</b>'+
+        '<span>'+notas.slice(0,4).map(function(x){ return htmlEscape(firstName(x.p.name)); }).join(' · ')+
+        (notas.length>4?' +'+(notas.length-4):'')+'</span></div>'+
+        '<span class="act-tag" style="color:var(--sky);background:var(--sky-soft);border:1px solid var(--line-strong)">Mensajes</span></div>'+
+      '<div class="act-why">Escribieron en el campo de mensaje al coach de su check-in de hoy.</div>'+
+      '<div class="act-btns"><button class="act-btn" style="background:var(--sky)" onclick="openNotesList()">Leer mensajes</button></div></div>';
+  }
   var missing = isPracticeDay() ? playersWithoutCheckinToday(tf) : [];
   if(missing.length){
     extra += '<div class="act-card" style="border-color:rgba(255,140,0,.4)">'+
@@ -2915,7 +3095,7 @@ function renderActions(tf){
     extra += '<div style="font-size:12.5px;color:var(--dim);padding:4px 2px">Hay '+hidden+
       ' jugador'+(hidden===1?'':'es')+' más con banderas. El semáforo del roster los lista todos.</div>';
   }
-  var total = acts.length + (missing.length?1:0) + (stale.length?1:0);
+  var total = acts.length + (notas.length?1:0) + (missing.length?1:0) + (stale.length?1:0);
   if(!total){
     slot.innerHTML = '<div class="panel section-gap">'+
       '<div class="panel-title"><span class="dot" style="background:var(--mint)"></span>Acciones de hoy</div>'+
@@ -3335,7 +3515,7 @@ function renderStaffPlayer(pid){
 
   const histRows=entries.slice(0,12).map(function(e){
     return '<tr>'+
-      '<td class="tnum">'+e.date+'</td>'+
+      '<td class="tnum">'+e.date+lateBadge(e)+'</td>'+
       '<td class="tnum">'+(e.sessionLabel||'—')+'</td>'+
       '<td class="tnum">'+(e.duration!=null?e.duration:'—')+'</td>'+
       '<td><span class="rpe-pill '+rpeClass(e.rpe)+'">'+e.rpe+'</span></td>'+
@@ -3614,8 +3794,12 @@ function saveInjury(){ writeInjury((document.getElementById('inj-textarea').valu
 function clearInjury(){ writeInjury(''); }
 
 function openNoteSlider(name, date, note) {
+  var titulo = document.querySelector('#note-panel .slideover-title');
+  if(titulo) titulo.textContent = 'Mensaje del jugador';
   document.getElementById('note-meta').textContent=name+' · '+date;
-  document.getElementById('note-body').textContent=note;
+  var body = document.getElementById('note-body');
+  body.style.whiteSpace = 'pre-wrap';
+  body.textContent=note;
   document.getElementById('note-backdrop').classList.add('open');
   document.getElementById('note-panel').classList.add('open');
 }
@@ -3653,7 +3837,7 @@ function renderRecords(){
   const rows=display.map(function(e){
     const p=DB.players.find(function(x){ return x.id===e.playerId; })||{name:'',team:''};
     return '<tr>'+
-      '<td class="tnum">'+e.date+'</td>'+
+      '<td class="tnum">'+e.date+lateBadge(e)+'</td>'+
       '<td style="font-weight:600;cursor:pointer;color:var(--sky)" onclick="openPlayer(\''+e.playerId+'\')">'+htmlEscape(p.name)+'</td>'+
       '<td><span class="badge">'+htmlEscape(p.team)+'</span></td>'+
       '<td class="tnum">'+(e.sessionLabel||'—')+'</td>'+
