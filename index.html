@@ -78,6 +78,12 @@
 html{scroll-behavior:smooth;}
 body{font-family:var(--body);background:var(--bg0);color:var(--text);min-height:100vh;font-size:15px;overflow-x:hidden;}
 button{font-family:inherit;}
+/* Respuesta al toque. Sin esto, en el telefono no pasa nada visible al pulsar
+   y da la sensacion de que el boton no responde. */
+button:active,.pod:active,.sem-row:active,.tl-row:active,.date-chip:active,
+.btn-option:active,.rpe-btn:active,.btn-zone:active,.filter-tab:active{
+  opacity:.72;transform:scale(.98);}
+button,.pod,.sem-row,.filter-tab{transition:opacity .12s,transform .12s;}
 
 /* ===== ATMOSFERA ===== */
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
@@ -425,7 +431,8 @@ body.player-shell .page{padding-top:calc(18px + var(--sat));}
   padding:5px 11px;white-space:nowrap;}
 .act-why{font-size:13.5px;line-height:1.55;color:var(--dim);margin-top:12px;}
 .act-btns{display:flex;align-items:center;gap:9px;margin-top:13px;flex-wrap:wrap;}
-.act-btn{border:none;border-radius:10px;padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;color:#fff;}
+.act-btn{border:none;border-radius:10px;padding:12px 18px;font-size:12.5px;font-weight:700;cursor:pointer;
+  color:#fff;min-height:44px;}
 .act-btn.ghost{background:transparent;border:1px solid var(--line-strong);color:var(--dim);font-weight:600;}
 
 /* ===== STAFF: SEMAFORO DEL ROSTER ===== */
@@ -469,7 +476,7 @@ body.player-shell .page{padding-top:calc(18px + var(--sat));}
 .rpe-pill.rpe-mid{background:var(--amber-soft);color:var(--amber);}
 .rpe-pill.rpe-high{background:var(--coral-soft);color:var(--coral);}
 .card-link-btn{background:var(--bg3);border:1px solid var(--line);color:var(--dim);border-radius:var(--r-sm);
-  padding:9px 12px;font-size:12.5px;font-weight:600;cursor:pointer;text-align:center;}
+  padding:12px;font-size:12.5px;font-weight:600;cursor:pointer;text-align:center;min-height:44px;}
 .card-link-btn:hover{border-color:var(--sky);color:var(--sky);}
 .card-link-btn.wa{background:var(--mint-soft);border-color:rgba(52,227,165,.34);color:#0f9f6e;}
 
@@ -510,7 +517,7 @@ body.player-shell .page{padding-top:calc(18px + var(--sat));}
 .rr-team{font-family:var(--mono);font-size:9.5px;font-weight:700;}
 .rr-name{flex:1;font-size:13.5px;font-weight:500;}
 .wa-btn{background:var(--mint-soft);border:1px solid rgba(52,227,165,.36);color:#0f9f6e;border-radius:var(--r-sm);
-  padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;}
+  padding:11px 15px;font-size:12px;font-weight:600;cursor:pointer;min-height:42px;}
 
 /* ===== TABLAS ===== */
 .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-md);}
@@ -521,14 +528,15 @@ table.data td{padding:12px 14px;border-top:1px solid var(--line);vertical-align:
 table.data tr:hover td{background:rgba(81,183,228,.04);}
 .tnum{font-family:var(--mono);font-size:12px;}
 .note-btn,.edit-date-btn{background:var(--sky-soft);border:1px solid var(--line-strong);color:var(--sky);
-  border-radius:7px;padding:5px 11px;font-size:12px;cursor:pointer;}
+  border-radius:7px;padding:9px 13px;font-size:12px;cursor:pointer;min-height:38px;}
 .del-btn{background:var(--coral-soft);border:1px solid rgba(255,93,108,.35);color:var(--coral);
-  border-radius:7px;padding:5px 11px;font-size:12px;cursor:pointer;}
+  border-radius:7px;padding:9px 13px;font-size:12px;cursor:pointer;min-height:38px;}
 
 /* ===== FILTROS ===== */
 .filter-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:1rem;}
 .filter-tab{background:var(--bg1);border:1px solid var(--line);color:var(--dim);border-radius:999px;
-  padding:8px 16px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.05em;cursor:pointer;}
+  padding:11px 17px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.05em;cursor:pointer;
+  min-height:40px;display:inline-flex;align-items:center;}
 .filter-tab.active{background:var(--sky-soft);border-color:var(--sky);color:var(--sky);}
 .filters-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.2rem;}
 .filter-input{background:var(--bg1);border:1px solid var(--line-strong);border-radius:var(--r-md);
@@ -570,7 +578,9 @@ table.data tr:hover td{background:rgba(81,183,228,.04);}
 
 .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,0);z-index:200;background:var(--text);
   color:#fff;border-radius:var(--r-md);padding:13px 22px;font-size:13.5px;box-shadow:var(--shadow-lg);
-  display:none;max-width:90vw;text-align:center;}
+  display:none;max-width:90vw;text-align:center;
+  /* Es un aviso, no un control: nunca debe interceptar un toque. */
+  pointer-events:none;}
 .toast.show{display:block;animation:toastIn .24s ease;}
 .toast.err{background:var(--coral);}
 body.player-shell .toast{bottom:calc(92px + var(--sab));}
@@ -1750,6 +1760,9 @@ async function init() {
 }
 async function startApp() {
   showLoading(true);
+  // Blindaje: si algo revienta por el camino, la capa de carga NO puede
+  // quedarse puesta. Cubre toda la pantalla y bloquearia cualquier toque.
+  setTimeout(function(){ showLoading(false); }, 12000);
 
   // --- Modo jugador: todo llega del servidor filtrado por token
   if (isPlayerMode()) {
