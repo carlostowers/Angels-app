@@ -347,6 +347,33 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opac
   padding:10px 6px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .16s;}
 .btn-zone:hover{border-color:var(--sky);}
 .btn-zone.selected{background:var(--coral-soft);border-color:var(--coral);color:var(--coral);font-weight:700;}
+.side-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);}
+.side-row:last-child{border-bottom:none;}
+.side-row .side-name{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--ink);}
+.btn-side{background:var(--bg1);border:1px solid var(--line);color:var(--dim);border-radius:999px;
+  min-height:38px;min-width:52px;padding:0 12px;font-size:12px;font-weight:600;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:border-color .12s,background .12s;}
+.btn-side.selected{background:var(--coral-soft);border-color:var(--coral);color:var(--coral);}
+.season-bar{display:inline-block;vertical-align:middle;width:110px;height:7px;border-radius:4px;
+  background:var(--bg1);border:1px solid var(--line);overflow:hidden;margin-right:9px;}
+.season-bar i{display:block;height:100%;background:var(--sky);}
+.season-num{font-family:var(--mono);font-size:11.5px;color:var(--dim);}
+.seg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:14px;}
+.seg-cell{background:var(--bg1);border:1px solid var(--line);border-radius:12px;padding:12px 13px;}
+.seg-label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--faint);}
+.seg-value{display:block;font-family:var(--mono);font-size:19px;font-weight:700;color:var(--ink);margin:5px 0 3px;}
+.seg-sub{display:block;font-size:11.5px;line-height:1.5;color:var(--dim);}
+.welcome-list{margin-top:1.2rem;}
+.welcome-item{padding:12px 0;border-bottom:1px solid var(--line);}
+.welcome-item:last-child{border-bottom:none;}
+.welcome-item b{display:block;font-size:13.5px;color:var(--ink);margin-bottom:4px;}
+.welcome-item p{margin:0;font-size:13px;line-height:1.6;color:var(--dim);}
+.ostrc-card{background:var(--amber-soft,rgba(255,140,0,.08));border:1px solid var(--amber);
+  border-radius:14px;padding:14px;margin-bottom:1rem;}
+.ostrc-card b{display:block;font-size:13.5px;color:var(--ink);margin-bottom:4px;}
+.ostrc-card p{margin:0 0 10px;font-size:12.5px;line-height:1.6;color:var(--dim);}
+.btn-side:active{transform:scale(.97);}
 
 .date-chips{display:flex;gap:8px;flex-wrap:wrap;}
 .date-chip{background:var(--bg1);border:1px solid var(--line-strong);color:var(--dim);border-radius:999px;
@@ -688,6 +715,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
       <div class="nav-link" id="nav-gameday" style="display:none" onclick="showPage('gameday')">Game Day</div>
       <div class="nav-link" id="nav-taper" style="display:none" onclick="showPage('taper')">Taper</div>
       <div class="nav-link" id="nav-tournaments" style="display:none" onclick="showPage('tournaments')">Torneos</div>
+      <div class="nav-link" onclick="showPage('season')">Temporada</div>
       <div class="nav-link" onclick="showPage('records')">Historial</div>
       <div class="nav-link" onclick="showPage('import')">Datos</div>
     </div>
@@ -705,6 +733,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
   <div class="nav-link" id="mob-gameday" style="display:none" onclick="showPage('gameday');closeMobileMenu()">Game Day</div>
   <div class="nav-link" id="mob-taper" style="display:none" onclick="showPage('taper');closeMobileMenu()">Taper</div>
   <div class="nav-link" id="mob-tournaments" style="display:none" onclick="showPage('tournaments');closeMobileMenu()">Torneos</div>
+  <div class="nav-link" id="mob-season" onclick="showPage('season');closeMobileMenu()">Temporada</div>
   <div class="nav-link" id="mob-records" onclick="showPage('records');closeMobileMenu()">Historial</div>
   <div class="nav-link" id="mob-import" onclick="showPage('import');closeMobileMenu()">Datos</div>
   <div id="mob-logout" style="display:none;padding:12px 0 0;border-top:1px solid var(--line);margin-top:8px">
@@ -752,9 +781,9 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
       <div class="chart-wrap"><canvas id="team-load-chart"></canvas></div>
     </div>
     <div class="panel">
-      <div class="panel-title"><span class="dot" style="background:var(--amber)"></span>Monotonía · Foster</div>
-      <div id="monotony-board"></div>
-      <div class="mono-note">Monotonía = media ÷ desviación estándar de la carga diaria de 7 días. Un valor alto indica falta de variación. Strain = carga semanal × monotonía.</div>
+      <div class="panel-title"><span class="dot" style="background:var(--amber)"></span>Progresión de carga</div>
+      <div id="progresion-board"></div>
+      <div class="mono-note">Carga de los últimos 7 días frente a los 7 anteriores. Subidas sostenidas por encima del 15% son las que conviene mirar. Requiere al menos dos sesiones en cada semana; si no, se muestra la adherencia.</div>
     </div>
   </div>
 
@@ -799,6 +828,14 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
 </div>
 
 <!-- HISTORIAL -->
+<!-- TEMPORADA -->
+<div class="page" id="page-season">
+  <div class="eyebrow">Vista larga</div>
+  <div class="page-title">Temporada</div>
+  <div class="page-sub">Semana a semana desde el primer registro. Sirve para ver el arco completo, no el día de hoy.</div>
+  <div id="season-content"></div>
+</div>
+
 <div class="page" id="page-records">
   <div class="eyebrow">Registro completo</div>
   <div class="page-title">Historial</div>
@@ -869,7 +906,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
 
 <footer>
   <div class="footer-inner">
-    <span class="mono-note" style="margin-top:0">Angels Performance OS</span>
+    <span class="mono-note" style="margin-top:0">Angels Performance OS · <span id="app-version"></span></span>
   </div>
 </footer>
 
@@ -899,6 +936,104 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
       <button class="btn-primary" style="width:100%" onclick="dupChoose('replace')">Reemplazar el anterior</button>
       <button class="btn-secondary" style="width:100%" onclick="dupChoose('add')">Fue otra sesión, añadir</button>
       <button class="btn-ghost" style="width:100%" onclick="closeDupModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- DISPONIBILIDAD REAL DEL DIA. Lo que de verdad hizo, no lo que se
+     esperaba que hiciera. Es el desenlace contra el que se contrasta todo
+     lo demas. -->
+<div class="modal-overlay" id="avail-modal" style="display:none" onclick="closeAvailModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title" id="avail-modal-name">Disponibilidad</div>
+    <div class="modal-subtitle">Qué pudo hacer hoy de verdad. Sin esto, la app registra señales pero nunca sabe si acertaron.</div>
+    <div class="form-block">
+      <label class="form-label">Fecha</label>
+      <input type="date" id="avail-date" class="form-input">
+    </div>
+    <div class="form-block">
+      <label class="form-label">Qué pudo hacer</label>
+      <div class="opt-grid" id="avail-opts" style="grid-template-columns:repeat(2,1fr)"></div>
+      <input type="hidden" id="avail-status" value="completo">
+    </div>
+    <div class="form-block">
+      <label class="form-label">Nota (opcional)</label>
+      <input type="text" id="avail-note" class="form-input" placeholder="Ej: salió del scrimmage por molestia en rodilla">
+    </div>
+    <div id="avail-error" class="form-help" style="color:var(--coral)"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAvailModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveAvailability()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ESTATURA. En estas edades el estiron cambia la tolerancia a la carga y
+     explica molestias de rodilla y talon que si no parecen sin causa. -->
+<div class="modal-overlay" id="growth-modal" style="display:none" onclick="closeGrowthModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title" id="growth-modal-name">Estatura</div>
+    <div class="modal-subtitle">Cada 6 u 8 semanas es suficiente. Un crecimiento rápido cambia lo que el cuerpo aguanta y ayuda a leer las molestias de rodilla y talón.</div>
+    <div class="form-grid">
+      <div class="form-block">
+        <label class="form-label">Fecha de la medida</label>
+        <input type="date" id="growth-date" class="form-input">
+      </div>
+      <div class="form-block">
+        <label class="form-label">Estatura (cm)</label>
+        <input type="number" id="growth-cm" class="form-input" min="120" max="230" step="0.5" inputmode="decimal">
+      </div>
+    </div>
+    <div id="growth-error" class="form-help" style="color:var(--coral)"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeGrowthModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveGrowth()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDITAR ENTRADA (staff). Solo lo objetivo: lo que el jugador sintio no
+     se corrige desde fuera. -->
+<div class="modal-overlay" id="edit-modal" style="display:none" onclick="closeEditModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:460px">
+    <div class="modal-title" id="edit-modal-name">Corregir registro</div>
+    <div class="modal-subtitle">Puedes corregir fecha, tipo de sesión, duración y esfuerzo. El bienestar lo contestó el jugador y no se edita: si está mal, pídele que lo registre de nuevo.</div>
+    <div class="form-grid">
+      <div class="form-block">
+        <label class="form-label">Fecha</label>
+        <input type="date" id="edit-date" class="form-input">
+      </div>
+      <div class="form-block">
+        <label class="form-label">Duración (minutos)</label>
+        <input type="number" id="edit-duration" class="form-input" min="0" max="600" step="5" inputmode="numeric">
+      </div>
+    </div>
+    <div class="form-block">
+      <label class="form-label">Tipo de sesión</label>
+      <select id="edit-session" class="form-input">
+        <option value="">Sin especificar</option>
+        <option value="tecnica">Técnica</option>
+        <option value="fisico">Físico</option>
+        <option value="scrimmage">Scrimmage</option>
+        <option value="partido">Partido</option>
+        <option value="recuperacion">Recuperación</option>
+      </select>
+    </div>
+    <div class="form-grid">
+      <div class="form-block">
+        <label class="form-label">RPE (1 a 10)</label>
+        <input type="number" id="edit-rpe" class="form-input" min="1" max="10" step="1" inputmode="numeric">
+      </div>
+      <div class="form-block">
+        <label class="form-label">Sets jugados</label>
+        <input type="number" id="edit-sets" class="form-input" min="0" max="10" step="1" inputmode="numeric">
+      </div>
+    </div>
+    <div id="edit-locked" class="mono-note" style="margin-top:0"></div>
+    <div id="edit-error" class="form-help" style="color:var(--coral)"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeEditModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveEntryEdit()">Guardar corrección</button>
     </div>
   </div>
 </div>
@@ -991,6 +1126,10 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
 </div>
 
 <script>
+// Version visible en pantalla. Cuando alguien reporte algo raro, lo primero
+// es saber que version esta corriendo su telefono.
+const APP_VERSION = 'v3.0 · 19 ago 2026';
+
 // ============ SUPABASE ============
 const sb = window.supabase.createClient(
   'https://qagvxlenrojmgzjoywzm.supabase.co',
@@ -1067,6 +1206,7 @@ async function loadTeamSettings() {
     const { data } = await sb.from('team_settings').select('*');
     if (data) data.forEach(function(row){
       if (TEAM_SETTINGS[row.team] !== undefined) TEAM_SETTINGS[row.team].tournamentMode = row.tournament_mode;
+      if (row.team === PRACTICE_TEAM && row.timezone) TEAM_TZ = row.timezone;
     });
   } catch(e) { console.error('team_settings', e); }
 }
@@ -1084,6 +1224,9 @@ let PRACTICE_DAYS = {};
 let PLAYER_TOKEN = null;      // token del enlace personal (solo modo jugador)
 let PLAYER_ID = null;         // id que devuelve el servidor a partir del token
 let TEAM_CHECKIN_DAYS = {};   // "pid|fecha" -> true. Solo el hecho, nunca el contenido.
+let OVERUSE = [];             // seguimiento semanal de molestia por sobreuso (OSTRC-O)
+let AVAILABILITY = [];        // disponibilidad real por dia
+let GROWTH = [];              // estatura cada 6-8 semanas
 let currentPage = 'dashboard';
 let prevPage = 'dashboard';
 let currentFilter = { dash:'ALL', roster:'ALL', loadChart:'ALL' };
@@ -1154,13 +1297,19 @@ async function loadAll() {
     sb.from('players').select('*').order('team').order('name'),
     sb.from('entries').select('*').order('date', { ascending: false }),
     sb.from('tournaments').select('*').order('start_date'),
-    sb.from('practice_days').select('*').order('date', { ascending: false }).limit(400)
+    sb.from('practice_days').select('*').order('date', { ascending: false }).limit(400),
+    sb.from('overuse_reports').select('*').order('week_start', { ascending: false }).limit(600),
+    sb.from('availability').select('*').order('date', { ascending: false }).limit(600),
+    sb.from('growth').select('*').order('date', { ascending: false }).limit(400)
   ]);
   DB.players = results[0].data || [];
   DB.entries = (results[1].data || []).map(normalizeEntry);
   TOURNAMENTS = (results[2].data || []).map(normalizeTournament);
+  OVERUSE = (results[4].data || []).map(normalizeOveruse);
+  AVAILABILITY = (results[5].data || []).map(normalizeAvailability);
+  GROWTH = (results[6].data || []).map(normalizeGrowth);
   PRACTICE_DAYS = {};
-  (results[3].data || []).forEach(function(r){ if(r.active) PRACTICE_DAYS[r.team+'|'+r.date] = true; });
+  (results[3].data || []).forEach(function(r){ if(r.active) PRACTICE_DAYS[r.team+'|'+r.date] = { active:true, jump:r.jump_level || null }; });
   try { invalidateMetricsCache(); } catch(e) {}
 }
 // El modo jugador no lee las tablas: pide su paquete al servidor, que filtra
@@ -1183,11 +1332,13 @@ function applyBootstrap(b){
   TEAM_CHECKIN_DAYS = {};
   (b.checkins || []).forEach(function(c){ TEAM_CHECKIN_DAYS[c.player_id + '|' + c.date] = true; });
   PRACTICE_DAYS = {};
-  (b.practice_days || []).forEach(function(r){ if(r.active) PRACTICE_DAYS[r.team + '|' + r.date] = true; });
+  (b.practice_days || []).forEach(function(r){ if(r.active) PRACTICE_DAYS[r.team + '|' + r.date] = { active:true, jump:r.jump_level || null }; });
   TOURNAMENTS = (b.tournaments || []).map(normalizeTournament);
   (b.team_settings || []).forEach(function(row){
     if(TEAM_SETTINGS[row.team] !== undefined) TEAM_SETTINGS[row.team].tournamentMode = row.tournament_mode;
+    if(row.timezone) TEAM_TZ = row.timezone;
   });
+  OVERUSE = (b.overuse || []).map(normalizeOveruse);
   try { invalidateMetricsCache(); } catch(e) {}
 }
 async function refreshData(){
@@ -1198,6 +1349,16 @@ function hasCheckinOn(pid, date){
   if(PLAYER_TOKEN) return !!TEAM_CHECKIN_DAYS[pid + '|' + date];
   return DB.entries.some(function(e){ return e.playerId===pid && e.date===date; });
 }
+function normalizeOveruse(r){
+  return { playerId:r.player_id, weekStart:r.week_start, zone:r.zone,
+           q1:r.q1, q2:r.q2, q3:r.q3, q4:r.q4, score:r.score };
+}
+function normalizeAvailability(r){
+  return { id:r.id, playerId:r.player_id, date:r.date, status:r.status, note:r.note };
+}
+function normalizeGrowth(r){
+  return { id:r.id, playerId:r.player_id, date:r.date, heightCm:Number(r.height_cm) };
+}
 function normalizeEntry(e) {
   return {
     id:e.id, playerId:e.player_id, date:e.date,
@@ -1205,16 +1366,33 @@ function normalizeEntry(e) {
     roleInEvent:e.role_in_event, setsPlayed:e.sets_played,
     mood:e.mood, sleepQuality:e.sleep_quality, soreness:e.soreness, stress:e.stress,
     fatigue:e.fatigue, motivation:e.motivation,
-    painConcern:e.pain_concern, painZones:e.pain_zones,
+    painConcern:e.pain_concern, painZones:e.pain_zones, painSides:e.pain_sides || {},
     notes:e.notes, playerNote:e.player_note, createdAt:e.created_at
   };
 }
 
 // ============ HELPERS ============
 function uid(){ return 'e-'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
-function today(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function daysAgoStr(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function daysAheadStr(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+// La fecha se calcula en la zona horaria del EQUIPO, no la del telefono.
+// Un torneo fuera de Puerto Rico no debe mover el dia de nadie.
+let TEAM_TZ = 'America/Puerto_Rico';
+function ymd(d){
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: TEAM_TZ }).format(d);
+  } catch(e) {
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+}
+function today(){ return ymd(new Date()); }
+function daysAgoStr(n){ return ymd(new Date(Date.now() - n*86400000)); }
+function daysAheadStr(n){ return ymd(new Date(Date.now() + n*86400000)); }
+function weekStart(iso){
+  // Lunes de la semana de esa fecha, igual que date_trunc('week') en Postgres
+  var d = dateFromISO(iso || today());
+  var dow = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - dow);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
 var DOW_ES=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 var DOW_SHORT=['dom','lun','mar','mié','jue','vie','sáb'];
 var MON_ES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
@@ -1246,7 +1424,17 @@ function hexA(hex,a){
   return 'rgba('+r+','+g+','+b+','+a+')';
 }
 function playerEntries(pid){ return DB.entries.filter(function(e){ return e.playerId===pid; }).sort(function(a,b){ return b.date.localeCompare(a.date); }); }
-function internalLoad(e){ if(!e) return 0; return (e.rpe||0)*(e.duration||0); }
+// Una entrada solo cuenta como sesion si hubo esfuerzo y duracion reales.
+// La recuperacion es un registro de bienestar: no aporta carga ni RPE.
+function isSession(e){
+  return !!(e && e.sessionLabel !== 'recuperacion' && e.rpe != null && e.duration != null && e.rpe > 0 && e.duration > 0);
+}
+function internalLoad(e){ return isSession(e) ? e.rpe * e.duration : 0; }
+function sessionEntries(pid, desdeISO){
+  return playerEntries(pid).filter(function(e){
+    return isSession(e) && (!desdeISO || e.date >= desdeISO);
+  });
+}
 function rpeClass(r){ return r>=8?'rpe-high':r>=5?'rpe-mid':'rpe-low'; }
 function rpeColor(r){ return r>=8?'var(--coral)':r>=5?'var(--amber)':'var(--mint)'; }
 function toast(msg, err){
@@ -1303,16 +1491,99 @@ function dailyLoads(pid, days){
   playerEntries(pid).forEach(function(e){ if(map[e.date]!==undefined) map[e.date]+=internalLoad(e); });
   return map;
 }
-function monotony(pid){
-  const m=dailyLoads(pid,7);
-  const vals=Object.values(m);
-  const hasAny=vals.some(function(v){ return v>0; });
-  if(!hasAny) return null;
-  const mean=vals.reduce(function(a,b){ return a+b; },0)/7;
-  const sd=Math.sqrt(vals.reduce(function(a,b){ return a+(b-mean)*(b-mean); },0)/7);
-  if(sd===0) return {mono:null, strain:null, weekly:mean*7};
-  const mono=mean/sd;
-  return {mono:mono, strain:mean*7*mono, weekly:mean*7};
+// La monotonia de Foster se retiro a proposito: se calcula sobre 7 dias y con
+// dos o tres sesiones semanales los dias en blanco dominan la desviacion
+// estandar. El indice deja de significar nada en este contexto.
+
+// ---------------------------------------------------------------- 6
+// Linea base propia. Un jugador que siempre contesta 3 no es comparable con
+// uno que normalmente contesta 5 y hoy puso 3: la senal es el cambio, no el
+// valor absoluto.
+function baselineStats(pid, key, days){
+  days = days || 28;
+  var lim = daysAgoStr(days), t = today();
+  var vals = playerEntries(pid).filter(function(e){
+    return e.date >= lim && e.date < t && e[key] != null;
+  }).map(function(e){ return e[key]; });
+  if(vals.length < 5) return null;
+  var mean = vals.reduce(function(a,b){ return a+b; },0) / vals.length;
+  var sd = Math.sqrt(vals.reduce(function(a,b){ return a+(b-mean)*(b-mean); },0) / vals.length);
+  return { mean:mean, sd:sd, n:vals.length };
+}
+// Devuelve null cuando no hay historial suficiente o cuando el jugador nunca
+// varia: en esos casos no hay z fiable y se cae a los umbrales absolutos.
+function zScore(pid, key, valor){
+  if(valor == null) return null;
+  var b = baselineStats(pid, key);
+  if(!b || b.sd < 0.35) return null;
+  return (valor - b.mean) / b.sd;
+}
+
+// ---------------------------------------------------------------- 7
+// Cambio de carga semana contra semana. Es la barandilla de progresion que
+// quedo vacia al retirar el ACWR, y se explica en una frase.
+function weekLoadChange(pid){
+  var estaSem = 0, antSem = 0, nA = 0, nB = 0;
+  var lim14 = daysAgoStr(13), lim7 = daysAgoStr(6);
+  sessionEntries(pid, lim14).forEach(function(e){
+    if(e.date >= lim7){ estaSem += internalLoad(e); nA++; }
+    else { antSem += internalLoad(e); nB++; }
+  });
+  if(nA < 2 || nB < 2 || antSem <= 0) return null;
+  return { pct: Math.round((estaSem - antSem) / antSem * 100), esta:estaSem, anterior:antSem };
+}
+function teamWeekLoadChange(tf){
+  var pids = teamPidsFor(tf);
+  var lim14 = daysAgoStr(13), lim7 = daysAgoStr(6);
+  var a = 0, b = 0, nA = 0, nB = 0;
+  DB.entries.forEach(function(e){
+    if(pids.indexOf(e.playerId) === -1 || !isSession(e) || e.date < lim14) return;
+    if(e.date >= lim7){ a += internalLoad(e); nA++; } else { b += internalLoad(e); nB++; }
+  });
+  if(nA < 3 || nB < 3 || b <= 0) return null;
+  return { pct: Math.round((a-b)/b*100), esta:a, anterior:b };
+}
+
+// ---------------------------------------------------------------- 14
+// Adherencia sobre los dias que de verdad hubo practica o partido.
+function adherence(pid, semanas){
+  semanas = semanas || 4;
+  var lim = daysAgoStr(semanas*7 - 1), t = today();
+  var dias = practiceDatesDesc().filter(function(d){ return d >= lim && d <= t; });
+  if(!dias.length) return null;
+  var hechos = {};
+  playerEntries(pid).forEach(function(e){ hechos[e.date] = true; });
+  var n = dias.filter(function(d){ return hechos[d]; }).length;
+  return { done:n, total:dias.length, pct: Math.round(n/dias.length*100) };
+}
+
+// ---------------------------------------------------------------- 9
+// Exposicion al salto. No es un conteo real y no debe presentarse como tal:
+// es el volumen que marca el staff, ponderado por lo que salta cada posicion.
+const JUMP_LEVEL = { bajo:1, medio:2, alto:3 };
+const JUMP_POS   = { MH:1, OH:1, OP:1, RS:1, S:0.6, L:0.15, DS:0.15 };
+function jumpFactorFor(pos){
+  var k = String(pos||'').toUpperCase();
+  return JUMP_POS[k] != null ? JUMP_POS[k] : 0.8;
+}
+function jumpLevelOn(fecha){
+  var r = PRACTICE_DAYS[PRACTICE_TEAM + '|' + fecha];
+  return (r && r.jump) ? r.jump : null;
+}
+function jumpExposure(pid, dias){
+  dias = dias || 7;
+  var p = DB.players.find(function(x){ return x.id===pid; });
+  if(!p) return null;
+  var f = jumpFactorFor(p.position);
+  var lim = daysAgoStr(dias-1), t = today(), total = 0, n = 0;
+  practiceDatesDesc().forEach(function(d){
+    if(d < lim || d > t) return;
+    var lvl = jumpLevelOn(d);
+    if(!lvl) return;
+    total += JUMP_LEVEL[lvl] * f;
+    n++;
+  });
+  return n ? { total: Math.round(total*10)/10, sesiones:n } : null;
 }
 
 // VWI 0-100. Sueno 25 · fatiga 25 · animo 15 · estres 15 · soreness 10 ·
@@ -1450,30 +1721,77 @@ function hasPainFlag(pid){
 }
 
 // Estado del jugador. Descriptivo: agrupa lo observado, no prescribe.
+// Las senales se leen contra la linea base propia cuando hay historial; si no
+// lo hay todavia, se cae a umbrales absolutos.
 function playerStatus(pid){
   var m = getMetrics(pid);
   var last = m.lastEntry;
   if(!last) return { key:'nodata', label:'Sin datos', color:'#9BA8C4', reasons:['Todavía no ha registrado ningún check-in'] };
-  var hard = [];
-  if((last.painConcern||0)>=2){
-    hard.push('Dolor preocupante ' + last.painConcern +
-      ((last.painZones && last.painZones.length) ? ' en ' + last.painZones.join(', ') : ''));
+
+  function señal(key, etiqueta, umbralAbs){
+    var v = last[key];
+    if(v == null) return null;
+    var z = zScore(pid, key, v);
+    if(z != null){
+      if(z <= -1.5) return { grave:true,  txt: etiqueta + ' muy por debajo de su normal (' + v + '/5)' };
+      if(z <= -1.0) return { grave:false, txt: etiqueta + ' por debajo de su normal (' + v + '/5)' };
+      return null;
+    }
+    if(v <= umbralAbs) return { grave: v <= umbralAbs-1, txt: etiqueta + ' ' + v + '/5' };
+    return null;
   }
-  if((last.sleepQuality||3)<=2) hard.push('Sueño ' + last.sleepQuality + '/5');
-  if((last.soreness||3)<=2) hard.push('Dolor muscular ' + last.soreness + '/5');
-  if(m.vwi!=null && m.vwi<45) hard.push('Bienestar ' + m.vwi + '/100');
-  if(hard.length) return { key:'atencion', label:'Atención', color:'#ff5d6c', reasons:hard };
 
-  var soft = [];
-  if(m.vwi!=null && m.vwi<60) soft.push('Bienestar ' + m.vwi + '/100');
-  if(m.trend!=null && m.trend<=-12) soft.push('Bienestar ' + m.trend + ' puntos frente a su semana');
-  if((last.stress||3)<=2) soft.push('Estrés ' + last.stress + '/5');
-  if((last.rpe||0)>=8) soft.push('Último RPE ' + last.rpe);
-  if(m.recovery && m.recovery.streakUnderRecovered>=2) soft.push(m.recovery.streakUnderRecovered + ' sesiones duras sin recuperar');
-  if(m.staleDays!=null && m.staleDays>=2) soft.push(m.staleDays + ' prácticas sin registrar');
-  if(soft.length) return { key:'observar', label:'Observar', color:'#FF8C00', reasons:soft };
+  var graves = [], leves = [];
+  function meter(r){ if(!r) return; (r.grave ? graves : leves).push(r.txt); }
 
+  if((last.painConcern||0) >= 2){
+    graves.push('Dolor preocupante ' + last.painConcern +
+      ((last.painZones && last.painZones.length) ? ' en ' + painZonesText(last) : ''));
+  }
+  meter(señal('sleepQuality', 'Sueño', 2));
+  meter(señal('soreness', 'Dolor muscular', 2));
+  meter(señal('fatigue', 'Fatiga', 2));
+  if(m.vwi != null && m.vwi < 45) graves.push('Bienestar ' + m.vwi + '/100');
+  if(graves.length) return { key:'atencion', label:'Atención', color:'#ff5d6c', reasons:graves };
+
+  meter(señal('mood', 'Ánimo', 2));
+  meter(señal('stress', 'Estrés', 2));
+  if(m.vwi != null && m.vwi < 60 && baselineStats(pid,'sleepQuality') == null){
+    leves.push('Bienestar ' + m.vwi + '/100');
+  }
+  if(m.trend != null && m.trend <= -12) leves.push('Bienestar ' + m.trend + ' puntos frente a su semana');
+
+  // Un RPE alto por si solo no es una senal: es un martes exigente. Solo
+  // cuenta si viene acompanado de mal descanso o de otro dia duro seguido.
+  if(isSession(last) && last.rpe >= 8){
+    var previa = sessionEntries(pid).filter(function(e){ return e.date < last.date; })[0];
+    var encadenado = !!(previa && previa.rpe >= 8);
+    var malDescanso = (last.sleepQuality != null && last.sleepQuality <= 3) ||
+                      (last.soreness != null && last.soreness <= 3);
+    if(encadenado) leves.push('Dos sesiones seguidas de RPE ' + last.rpe + ' o más');
+    else if(malDescanso) leves.push('RPE ' + last.rpe + ' con el descanso justo');
+  }
+
+  var chg = weekLoadChange(pid);
+  if(chg && chg.pct >= 15){
+    var eq = teamWeekLoadChange('ALL');
+    var propio = eq ? (chg.pct - eq.pct) : chg.pct;
+    if(propio >= 20) leves.push('Carga ' + chg.pct + '% por encima de su semana anterior, más que el resto del equipo');
+  }
+
+  if(m.recovery && m.recovery.streakUnderRecovered >= 2) leves.push(m.recovery.streakUnderRecovered + ' sesiones duras sin recuperar');
+  if(m.staleDays != null && m.staleDays >= 2) leves.push(m.staleDays + ' prácticas sin registrar');
+
+  if(leves.length) return { key:'observar', label:'Observar', color:'#FF8C00', reasons:leves };
   return { key:'ok', label:'En rango', color:'#34e3a5', reasons:[] };
+}
+// Zonas con lado, para que "Hombro" diga cual.
+function painZonesText(e){
+  var z = e.painZones || [], lados = e.painSides || {};
+  return z.map(function(n){
+    var l = lados[n];
+    return n + (l ? ' ' + (l==='ambos' ? '(ambos)' : l==='izq' ? '(izq)' : '(der)') : '');
+  }).join(', ');
 }
 const STATUS_ORDER = { atencion:0, observar:1, nodata:2, ok:3 };
 
@@ -1488,10 +1806,12 @@ function getMetrics(pid){
     _metricsCache.byPlayer[pid] = {
       entries: pe,
       lastEntry: pe[0] || null,
-      monotony: monotony(pid),
       vwi: vwi(pid),
       trend: wellnessTrend(pid),
       load7: recentLoad(pid,7),
+      loadChange: weekLoadChange(pid),
+      adherence: adherence(pid,4),
+      jump7: jumpExposure(pid,7),
       baseline: baselineDailyLoad(pid),
       recovery: recoveryQuality(pid),
       staleDays: practiceDaysSinceCheckin(pid),
@@ -1512,16 +1832,38 @@ function isPracticeDayOn(dateStr){
 function isPracticeDay(){ return isPracticeDayOn(today()); }
 async function togglePracticeDay(){
   var d = today(), key = PRACTICE_TEAM + '|' + d, on = !isPracticeDay();
-  if(on) PRACTICE_DAYS[key] = true; else delete PRACTICE_DAYS[key];
+  var antes = PRACTICE_DAYS[key];
+  if(on) PRACTICE_DAYS[key] = { active:true, jump:(antes && antes.jump) || null }; else delete PRACTICE_DAYS[key];
   renderPracticeToggle(); renderReminder();
   try {
     const { error } = await sb.from('practice_days')
       .upsert({ team:PRACTICE_TEAM, date:d, active:on }, { onConflict:'team,date' });
     if(error) throw error;
   } catch(e){
-    if(on) delete PRACTICE_DAYS[key]; else PRACTICE_DAYS[key] = true;
+    if(on) delete PRACTICE_DAYS[key]; else PRACTICE_DAYS[key] = antes || { active:true, jump:null };
     renderPracticeToggle(); renderReminder();
     toast('No se pudo guardar el estado de práctica', true);
+  }
+}
+// No es un conteo de saltos: es el volumen que marca el staff. Se presenta
+// siempre como estimacion, nunca como una medicion.
+async function setJumpLevel(nivel){
+  var d = today(), key = PRACTICE_TEAM + '|' + d;
+  var reg = PRACTICE_DAYS[key];
+  if(!reg){ toast('Marca primero que hoy hay práctica', true); return; }
+  var antes = reg.jump || null;
+  reg.jump = (antes === nivel) ? null : nivel;
+  renderPracticeToggle();
+  try {
+    const { error } = await sb.from('practice_days')
+      .upsert({ team:PRACTICE_TEAM, date:d, active:true, jump_level:reg.jump },
+              { onConflict:'team,date' });
+    if(error) throw error;
+    invalidateMetricsCache();
+  } catch(e){
+    reg.jump = antes;
+    renderPracticeToggle();
+    toast('No se pudo guardar el volumen de salto', true);
   }
 }
 function practiceDatesDesc(){
@@ -1676,6 +2018,7 @@ function showPage(name, pid) {
   else if (name==='gameday') renderGameDay();
   else if (name==='taper') renderTaper();
   else if (name==='player' && pid) renderPlayerPage(pid);
+  else if (name==='season') renderSeason();
   else if (name==='records') renderRecords();
   else if (name==='tournaments') renderTournaments();
   window.scrollTo(0,0);
@@ -1739,6 +2082,8 @@ function showInvalidLink(legacy){
 
 // ============ ARRANQUE ============
 async function init() {
+  var vEl = document.getElementById('app-version');
+  if(vEl) vEl.textContent = APP_VERSION;
   PLAYER_TOKEN = playerTokenFromURL();
   if (isPlayerMode()) { await startApp(); return; }
   // Antes de resolver la sesion: sin esto el rail se pinta encima del
@@ -1773,7 +2118,10 @@ async function startApp() {
     showLoading(false);
     if (!ok || !PLAYER_ID) { showInvalidLink(false); return; }
     enterPlayerShell();
-    playerView = 'hoy';
+    // La primera vez que abre su enlace no sabe que es esto ni quien lo ve.
+    // Una pantalla, una sola vez, y despues nunca mas.
+    var yo = DB.players.find(function(x){ return x.id===PLAYER_ID; });
+    playerView = (yo && !yo.welcomed_at) ? 'bienvenida' : 'hoy';
     updateGameDayNav();
     updateTaperNav();
     showPage('player', PLAYER_ID);
@@ -1883,8 +2231,46 @@ function painConcernField(label) {
         }).join('')+
       '</div>'+
       '<input type="hidden" id="f-pain-zones" value="[]">'+
+      // Saber si es la rodilla izquierda o la derecha es lo que permite
+      // seguir una molestia en el tiempo. Sin lado, dos rodillas distintas
+      // parecen la misma historia.
+      '<div id="pain-sides-slot"></div>'+
+      '<input type="hidden" id="f-pain-sides" value="{}">'+
     '</div>'+
   '</div>';
+}
+// La espalda se marca sin lado; el resto son estructuras pares.
+const ZONAS_CENTRALES = ['Espalda'];
+function renderPainSides(){
+  var slot = document.getElementById('pain-sides-slot');
+  var hz = document.getElementById('f-pain-zones');
+  var hs = document.getElementById('f-pain-sides');
+  if(!slot || !hz || !hs) return;
+  var zonas = [], lados = {};
+  try{ zonas = JSON.parse(hz.value||'[]'); }catch(e){}
+  try{ lados = JSON.parse(hs.value||'{}'); }catch(e){}
+  var pares = zonas.filter(function(z){ return ZONAS_CENTRALES.indexOf(z)===-1; });
+  if(!pares.length){ slot.innerHTML=''; return; }
+  slot.innerHTML = '<div style="margin-top:.9rem">'+
+    '<label class="form-label">¿De qué lado?</label>'+
+    pares.map(function(z){
+      var sel = lados[z] || '';
+      return '<div class="side-row"><span class="side-name">'+htmlEscape(z)+'</span>'+
+        [['izq','Izq'],['der','Der'],['ambos','Ambos']].map(function(o){
+          return '<button type="button" class="btn-side'+(sel===o[0]?' selected':'')+
+            '" onclick="setPainSide(this,\''+z+'\',\''+o[0]+'\')">'+o[1]+'</button>';
+        }).join('')+
+      '</div>';
+    }).join('')+'</div>';
+}
+function setPainSide(btn, zona, lado){
+  var hs = document.getElementById('f-pain-sides');
+  if(!hs) return;
+  var lados = {};
+  try{ lados = JSON.parse(hs.value||'{}'); }catch(e){}
+  if(lados[zona] === lado) delete lados[zona]; else lados[zona] = lado;
+  hs.value = JSON.stringify(lados);
+  renderPainSides();
 }
 // Campos criticos de captura: corrigieron un error real en el calculo de
 // carga y no se pueden perder.
@@ -1977,6 +2363,16 @@ function toggleZone(btn, zone) {
   if(btn.classList.contains('selected')){ if(arr.indexOf(zone)===-1) arr.push(zone); }
   else arr=arr.filter(function(z){ return z!==zone; });
   hidden.value=JSON.stringify(arr);
+  // Al soltar una zona se olvida tambien su lado, para no guardar un lado
+  // huerfano de una molestia que ya no esta marcada.
+  var hs=document.getElementById('f-pain-sides');
+  if(hs){
+    var lados={};
+    try{ lados=JSON.parse(hs.value||'{}'); }catch(e){}
+    Object.keys(lados).forEach(function(z){ if(arr.indexOf(z)===-1) delete lados[z]; });
+    hs.value=JSON.stringify(lados);
+  }
+  renderPainSides();
 }
 
 /* ---------- Que formulario toca hoy ---------- */
@@ -2045,9 +2441,7 @@ function checkinSteps(kind){
         req:'f-mood' },
       { q:'¿Algo para el coach?', sub:'Opcional.',
         body:playerNoteField('Mensaje al coach (opcional)','¿Algo que quieras decirle al coach?')+
-             '<input type="hidden" id="f-sessionType" value="recuperacion">'+
-             '<input type="hidden" id="f-duration" value="1">'+
-             '<input type="hidden" id="f-rpe" value="1">',
+             '<input type="hidden" id="f-sessionType" value="recuperacion">',
         req:'' }
     ];
   }
@@ -2216,14 +2610,18 @@ function collectEntry(pid){
   var num = function(id){ var v=parseInt(val(id)); return isNaN(v)?null:v; };
   var pain_zones=[];
   try{ pain_zones=JSON.parse(val('f-pain-zones')||'[]'); }catch(e){}
+  var pain_sides={};
+  try{ pain_sides=JSON.parse(val('f-pain-sides')||'{}'); }catch(e){}
   return {
     id:uid(), player_id:pid,
     date: val('f-date')||today(),
     session_label: val('f-sessionType') || (document.getElementById('f-setsPlayed')?'partido':null),
     role_in_event: val('f-roleInEvent')||null,
     sets_played: num('f-setsPlayed'),
-    duration: parseInt(val('f-duration'))||0,
-    rpe: parseInt(val('f-rpe'))||0,
+    // En recuperacion no hubo sesion: se guarda null, no un 1 de relleno que
+    // contaminaba las medias de RPE y aparecia como practica de un minuto.
+    duration: val('f-sessionType')==='recuperacion' ? null : (parseInt(val('f-duration'))||0),
+    rpe: val('f-sessionType')==='recuperacion' ? null : (parseInt(val('f-rpe'))||0),
     mood: num('f-mood'),
     sleep_quality: num('f-sleepQuality'),
     soreness: num('f-soreness'),
@@ -2232,6 +2630,7 @@ function collectEntry(pid){
     motivation: num('f-motivation'),
     pain_concern: parseInt(val('f-painConcern'))||0,
     pain_zones: pain_zones,
+    pain_sides: pain_sides,
     notes: val('f-notes')||'',
     player_note: val('f-player-note')||null
   };
@@ -2413,7 +2812,9 @@ function renderPlayerApp(pid){
   var cd = document.getElementById('player-countdown');
   if(cd) cd.innerHTML = (playerView==='hoy') ? tournamentCountdownHTML(p.team) : '';
 
-  if(playerView==='checkin')      slot.innerHTML = playerCheckinView(p);
+  if(playerView==='bienvenida')   slot.innerHTML = playerWelcomeView(p);
+  else if(playerView==='ostrc')   slot.innerHTML = playerOveruseView(p);
+  else if(playerView==='checkin') slot.innerHTML = playerCheckinView(p);
   else if(playerView==='done')    slot.innerHTML = playerDoneView(p);
   else if(playerView==='carga')   slot.innerHTML = playerCargaView(p);
   else if(playerView==='torneos') slot.innerHTML = playerTorneosView(p);
@@ -2422,6 +2823,121 @@ function renderPlayerApp(pid){
 
   if(playerView==='checkin') initCheckinForm(pid);
   renderInstallBanners();
+}
+
+/* ---------- Seguimiento de sobreuso (OSTRC-O) ----------
+   Semanal, y solo para quien viene reportando molestia. El check-in diario
+   dice "me duele"; esto dice cuanto le esta costando: si entrena menos, si
+   rinde peor, si tuvo que parar. Es la diferencia entre una molestia que se
+   va sola y una que ya esta quitando entrenamiento.
+   Preguntas 1 y 4 puntuan 0/8/17/25; las 2 y 3, 0/6/13/25. Total 0-100.
+   ------------------------------------------------------------------------ */
+const OSTRC_PREGUNTAS = [
+  { q:'¿Has tenido dificultad para entrenar o jugar por esta molestia?',
+    op:['Ninguna','Alguna','Bastante','No pude participar'] },
+  { q:'¿Has tenido que entrenar menos por esta molestia?',
+    op:['Nada','Un poco','Bastante','Mucho'] },
+  { q:'¿Ha afectado tu rendimiento?',
+    op:['Nada','Un poco','Bastante','Mucho'] },
+  { q:'¿Cuánto te ha dolido esta semana?',
+    op:['Nada','Poco','Moderado','Fuerte'] }
+];
+var _ostrcZona = null;
+var _ostrcResp = [null, null, null, null];
+
+function overuseDue(pid){
+  // Zonas marcadas en los ultimos 7 dias que todavia no tienen seguimiento
+  // de esta semana. Si no reporto dolor, no se le pregunta nada.
+  var lim = daysAgoStr(6), wk = weekStart();
+  var zonas = {};
+  playerEntries(pid).forEach(function(e){
+    if(e.date < lim || (e.painConcern||0) < 1) return;
+    (e.painZones||[]).forEach(function(z){ zonas[z] = true; });
+  });
+  var hechas = {};
+  OVERUSE.forEach(function(o){
+    if(o.playerId === pid && o.weekStart === wk) hechas[o.zone] = true;
+  });
+  var pend = Object.keys(zonas).filter(function(z){ return !hechas[z]; });
+  return pend.length ? pend[0] : null;
+}
+function startOveruse(zona){
+  _ostrcZona = zona;
+  _ostrcResp = [null, null, null, null];
+  setPlayerView('ostrc', true);
+}
+function playerOveruseView(p){
+  var z = _ostrcZona || '';
+  return '<div class="panel section-gap">'+
+    '<button class="btn-ghost" style="margin-bottom:1rem" onclick="setPlayerView(\'hoy\', true)">← Volver</button>'+
+    '<h1 class="page-title">Cómo va tu '+htmlEscape(z.toLowerCase())+'</h1>'+
+    '<p class="page-sub">Cuatro preguntas, una vez por semana. Sirven para ver si la molestia va cediendo o si te está quitando entrenamiento.</p>'+
+    OSTRC_PREGUNTAS.map(function(pr, i){
+      return '<div class="form-block"><label class="form-label">'+pr.q+'</label>'+
+        '<div class="opt-grid" style="grid-template-columns:repeat(2,1fr)">'+
+          pr.op.map(function(t, j){
+            return '<button type="button" class="btn-option'+(_ostrcResp[i]===j?' selected':'')+
+              '" onclick="setOveruseAnswer('+i+','+j+')">'+t+'</button>';
+          }).join('')+
+        '</div></div>';
+    }).join('')+
+    '<div id="ostrc-error" class="form-help" style="color:var(--coral)"></div>'+
+    '<button class="btn-primary" style="width:100%;margin-top:.6rem" onclick="submitOveruse()">Guardar seguimiento</button>'+
+  '</div>';
+}
+function setOveruseAnswer(i, j){
+  _ostrcResp[i] = j;
+  if(currentPlayerId) renderPlayerApp(currentPlayerId);
+}
+async function submitOveruse(){
+  var err = document.getElementById('ostrc-error');
+  if(_ostrcResp.some(function(v){ return v === null; })){
+    if(err) err.textContent = 'Contesta las cuatro preguntas antes de guardar.';
+    return;
+  }
+  if(err) err.textContent = '';
+  try {
+    var res = await sb.rpc('player_submit_overuse', {
+      p_token: PLAYER_TOKEN, p_zone: _ostrcZona,
+      p_q1: _ostrcResp[0], p_q2: _ostrcResp[1], p_q3: _ostrcResp[2], p_q4: _ostrcResp[3]
+    });
+    if(res.error) throw new Error(res.error.message);
+    OVERUSE.push({ playerId:PLAYER_ID, weekStart:weekStart(), zone:_ostrcZona,
+      q1:_ostrcResp[0], q2:_ostrcResp[1], q3:_ostrcResp[2], q4:_ostrcResp[3],
+      score:(res.data && res.data.score) || null });
+    _ostrcZona = null;
+    toast('Seguimiento guardado');
+    setPlayerView('hoy', true);
+  } catch(e){
+    console.error('overuse', e);
+    if(err) err.textContent = 'No se pudo guardar. Revisa la conexión e inténtalo otra vez.';
+  }
+}
+
+/* ---------- Bienvenida (una sola vez) ---------- */
+function playerWelcomeView(p){
+  return '<div class="panel section-gap">'+
+    '<h1 class="page-title">Hola, '+htmlEscape(firstName(p.name))+'</h1>'+
+    '<p class="page-sub">Este enlace es tuyo. No hace falta cuenta ni contraseña: guárdalo en la pantalla de inicio y con abrirlo entras.</p>'+
+    '<div class="welcome-list">'+
+      '<div class="welcome-item"><b>Qué te vamos a preguntar</b>'+
+        '<p>Cuánto duró la práctica, qué tan duro estuvo, cómo dormiste y si algo te duele. Un minuto, casi todo tocando botones.</p></div>'+
+      '<div class="welcome-item"><b>Para qué sirve</b>'+
+        '<p>Para ajustar la carga antes de que una molestia se vuelva lesión. No es una prueba y no evalúa tu nivel.</p></div>'+
+      '<div class="welcome-item"><b>Contesta con la verdad</b>'+
+        '<p>Decir que te duele la rodilla no te saca del juego: es lo que permite cuidarla a tiempo. Si escribes que estás bien cuando no lo estás, la app no sirve de nada.</p></div>'+
+      '<div class="welcome-item"><b>Quién lo ve</b>'+
+        '<p>Solo el cuerpo técnico. Tus compañeros ven únicamente quién registró el día, nunca tus respuestas.</p></div>'+
+    '</div>'+
+    '<button class="btn-primary" style="width:100%;margin-top:1.2rem" onclick="finishWelcome()">Entendido, empezar</button>'+
+  '</div>';
+}
+async function finishWelcome(){
+  var yo = DB.players.find(function(x){ return x.id===PLAYER_ID; });
+  if(yo) yo.welcomed_at = new Date().toISOString();
+  setPlayerView('hoy', true);
+  try { if(PLAYER_TOKEN) await sb.rpc('player_mark_welcomed', { p_token: PLAYER_TOKEN }); }
+  catch(e){ console.error('welcomed', e); }
 }
 
 /* ---------- Inicio ---------- */
@@ -2454,6 +2970,15 @@ function playerHomeView(p){
       '<span style="font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--pink)">racha</span></div>'
     : '';
 
+  // Si viene arrastrando una molestia y no ha hecho el seguimiento semanal,
+  // se le ofrece aqui. Solo aparece cuando aplica.
+  var zonaPend = overuseDue(pid);
+  var ostrcCard = zonaPend
+    ? '<div class="ostrc-card"><b>Seguimiento de tu '+htmlEscape(zonaPend.toLowerCase())+'</b>'+
+      '<p>Marcaste esa zona esta semana. Cuatro preguntas para saber si va cediendo.</p>'+
+      '<button class="btn-secondary" style="width:100%" onclick="startOveruse(\''+zonaPend+'\')">Contestar</button></div>'
+    : '';
+
   var cta;
   if(doneToday){
     cta = '<div class="done-card">'+checkSVG('#34e3a5')+
@@ -2478,6 +3003,8 @@ function playerHomeView(p){
         '<div style="font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:6px">'+formatDateLong(today())+'</div>'+
       '</div>'+ streakChip +
     '</div>'+
+
+    ostrcCard +
 
     '<div class="halo-card" style="margin-top:16px">'+
       '<img class="hc-mark" src="/angels-mark.png" alt="">'+
@@ -2847,7 +3374,7 @@ function teamWeeklyLoads(tf){
 function teamWeeklyAvgRPE(tf){
   var pids = teamPidsFor(tf);
   var rows = DB.entries.filter(function(e){
-    return pids.indexOf(e.playerId)!==-1 && e.date>=daysAgoStr(6) && (e.rpe||0)>0;
+    return pids.indexOf(e.playerId)!==-1 && e.date>=daysAgoStr(6) && isSession(e);
   });
   if(!rows.length) return null;
   return rows.reduce(function(s,e){ return s+e.rpe; },0)/rows.length;
@@ -2888,7 +3415,7 @@ function renderDashboard(teamFilter) {
   try { renderReminder(tf); } catch(e){ console.log('reminder:', e); }
   updateAlertBadge();
   renderSemaforo(tf);
-  renderMonotonyBoard();
+  renderProgresionBoard();
 
   document.getElementById('load-chart-tabs').innerHTML=['ALL'].concat(TEAM_ORDER).map(function(t){
     return '<div class="filter-tab '+(currentFilter.loadChart===t?'active':'')+'" onclick="setLoadChartTeam(\''+t+'\')">'+(t==='ALL'?'Todos':t)+'</div>';
@@ -2900,13 +3427,13 @@ function renderDashboard(teamFilter) {
   document.getElementById('dash-stats').innerHTML=teamsToShow.map(function(team){
     const tPlayers=DB.players.filter(function(p){ return p.team===team; });
     const tEntries=DB.entries.filter(function(e){ return tPlayers.some(function(p){ return p.id===e.playerId; }); });
-    const tLatest=tPlayers.map(function(p){ return playerEntries(p.id)[0]; }).filter(Boolean);
-    const tAvgRpe=tLatest.length?(tLatest.reduce(function(s,e){ return s+(e.rpe||0); },0)/tLatest.length):null;
+    const tLatest=tPlayers.map(function(p){ return sessionEntries(p.id)[0]; }).filter(Boolean);
+    const tAvgRpe=tLatest.length?(tLatest.reduce(function(s,e){ return s+e.rpe; },0)/tLatest.length):null;
     const tLoad=tEntries.reduce(function(s,e){ return s+internalLoad(e); },0);
     const color=TEAM_COLOR[team];
     return '<div class="stat-card"><div class="stat-label">Jugadores</div><div class="stat-value" data-cu="'+tPlayers.length+'">0</div><div class="stat-sub">'+team+'</div></div>'+
       '<div class="stat-card"><div class="stat-label">Entradas RPE</div><div class="stat-value" style="color:'+color+'" data-cu="'+tEntries.length+'">0</div><div class="stat-sub">total acumulado</div></div>'+
-      '<div class="stat-card"><div class="stat-label">RPE Promedio</div><div class="stat-value">'+(tAvgRpe!=null?tAvgRpe.toFixed(1):'—')+'</div><div class="stat-sub">último check-in</div></div>'+
+      '<div class="stat-card"><div class="stat-label">RPE Promedio</div><div class="stat-value">'+(tAvgRpe!=null?tAvgRpe.toFixed(1):'—')+'</div><div class="stat-sub">última sesión</div></div>'+
       '<div class="stat-card"><div class="stat-label">Carga Total</div><div class="stat-value" data-cu="'+tLoad+'">0</div><div class="stat-sub">unidades RPE·min</div></div>';
   }).join('');
   document.querySelectorAll('#dash-stats [data-cu]').forEach(function(el){
@@ -2957,9 +3484,20 @@ function renderPracticeToggle(){
       pillBtn(on ? 'Practicamos hoy' : 'Hoy no hay práctica', on, 'togglePracticeDay()')+
       pillBtn(tmode ? 'Modo Torneo activado' : 'Modo Torneo', tmode,
               'toggleTournament(\''+PRACTICE_TEAM+'\','+(!tmode)+')', '#EB448F')+
+      pillBtn('Recordar al equipo', false, 'remindTeam()', '#25D366')+
       pillBtn('Copiar informe del día', false, 'copyDailyReport()')+
       pillBtn('Reporte semanal', false, 'copyWeeklyReport()', '#51B7E4')+
     '</div>'+
+    // El salto es la carga que el RPE no ve: dos horas de recepcion y dos
+    // horas de bloqueo y remate se sienten igual de duras y no lo son.
+    // Lo marca el staff, que es quien sabe que se hizo en la practica.
+    (on ? '<div style="margin-bottom:1rem;display:flex;align-items:center;gap:9px;flex-wrap:wrap">'+
+      '<span style="font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)">Volumen de salto</span>'+
+      ['bajo','medio','alto'].map(function(lv){
+        var sel = jumpLevelOn(today()) === lv;
+        return pillBtn(lv.charAt(0).toUpperCase()+lv.slice(1), sel, 'setJumpLevel(\''+lv+'\')', '#8B5CF6');
+      }).join('')+
+    '</div>' : '')+
     '<div style="margin-bottom:1.4rem;font-family:var(--mono);font-size:11px;color:var(--faint);line-height:1.7">'+
       (on ? 'El recordatorio de check-in está activo' : 'El recordatorio está oculto para hoy')+
       (tmode ? ' · los jugadores ven el check-in de Game Day' : '')+
@@ -3143,7 +3681,7 @@ function renderSemaforo(tf){
   if(!players.length){ slot.innerHTML=''; return; }
   var rows = players.map(function(p){
     var m = getMetrics(p.id), st = playerStatus(p.id), last = m.lastEntry;
-    var wk = m.entries.filter(function(e){ return e.date>=daysAgoStr(6) && (e.rpe||0)>0; });
+    var wk = m.entries.filter(function(e){ return e.date>=daysAgoStr(6) && isSession(e); });
     var rpe = wk.length ? (wk.reduce(function(x,e){ return x+e.rpe; },0)/wk.length).toFixed(1) : '—';
     return { p:p, m:m, st:st, sleep:(last&&last.sleepQuality!=null)?last.sleepQuality:'—', rpe:rpe,
       ord: STATUS_ORDER[st.key] };
@@ -3176,22 +3714,35 @@ function renderSemaforo(tf){
   '</div>';
 }
 
-/* ---------- Monotonia ---------- */
-function renderMonotonyBoard(){
-  var slot = document.getElementById('monotony-board');
+/* ---------- Progresion de carga ---------- */
+function renderProgresionBoard(){
+  var slot = document.getElementById('progresion-board');
   if(!slot) return;
-  const monoRows=DB.players.map(function(p){ return {p:p, m:getMetrics(p.id).monotony}; })
-    .filter(function(x){ return x.m && x.m.mono!=null; })
-    .sort(function(a,b){ return b.m.mono-a.m.mono; });
-  slot.innerHTML = monoRows.length?
-    monoRows.slice(0,7).map(function(r){
-      const col = r.m.mono>=2 ? 'var(--coral)' : r.m.mono>=1.5 ? 'var(--amber)' : 'var(--mint)';
-      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)">'+
-        '<span style="flex:1;min-width:0;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="openPlayer(\''+r.p.id+'\')">'+htmlEscape(r.p.name)+'</span>'+
-        '<span style="font-family:var(--mono);font-size:10.5px;color:var(--faint)">strain '+(r.m.strain!=null?Math.round(r.m.strain).toLocaleString():'—')+'</span>'+
-        '<b style="font-family:var(--mono);font-size:12.5px;color:'+col+'">'+r.m.mono.toFixed(2)+'</b></div>';
-    }).join('')
-    : emptyState('Sin variación medible','La monotonía requiere check-ins en varios días de la última semana.');
+  var rows = DB.players.map(function(p){
+    var m = getMetrics(p.id);
+    return { p:p, chg:m.loadChange, adh:m.adherence };
+  }).filter(function(x){ return x.chg || x.adh; })
+    .sort(function(a,b){
+      var va = a.chg ? a.chg.pct : -999, vb = b.chg ? b.chg.pct : -999;
+      return vb - va;
+    });
+  if(!rows.length){
+    slot.innerHTML = emptyState('Todavía sin comparación','Hacen falta dos sesiones registradas en cada una de las últimas dos semanas.');
+    return;
+  }
+  slot.innerHTML = rows.slice(0,7).map(function(r){
+    var txt, col;
+    if(r.chg){
+      col = r.chg.pct >= 30 ? 'var(--coral)' : r.chg.pct >= 15 ? 'var(--amber)' :
+            r.chg.pct <= -30 ? 'var(--sky)' : 'var(--mint)';
+      txt = (r.chg.pct > 0 ? '+' : '') + r.chg.pct + '%';
+    } else { col = 'var(--faint)'; txt = '—'; }
+    var sub = r.adh ? 'adherencia ' + r.adh.pct + '%' : '';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)">'+
+      '<span style="flex:1;min-width:0;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="openPlayer(\''+r.p.id+'\')">'+htmlEscape(r.p.name)+'</span>'+
+      '<span style="font-family:var(--mono);font-size:10.5px;color:var(--faint)">'+sub+'</span>'+
+      '<b style="font-family:var(--mono);font-size:12.5px;color:'+col+'">'+txt+'</b></div>';
+  }).join('');
 }
 
 /* ---------- Insignias y tarjetas ---------- */
@@ -3444,6 +3995,30 @@ function sendReminder(pid){
   var msg = 'Hola ' + firstName(p.name) + '. Recuerda llenar tu check-in de hoy en Angels Performance OS.\n\n' + l;
   window.open('https://wa.me/1' + phone + '?text=' + encodeURIComponent(msg), '_blank');
 }
+// Uno a uno por WhatsApp no escala. Esto arma el mensaje del grupo y abre
+// la hoja de compartir del telefono; el enlace personal NO va aqui, porque
+// el grupo es de todos y cada enlace es de uno solo.
+function remindTeam(){
+  var tf = currentFilter.dash;
+  var missing = playersWithoutCheckinToday(tf);
+  var nombres = missing.map(function(p){ return firstName(p.name); });
+  var msg;
+  if(!nombres.length){
+    msg = 'Equipo: ya todos registraron el check-in de hoy. Gracias.';
+  } else {
+    msg = 'Equipo: falta el check-in de hoy de ' + listaEs(nombres) + '. ' +
+          'Ábranlo desde su enlace personal, es un minuto.';
+  }
+  if(navigator.share){
+    navigator.share({ text: msg }).catch(function(){});
+    return;
+  }
+  copyText(msg, 'Mensaje copiado, pégalo en el grupo');
+}
+function listaEs(arr){
+  if(arr.length === 1) return arr[0];
+  return arr.slice(0, -1).join(', ') + ' y ' + arr[arr.length-1];
+}
 function sendBulkReminder(){
   var tf = currentFilter.dash;
   var missing = playersWithoutCheckinToday(tf).filter(function(p){ return !!p.phone; });
@@ -3456,6 +4031,72 @@ function sendBulkReminder(){
     setTimeout(sendNext, 800);
   }
   sendNext();
+}
+
+/* ---------- Temporada completa ----------
+   Una temporada no se juzga por la semana en curso. Esta pantalla pone las
+   semanas en fila para ver el arco: cuando se subio, cuando se bajo, cuando
+   el equipo dejo de registrar.
+   ------------------------------------------------------------------------ */
+function seasonWeeks(){
+  if(!DB.entries.length) return [];
+  var fechas = DB.entries.map(function(e){ return e.date; }).sort();
+  var w0 = weekStart(fechas[0]), wN = weekStart(today());
+  var semanas = [], cursor = w0, guarda = 0;
+  while(cursor <= wN && guarda++ < 200){
+    semanas.push(cursor);
+    var d = dateFromISO(cursor); d.setDate(d.getDate() + 7);
+    cursor = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  return semanas;
+}
+function renderSeason(){
+  var slot = document.getElementById('season-content');
+  if(!slot || !isStaff()){ if(slot) slot.innerHTML=''; return; }
+  var semanas = seasonWeeks();
+  if(!semanas.length){
+    slot.innerHTML = emptyState('Todavía no hay temporada','Aparecerá en cuanto haya el primer check-in registrado.');
+    return;
+  }
+  var filas = semanas.map(function(w){
+    var d = dateFromISO(w); d.setDate(d.getDate()+6);
+    var fin = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    var ents = DB.entries.filter(function(e){ return e.date >= w && e.date <= fin; });
+    var ses = ents.filter(isSession);
+    var carga = ses.reduce(function(a,e){ return a + internalLoad(e); }, 0);
+    var vwis = ents.map(vwiFromEntry).filter(function(v){ return v!=null; });
+    var vwi = vwis.length ? Math.round(vwis.reduce(function(a,b){ return a+b; },0)/vwis.length) : null;
+    var dias = practiceDatesDesc().filter(function(x){ return x >= w && x <= fin; });
+    var esperados = dias.length * DB.players.length;
+    var hechos = ents.filter(function(e){ return dias.indexOf(e.date)!==-1; }).length;
+    var adh = esperados ? Math.round(hechos/esperados*100) : null;
+    var dolor = ents.filter(function(e){ return (e.painConcern||0) >= 2; }).length;
+    return { w:w, fin:fin, carga:carga, vwi:vwi, adh:adh, ses:ses.length, dolor:dolor, jug:DB.players.length };
+  });
+  var maxCarga = Math.max.apply(null, filas.map(function(f){ return f.carga; }).concat([1]));
+
+  slot.innerHTML = '<div class="panel section-gap">'+
+    '<div class="panel-title"><span class="dot"></span>'+filas.length+' semanas registradas</div>'+
+    '<div class="table-wrap"><table class="data"><thead><tr>'+
+      '<th>Semana</th><th>Carga</th><th class="tnum">Sesiones</th><th class="tnum">Bienestar</th>'+
+      '<th class="tnum">Adherencia</th><th class="tnum">Dolor 2+</th>'+
+    '</tr></thead><tbody>'+
+    filas.slice().reverse().map(function(f){
+      var pct = Math.round(f.carga / maxCarga * 100);
+      var colV = f.vwi==null ? 'var(--faint)' : haloColor(f.vwi);
+      return '<tr>'+
+        '<td style="white-space:nowrap">'+f.w+'</td>'+
+        '<td><div class="season-bar"><i style="width:'+pct+'%"></i></div>'+
+          '<span class="season-num">'+Math.round(f.carga).toLocaleString()+'</span></td>'+
+        '<td class="tnum">'+f.ses+'</td>'+
+        '<td class="tnum" style="color:'+colV+'">'+(f.vwi!=null?f.vwi:'—')+'</td>'+
+        '<td class="tnum">'+(f.adh!=null?f.adh+'%':'—')+'</td>'+
+        '<td class="tnum">'+(f.dolor||'—')+'</td>'+
+      '</tr>';
+    }).join('')+
+    '</tbody></table></div>'+
+    '<div class="mono-note">Carga interna semanal = suma de RPE × minutos de las sesiones. Los días de recuperación no suman carga. La adherencia se calcula solo sobre los días marcados como práctica.</div>'+
+  '</div>';
 }
 
 /* =========================================================================
@@ -3475,12 +4116,65 @@ function painSummary(pid, nEntries){
   var withPain = 0;
   ents.forEach(function(e){
     if((e.painConcern||0)>=1) withPain++;
-    (e.painZones||[]).forEach(function(z){ counts[z]=(counts[z]||0)+1; });
+    var lados = e.painSides || {};
+    (e.painZones||[]).forEach(function(z){
+      var l = lados[z];
+      var k = z + (l ? (l==='ambos' ? ' (ambos)' : l==='izq' ? ' (izq)' : ' (der)') : '');
+      counts[k]=(counts[k]||0)+1;
+    });
   });
   var rows = Object.keys(counts).map(function(z){ return {zone:z, n:counts[z]}; })
     .sort(function(a,b){ return b.n-a.n; });
   return { rows:rows, withPain:withPain, total:ents.length };
 }
+
+// Reune lo que no cabe en una grafica: adherencia, progresion, exposicion al
+// salto, disponibilidad real, seguimiento de sobreuso y crecimiento.
+function seguimientoPanel(pid){
+  var m = getMetrics(pid);
+  var cel = function(etq, val, sub){
+    return '<div class="seg-cell"><span class="seg-label">'+etq+'</span>'+
+      '<b class="seg-value">'+val+'</b>'+
+      (sub ? '<span class="seg-sub">'+sub+'</span>' : '')+'</div>';
+  };
+  var celdas = '';
+  celdas += cel('Adherencia', m.adherence ? m.adherence.pct+'%' : '—',
+    m.adherence ? m.adherence.done+' de '+m.adherence.total+' prácticas · 4 semanas' : 'sin prácticas marcadas');
+  celdas += cel('Carga vs. semana anterior',
+    m.loadChange ? (m.loadChange.pct>0?'+':'')+m.loadChange.pct+'%' : '—',
+    m.loadChange ? Math.round(m.loadChange.esta).toLocaleString()+' frente a '+Math.round(m.loadChange.anterior).toLocaleString() : 'faltan sesiones para comparar');
+  celdas += cel('Exposición al salto · 7 días',
+    m.jump7 ? String(m.jump7.total) : '—',
+    m.jump7 ? m.jump7.sesiones+' sesiones marcadas · estimación, no es un conteo' : 'sin volumen marcado');
+
+  var lastAvail = AVAILABILITY.filter(function(a){ return a.playerId===pid; })
+    .sort(function(a,b){ return b.date.localeCompare(a.date); })[0];
+  celdas += cel('Disponibilidad', lastAvail ? AVAIL_LABEL[lastAvail.status] || lastAvail.status : '—',
+    lastAvail ? formatDateLong(lastAvail.date) + (lastAvail.note ? ' · '+htmlEscape(lastAvail.note) : '') : 'sin registrar');
+
+  var gs = GROWTH.filter(function(g){ return g.playerId===pid; })
+    .sort(function(a,b){ return b.date.localeCompare(a.date); });
+  var subG = 'sin medir';
+  if(gs.length >= 2){
+    var d = gs[0].heightCm - gs[1].heightCm;
+    var meses = Math.max(1, Math.round((dateFromISO(gs[0].date) - dateFromISO(gs[1].date)) / 2629800000));
+    subG = (d>=0?'+':'') + d.toFixed(1) + ' cm en ' + meses + ' mes' + (meses===1?'':'es');
+  } else if(gs.length === 1){ subG = 'medido el ' + formatDateLong(gs[0].date); }
+  celdas += cel('Estatura', gs.length ? gs[0].heightCm.toFixed(1)+' cm' : '—', subG);
+
+  var ous = OVERUSE.filter(function(o){ return o.playerId===pid; })
+    .sort(function(a,b){ return b.weekStart.localeCompare(a.weekStart); });
+  celdas += cel('Sobreuso (OSTRC)', ous.length ? ous[0].score+'/100' : '—',
+    ous.length ? ous[0].zone + ' · semana del ' + ous[0].weekStart : 'sin seguimiento esta temporada');
+
+  return '<div class="panel section-gap">'+
+    '<div class="panel-title"><span class="dot" style="background:var(--sky)"></span>Seguimiento</div>'+
+    '<div class="seg-grid">'+celdas+'</div>'+
+    '<div class="mono-note">La exposición al salto es una estimación a partir del volumen que marca el staff y de lo que salta cada posición: no sustituye a un contador de saltos. El índice de sobreuso (OSTRC-O) va de 0 a 100 y sube cuando la molestia empieza a quitar entrenamiento.</div>'+
+  '</div>';
+}
+const AVAIL_LABEL = { completo:'Entrenó completo', parcial:'Entrenó parcial',
+                      ninguno:'No entrenó', lesionado:'Lesionado' };
 
 function renderStaffPlayer(pid){
   const p=DB.players.find(function(x){ return x.id===pid; });
@@ -3537,7 +4231,7 @@ function renderStaffPlayer(pid){
       '<td class="tnum">'+(e.mood!=null?e.mood:'—')+' / '+(e.sleepQuality!=null?e.sleepQuality:'—')+' / '+(e.soreness!=null?e.soreness:'—')+' / '+(e.stress!=null?e.stress:'—')+'</td>'+
       '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;color:var(--dim)">'+htmlEscape(e.notes||'')+'</td>'+
       '<td>'+(e.playerNote?'<button class="note-btn" data-name="'+attrEscape(p.name)+'" data-date="'+e.date+'" data-note="'+attrEscape(e.playerNote)+'" title="Ver mensaje">Ver</button>':'<span style="color:var(--faint)">—</span>')+'</td>'+
-      '<td style="white-space:nowrap"><button class="edit-date-btn" onclick="editEntryDate(\''+e.id+'\',\''+e.date+'\')" title="Corregir fecha" style="margin-right:5px">Fecha</button>'+
+      '<td style="white-space:nowrap"><button class="edit-date-btn" onclick="editEntryDate(\''+e.id+'\')" title="Corregir el registro" style="margin-right:5px">Editar</button>'+
       '<button class="del-btn" onclick="deleteEntry(\''+e.id+'\')" title="Eliminar">Borrar</button></td>'+
     '</tr>';
   }).join('');
@@ -3561,6 +4255,8 @@ function renderStaffPlayer(pid){
         '<div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap">'+
           '<button class="btn-secondary" onclick="openMsgModal(\''+pid+'\',event)">Enviar mensaje</button>'+
           '<button class="btn-ghost" onclick="openInjModal(\''+pid+'\',event)">'+(p.injury_note?'Editar restricción':'Registrar restricción')+'</button>'+
+          '<button class="btn-ghost" onclick="openAvailModal(\''+pid+'\',event)">Disponibilidad de hoy</button>'+
+          '<button class="btn-ghost" onclick="openGrowthModal(\''+pid+'\',event)">Registrar estatura</button>'+
         '</div>'+
       '</div>'+
     '</div>'+
@@ -3568,6 +4264,8 @@ function renderStaffPlayer(pid){
     (p.coach_message?'<div class="coach-banner"><strong>Mensaje activo para el jugador</strong>'+htmlEscape(p.coach_message)+'</div>':'')+
     (p.injury_note?'<div class="coach-banner" style="background:var(--coral-soft);border-color:rgba(255,93,108,.3)"><strong style="color:var(--coral)">Restricción registrada</strong>'+htmlEscape(p.injury_note)+'</div>':'')+
     (isTournament?'<div class="gold-banner">Modo Torneo activado — el jugador ve el check-in de Game Day</div>':'')+
+
+    seguimientoPanel(pid)+
 
     '<div class="chart-row">'+
       '<div class="panel">'+
@@ -3715,18 +4413,163 @@ async function deleteEntry(entryId){
   else if(currentPage==='records') renderRecords();
   else renderDashboard();
 }
-async function editEntryDate(entryId, currentDate){
-  var nd = prompt('Nueva fecha (AAAA-MM-DD):', currentDate);
-  if(nd===null) return;
-  nd = nd.trim();
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(nd)){ toast('Formato de fecha inválido', true); return; }
-  if(nd > today()){ toast('No se permiten fechas futuras', true); return; }
-  const res = await sb.from('entries').update({ date: nd }).eq('id', entryId);
-  if(res.error){ toast('Error: '+res.error.message, true); return; }
+/* ---------- Disponibilidad real ---------- */
+var _availPid = null;
+function openAvailModal(pid, event){
+  if(event) event.stopPropagation();
+  _availPid = pid;
+  var p = DB.players.find(function(x){ return x.id===pid; });
+  var hoy = today();
+  var ya = AVAILABILITY.filter(function(a){ return a.playerId===pid && a.date===hoy; })[0];
+  document.getElementById('avail-modal-name').textContent = 'Disponibilidad' + (p ? ' de ' + p.name : '');
+  document.getElementById('avail-date').value = hoy;
+  document.getElementById('avail-note').value = (ya && ya.note) || '';
+  document.getElementById('avail-error').textContent = '';
+  setAvailStatus((ya && ya.status) || 'completo');
+  document.getElementById('avail-modal').style.display = 'flex';
+}
+function setAvailStatus(st){
+  var h = document.getElementById('avail-status');
+  if(h) h.value = st;
+  var box = document.getElementById('avail-opts');
+  if(!box) return;
+  box.innerHTML = ['completo','parcial','ninguno','lesionado'].map(function(k){
+    return '<button type="button" class="btn-option'+(k===st?' selected':'')+
+      '" onclick="setAvailStatus(\''+k+'\')">'+AVAIL_LABEL[k]+'</button>';
+  }).join('');
+}
+function closeAvailModal(ev){
+  if(ev && ev.target !== ev.currentTarget) return;
+  document.getElementById('avail-modal').style.display = 'none';
+  _availPid = null;
+}
+async function saveAvailability(){
+  var err = document.getElementById('avail-error');
+  var fecha = document.getElementById('avail-date').value;
+  var st = document.getElementById('avail-status').value;
+  var nota = String(document.getElementById('avail-note').value || '').trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(fecha)){ err.textContent='La fecha no tiene el formato correcto.'; return; }
+  if(fecha > today()){ err.textContent='No se permiten fechas futuras.'; return; }
+  var res = await sb.from('availability').upsert(
+    { player_id:_availPid, date:fecha, status:st, note:nota || null },
+    { onConflict:'player_id,date' });
+  if(res.error){ err.textContent='No se pudo guardar: '+res.error.message; return; }
+  var pid = _availPid;
+  closeAvailModal();
   await loadAll();
-  toast('Fecha corregida');
+  toast('Disponibilidad registrada');
+  if(currentPage==='player'&&currentPlayerId) renderPlayerPage(currentPlayerId); else renderDashboard();
+}
+
+/* ---------- Estatura ---------- */
+var _growthPid = null;
+function openGrowthModal(pid, event){
+  if(event) event.stopPropagation();
+  _growthPid = pid;
+  var p = DB.players.find(function(x){ return x.id===pid; });
+  var ult = GROWTH.filter(function(g){ return g.playerId===pid; })
+    .sort(function(a,b){ return b.date.localeCompare(a.date); })[0];
+  document.getElementById('growth-modal-name').textContent = 'Estatura' + (p ? ' de ' + p.name : '');
+  document.getElementById('growth-date').value = today();
+  document.getElementById('growth-cm').value = ult ? ult.heightCm : '';
+  document.getElementById('growth-error').textContent = '';
+  document.getElementById('growth-modal').style.display = 'flex';
+}
+function closeGrowthModal(ev){
+  if(ev && ev.target !== ev.currentTarget) return;
+  document.getElementById('growth-modal').style.display = 'none';
+  _growthPid = null;
+}
+async function saveGrowth(){
+  var err = document.getElementById('growth-error');
+  var fecha = document.getElementById('growth-date').value;
+  var cm = parseFloat(document.getElementById('growth-cm').value);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(fecha)){ err.textContent='La fecha no tiene el formato correcto.'; return; }
+  if(fecha > today()){ err.textContent='No se permiten fechas futuras.'; return; }
+  if(isNaN(cm) || cm < 120 || cm > 230){ err.textContent='La estatura debe estar entre 120 y 230 cm.'; return; }
+  var res = await sb.from('growth').upsert(
+    { player_id:_growthPid, date:fecha, height_cm:cm },
+    { onConflict:'player_id,date' });
+  if(res.error){ err.textContent='No se pudo guardar: '+res.error.message; return; }
+  closeGrowthModal();
+  await loadAll();
+  toast('Estatura registrada');
   if(currentPage==='player'&&currentPlayerId) renderPlayerPage(currentPlayerId);
-  else renderRecords();
+}
+
+// Los muchachos se equivocan con los minutos y eso desvia la carga entera.
+// El staff corrige lo objetivo; el bienestar queda bloqueado a proposito.
+var _editId = null;
+function editEntryDate(entryId){
+  var e = DB.entries.find(function(x){ return x.id===entryId; });
+  if(!e){ toast('No se encontró el registro', true); return; }
+  var p = DB.players.find(function(x){ return x.id===e.playerId; });
+  _editId = entryId;
+  document.getElementById('edit-modal-name').textContent = 'Corregir registro' + (p ? ' de ' + p.name : '');
+  document.getElementById('edit-date').value = e.date || '';
+  document.getElementById('edit-duration').value = (e.duration!=null ? e.duration : '');
+  document.getElementById('edit-session').value = e.sessionLabel || '';
+  document.getElementById('edit-rpe').value = (e.rpe!=null ? e.rpe : '');
+  document.getElementById('edit-sets').value = (e.setsPlayed!=null ? e.setsPlayed : '');
+  var loc = [];
+  if(e.sleepQuality!=null) loc.push('sueño '+e.sleepQuality);
+  if(e.fatigue!=null) loc.push('fatiga '+e.fatigue);
+  if(e.soreness!=null) loc.push('dolor muscular '+e.soreness);
+  if(e.mood!=null) loc.push('ánimo '+e.mood);
+  if((e.painConcern||0)>0) loc.push('dolor '+e.painConcern+(e.painZones&&e.painZones.length?' en '+painZonesText(e):''));
+  document.getElementById('edit-locked').textContent = loc.length ? 'Lo que contestó el jugador: '+loc.join(' · ') : '';
+  document.getElementById('edit-error').textContent = '';
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+function closeEditModal(ev){
+  if(ev && ev.target !== ev.currentTarget) return;
+  document.getElementById('edit-modal').style.display = 'none';
+  _editId = null;
+}
+async function saveEntryEdit(){
+  var err = document.getElementById('edit-error');
+  var e = DB.entries.find(function(x){ return x.id===_editId; });
+  if(!e) return;
+  var v = function(id){ var el=document.getElementById(id); return el ? String(el.value||'').trim() : ''; };
+  var nd = v('edit-date');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(nd)){ err.textContent='La fecha no tiene el formato correcto.'; return; }
+  if(nd > today()){ err.textContent='No se permiten fechas futuras.'; return; }
+
+  var sess = v('edit-session');
+  var esRec = sess === 'recuperacion';
+  var dur = v('edit-duration')==='' ? null : parseInt(v('edit-duration'), 10);
+  var rpe = v('edit-rpe')==='' ? null : parseInt(v('edit-rpe'), 10);
+  var sets = v('edit-sets')==='' ? null : parseInt(v('edit-sets'), 10);
+
+  if(esRec){ dur = null; rpe = null; }
+  else {
+    if(dur==null || isNaN(dur) || dur < 1 || dur > 600){ err.textContent='La duración debe estar entre 1 y 600 minutos.'; return; }
+    if(rpe==null || isNaN(rpe) || rpe < 1 || rpe > 10){ err.textContent='El RPE debe estar entre 1 y 10.'; return; }
+  }
+  if(sets!=null && (isNaN(sets) || sets < 0 || sets > 10)){ err.textContent='Los sets deben estar entre 0 y 10.'; return; }
+
+  var antes = { date:e.date, session_label:e.sessionLabel, duration:e.duration, rpe:e.rpe, sets_played:e.setsPlayed };
+  var despues = { date:nd, session_label: sess || null, duration:dur, rpe:rpe, sets_played:sets };
+
+  var res = await sb.from('entries').update(despues).eq('id', _editId);
+  if(res.error){ err.textContent = 'No se pudo guardar: '+res.error.message; return; }
+
+  // Rastro de quien corrigio que. Si falla, la correccion no se deshace: el
+  // registro es secundario respecto al dato.
+  try {
+    await sb.from('entry_edits').insert({
+      entry_id: _editId, player_id: e.playerId,
+      changed_by: (_staffSession && _staffSession.user && _staffSession.user.email) || 'staff',
+      before: antes, after: despues
+    });
+  } catch(x){ console.error('entry_edits', x); }
+
+  closeEditModal();
+  await loadAll();
+  toast('Registro corregido');
+  if(currentPage==='player'&&currentPlayerId) renderPlayerPage(currentPlayerId);
+  else if(currentPage==='records') renderRecords();
+  else renderDashboard();
 }
 
 /* ---------- Modales ---------- */
@@ -3863,7 +4706,7 @@ function renderRecords(){
       '<td class="tnum">'+(e.stress!=null?e.stress:'—')+'</td>'+
       '<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;color:var(--dim)">'+htmlEscape(e.notes||'')+'</td>'+
       '<td>'+(e.playerNote?'<button class="note-btn" data-name="'+attrEscape(p.name||'')+'" data-date="'+e.date+'" data-note="'+attrEscape(e.playerNote)+'">Ver</button>':'<span style="color:var(--faint)">—</span>')+'</td>'+
-      '<td style="white-space:nowrap">'+(isStaff()?'<button class="edit-date-btn" onclick="editEntryDate(\''+e.id+'\',\''+e.date+'\')" title="Corregir fecha" style="margin-right:5px">Fecha</button><button class="del-btn" onclick="deleteEntry(\''+e.id+'\')">Borrar</button>':'')+'</td>'+
+      '<td style="white-space:nowrap">'+(isStaff()?'<button class="edit-date-btn" onclick="editEntryDate(\''+e.id+'\')" title="Corregir el registro" style="margin-right:5px">Editar</button><button class="del-btn" onclick="deleteEntry(\''+e.id+'\')">Borrar</button>':'')+'</td>'+
     '</tr>';
   }).join('');
   container.innerHTML='<div class="table-wrap"><table class="data">'+
@@ -4238,7 +5081,7 @@ function weeklyReportText(){
   L.push('');
   var week = DB.entries.filter(function(e){ return e.date>=from && e.date<=to; });
   var load = week.reduce(function(s,e){ return s+internalLoad(e); },0);
-  var rpes = week.filter(function(e){ return (e.rpe||0)>0; }).map(function(e){ return e.rpe; });
+  var rpes = week.filter(isSession).map(function(e){ return e.rpe; });
   var avgRpe = rpes.length ? (rpes.reduce(function(a,b){ return a+b; },0)/rpes.length) : null;
   var practiceDays = practiceDatesDesc().filter(function(d){ return d>=from && d<=to; });
   var expected = practiceDays.length * players.length;
@@ -4268,18 +5111,39 @@ function weeklyReportText(){
 
   // Molestias agregadas de la semana
   var zoneCount = {};
-  week.forEach(function(e){ (e.painZones||[]).forEach(function(z){ zoneCount[z]=(zoneCount[z]||0)+1; }); });
+  week.forEach(function(e){
+    var lados = e.painSides || {};
+    (e.painZones||[]).forEach(function(z){
+      var l = lados[z];
+      var k = z + (l ? (l==='ambos' ? ' (ambos)' : l==='izq' ? ' (izq)' : ' (der)') : '');
+      zoneCount[k]=(zoneCount[k]||0)+1;
+    });
+  });
   var zones = Object.keys(zoneCount).sort(function(a,b){ return zoneCount[b]-zoneCount[a]; });
   if(zones.length){
     L.push('ZONAS DE DOLOR MÁS REPORTADAS:');
     zones.forEach(function(z){ L.push('  ' + z + ' — ' + zoneCount[z] + ' reporte' + (zoneCount[z]===1?'':'s')); });
     L.push('');
   }
-  var monoHigh = players.map(function(p){ return {p:p, m:getMetrics(p.id).monotony}; })
-    .filter(function(x){ return x.m && x.m.mono!=null && x.m.mono>=2; });
-  if(monoHigh.length){
-    L.push('MONOTONÍA ALTA (poca variación de carga en 7 días):');
-    monoHigh.forEach(function(x){ L.push('  #'+x.p.number+' '+x.p.name+' — '+x.m.mono.toFixed(2)); });
+  var eqChg = teamWeekLoadChange('ALL');
+  if(eqChg){
+    L.push('CARGA DEL EQUIPO: ' + (eqChg.pct>0?'+':'') + eqChg.pct + '% frente a la semana anterior');
+    L.push('');
+  }
+  var subidas = players.map(function(p){ return {p:p, c:getMetrics(p.id).loadChange}; })
+    .filter(function(x){ return x.c && x.c.pct >= 15 && (x.c.pct - (eqChg ? eqChg.pct : 0)) >= 20; })
+    .sort(function(a,b){ return b.c.pct - a.c.pct; });
+  if(subidas.length){
+    L.push('SUBIERON MÁS QUE EL EQUIPO:');
+    subidas.forEach(function(x){ L.push('  #'+x.p.number+' '+x.p.name+' — +'+x.c.pct+'%'); });
+    L.push('');
+  }
+  var flojos = players.map(function(p){ return {p:p, a:getMetrics(p.id).adherence}; })
+    .filter(function(x){ return x.a && x.a.pct < 70; })
+    .sort(function(a,b){ return a.a.pct - b.a.pct; });
+  if(flojos.length){
+    L.push('ADHERENCIA BAJA (últimas 4 semanas):');
+    flojos.forEach(function(x){ L.push('  #'+x.p.number+' '+x.p.name+' — '+x.a.done+' de '+x.a.total+' ('+x.a.pct+'%)'); });
     L.push('');
   }
   var inj = DB.players.filter(function(p){ return p.injury_note; });
