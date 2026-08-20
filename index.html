@@ -700,8 +700,60 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
   *{animation:none!important;transition:none!important;}
   html{scroll-behavior:auto;}
 }
+
+/* ===== SPLASH DE ARRANQUE (alitas aleteando) ===== */
+.app-splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:16px;background:var(--bg0);transition:opacity .5s ease,visibility .5s ease;}
+.app-splash::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 50% at 50% 32%,rgba(81,183,228,.2) 0%,transparent 65%),
+             radial-gradient(ellipse 45% 35% at 82% 78%,rgba(235,68,143,.09) 0%,transparent 60%);}
+.app-splash.hide{opacity:0;visibility:hidden;pointer-events:none;}
+.app-splash svg{width:168px;height:auto;position:relative;z-index:1;overflow:visible;}
+.app-splash .splash-word{position:relative;z-index:1;font-family:var(--disp);font-size:14px;font-weight:800;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--text);opacity:0;
+  animation:splashWord .6s ease .45s forwards;}
+.splash-wing{fill:var(--sky);}
+.splash-halo{fill:none;stroke:var(--pink);stroke-width:24;}
+.splash-flap-r,.splash-flap-l{animation:splashFlap .95s ease-in-out infinite;transform-origin:0 0;}
+.splash-flap-l{animation-delay:-.02s;}
+@keyframes splashFlap{
+  0%{transform:rotate(0deg);}
+  28%{transform:rotate(-16deg);}
+  50%{transform:rotate(3deg);}
+  72%{transform:rotate(-8deg);}
+  100%{transform:rotate(0deg);}
+}
+@keyframes splashWord{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
 </style>
 <body>
+
+<div class="app-splash" id="app-splash" aria-hidden="true">
+  <svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(390,60)">
+      <g class="splash-flap-r">
+        <path class="splash-wing" d="M0,0 C70,-40 160,-50 240,-34 C300,-22 345,8 362,52 C348,90 325,122 364,164 C320,162 286,146 260,118 C260,146 245,162 260,184 C220,172 196,148 180,118 C176,138 166,148 174,162 C140,144 112,118 96,88 C70,82 40,64 20,38 C8,26 0,14 0,0 Z"/>
+      </g>
+    </g>
+    <g transform="translate(390,60) scale(-1,1)">
+      <g class="splash-flap-l">
+        <path class="splash-wing" d="M0,0 C70,-40 160,-50 240,-34 C300,-22 345,8 362,52 C348,90 325,122 364,164 C320,162 286,146 260,118 C260,146 245,162 260,184 C220,172 196,148 180,118 C176,138 166,148 174,162 C140,144 112,118 96,88 C70,82 40,64 20,38 C8,26 0,14 0,0 Z"/>
+      </g>
+    </g>
+    <ellipse class="splash-halo" cx="390" cy="88" rx="118" ry="42"/>
+  </svg>
+  <div class="splash-word">Angels</div>
+</div>
+<script>
+(function(){
+  var el = document.getElementById('app-splash');
+  if(!el) return;
+  var MIN_SHOW = 1450;
+  setTimeout(function(){
+    el.classList.add('hide');
+    setTimeout(function(){ if(el && el.parentNode) el.parentNode.removeChild(el); }, 550);
+  }, MIN_SHOW);
+})();
+</script>
 
 <nav id="main-nav">
   <div class="nav-inner">
