@@ -1010,7 +1010,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
     </div>
     <div class="form-block">
       <label class="form-label">Tipo de sesión</label>
-      <select id="edit-session" class="form-input">
+      <select id="edit-session" class="form-input" onchange="editSessionChanged()">
         <option value="">Sin especificar</option>
         <option value="tecnica">Técnica</option>
         <option value="fisico">Físico</option>
@@ -1029,11 +1029,12 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
         <input type="number" id="edit-sets" class="form-input" min="0" max="10" step="1" inputmode="numeric">
       </div>
     </div>
+    <div id="edit-session-help" class="form-help"></div>
     <div id="edit-locked" class="mono-note" style="margin-top:0"></div>
     <div id="edit-error" class="form-help" style="color:var(--coral)"></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeEditModal()">Cancelar</button>
-      <button class="btn-primary" onclick="saveEntryEdit()">Guardar corrección</button>
+      <button class="btn-primary" id="edit-save-btn" onclick="saveEntryEdit()">Guardar corrección</button>
     </div>
   </div>
 </div>
@@ -1128,7 +1129,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
 <script>
 // Version visible en pantalla. Cuando alguien reporte algo raro, lo primero
 // es saber que version esta corriendo su telefono.
-const APP_VERSION = 'v3.0 · 19 ago 2026';
+const APP_VERSION = 'v3.1 · 19 ago 2026';
 
 // ============ SUPABASE ============
 const sb = window.supabase.createClient(
@@ -1210,12 +1211,17 @@ async function loadTeamSettings() {
     });
   } catch(e) { console.error('team_settings', e); }
 }
+// Devuelve si de verdad se guardo. Tragarse el error hacia que el Modo
+// Torneo dijera "activado" aunque no hubiera llegado a la base de datos.
 async function saveTeamSettings() {
   try {
-    await Promise.all(['ADCJVBoys'].map(function(t){
+    var res = await Promise.all(['ADCJVBoys'].map(function(t){
       return sb.from('team_settings').upsert({ team: t, tournament_mode: TEAM_SETTINGS[t].tournamentMode });
     }));
-  } catch(e) { console.error('team_settings save', e); }
+    var fallo = res.filter(function(r){ return r && r.error; })[0];
+    if(fallo) throw fallo.error;
+    return true;
+  } catch(e) { console.error('team_settings save', e); return false; }
 }
 
 // ============ ESTADO ============
@@ -3458,11 +3464,21 @@ function renderDashboard(teamFilter) {
 }
 function setLoadChartTeam(t){ currentFilter.loadChart=t; renderDashboard(); }
 function togglePainOnly(){ painOnly = !painOnly; renderDashboard(); }
-function toggleTournament(team, on){
+async function toggleTournament(team, on){
+  var antes = TEAM_SETTINGS[team].tournamentMode;
   TEAM_SETTINGS[team].tournamentMode=on;
-  saveTeamSettings();
   updateGameDayNav();
   renderPracticeToggle();
+  var ok = await saveTeamSettings();
+  if(!ok){
+    // Si no llego a la base de datos, los jugadores no verian el cambio.
+    // Anunciarlo igual seria mentirle al entrenador.
+    TEAM_SETTINGS[team].tournamentMode = antes;
+    updateGameDayNav();
+    renderPracticeToggle();
+    toast('No se pudo cambiar el Modo Torneo', true);
+    return;
+  }
   toast(on?'Modo Torneo activado':'Modo Torneo desactivado');
 }
 
@@ -4443,18 +4459,23 @@ function closeAvailModal(ev){
   document.getElementById('avail-modal').style.display = 'none';
   _availPid = null;
 }
+var _availSaving = false;
 async function saveAvailability(){
+  if(_availSaving) return;
   var err = document.getElementById('avail-error');
   var fecha = document.getElementById('avail-date').value;
   var st = document.getElementById('avail-status').value;
   var nota = String(document.getElementById('avail-note').value || '').trim();
   if(!/^\d{4}-\d{2}-\d{2}$/.test(fecha)){ err.textContent='La fecha no tiene el formato correcto.'; return; }
   if(fecha > today()){ err.textContent='No se permiten fechas futuras.'; return; }
-  var res = await sb.from('availability').upsert(
+  _availSaving = true;
+  var res;
+  try { res = await sb.from('availability').upsert(
     { player_id:_availPid, date:fecha, status:st, note:nota || null },
-    { onConflict:'player_id,date' });
-  if(res.error){ err.textContent='No se pudo guardar: '+res.error.message; return; }
-  var pid = _availPid;
+    { onConflict:'player_id,date' }); }
+  catch(x){ res = { error:{ message: x.message || 'sin conexión' } }; }
+  _availSaving = false;
+  if(res && res.error){ err.textContent='No se pudo guardar: '+res.error.message; return; }
   closeAvailModal();
   await loadAll();
   toast('Disponibilidad registrada');
@@ -4480,17 +4501,23 @@ function closeGrowthModal(ev){
   document.getElementById('growth-modal').style.display = 'none';
   _growthPid = null;
 }
+var _growthSaving = false;
 async function saveGrowth(){
+  if(_growthSaving) return;
   var err = document.getElementById('growth-error');
   var fecha = document.getElementById('growth-date').value;
   var cm = parseFloat(document.getElementById('growth-cm').value);
   if(!/^\d{4}-\d{2}-\d{2}$/.test(fecha)){ err.textContent='La fecha no tiene el formato correcto.'; return; }
   if(fecha > today()){ err.textContent='No se permiten fechas futuras.'; return; }
   if(isNaN(cm) || cm < 120 || cm > 230){ err.textContent='La estatura debe estar entre 120 y 230 cm.'; return; }
-  var res = await sb.from('growth').upsert(
+  _growthSaving = true;
+  var res;
+  try { res = await sb.from('growth').upsert(
     { player_id:_growthPid, date:fecha, height_cm:cm },
-    { onConflict:'player_id,date' });
-  if(res.error){ err.textContent='No se pudo guardar: '+res.error.message; return; }
+    { onConflict:'player_id,date' }); }
+  catch(x){ res = { error:{ message: x.message || 'sin conexión' } }; }
+  _growthSaving = false;
+  if(res && res.error){ err.textContent='No se pudo guardar: '+res.error.message; return; }
   closeGrowthModal();
   await loadAll();
   toast('Estatura registrada');
@@ -4519,6 +4546,10 @@ function editEntryDate(entryId){
   if((e.painConcern||0)>0) loc.push('dolor '+e.painConcern+(e.painZones&&e.painZones.length?' en '+painZonesText(e):''));
   document.getElementById('edit-locked').textContent = loc.length ? 'Lo que contestó el jugador: '+loc.join(' · ') : '';
   document.getElementById('edit-error').textContent = '';
+  _editSaving = false;
+  var btn = document.getElementById('edit-save-btn');
+  if(btn){ btn.disabled = false; btn.textContent = 'Guardar corrección'; }
+  editSessionChanged();
   document.getElementById('edit-modal').style.display = 'flex';
 }
 function closeEditModal(ev){
@@ -4526,10 +4557,34 @@ function closeEditModal(ev){
   document.getElementById('edit-modal').style.display = 'none';
   _editId = null;
 }
+// Un dia de recuperacion no tiene sesion que medir, asi que sus campos de
+// duracion y RPE quedan cerrados. Antes se vaciaban en silencio al guardar:
+// escribias los minutos reales, el editor los borraba y no avisaba de nada.
+// Si la entrada se marco mal, primero se cambia el tipo; entonces se abren.
+function editSessionChanged(){
+  var sel = document.getElementById('edit-session');
+  var help = document.getElementById('edit-session-help');
+  var dur = document.getElementById('edit-duration');
+  var rpe = document.getElementById('edit-rpe');
+  if(!sel || !dur || !rpe) return;
+  var esRec = sel.value === 'recuperacion';
+  dur.disabled = esRec; rpe.disabled = esRec;
+  dur.style.opacity = esRec ? '.45' : '';
+  rpe.style.opacity = esRec ? '.45' : '';
+  if(esRec){ dur.value = ''; rpe.value = ''; }
+  if(help){
+    help.textContent = esRec
+      ? 'Un día de recuperación no lleva duración ni RPE. Si en realidad fue una práctica, cambia el tipo de sesión y podrás escribirlos.'
+      : '';
+  }
+}
+
+var _editSaving = false;
 async function saveEntryEdit(){
+  if(_editSaving) return;
   var err = document.getElementById('edit-error');
   var e = DB.entries.find(function(x){ return x.id===_editId; });
-  if(!e) return;
+  if(!e){ if(err) err.textContent='Se perdió la referencia al registro. Cierra y vuelve a abrirlo.'; return; }
   var v = function(id){ var el=document.getElementById(id); return el ? String(el.value||'').trim() : ''; };
   var nd = v('edit-date');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(nd)){ err.textContent='La fecha no tiene el formato correcto.'; return; }
@@ -4541,8 +4596,13 @@ async function saveEntryEdit(){
   var rpe = v('edit-rpe')==='' ? null : parseInt(v('edit-rpe'), 10);
   var sets = v('edit-sets')==='' ? null : parseInt(v('edit-sets'), 10);
 
-  if(esRec){ dur = null; rpe = null; }
-  else {
+  if(esRec){
+    // No se borra nada a espaldas del entrenador: si hay numeros, se le dice.
+    if(dur!=null || rpe!=null){
+      err.textContent='Marcaste el tipo como recuperación, que no lleva duración ni RPE. Si fue una práctica, cambia primero el tipo de sesión.';
+      return;
+    }
+  } else {
     if(dur==null || isNaN(dur) || dur < 1 || dur > 600){ err.textContent='La duración debe estar entre 1 y 600 minutos.'; return; }
     if(rpe==null || isNaN(rpe) || rpe < 1 || rpe > 10){ err.textContent='El RPE debe estar entre 1 y 10.'; return; }
   }
@@ -4551,8 +4611,29 @@ async function saveEntryEdit(){
   var antes = { date:e.date, session_label:e.sessionLabel, duration:e.duration, rpe:e.rpe, sets_played:e.setsPlayed };
   var despues = { date:nd, session_label: sess || null, duration:dur, rpe:rpe, sets_played:sets };
 
-  var res = await sb.from('entries').update(despues).eq('id', _editId);
-  if(res.error){ err.textContent = 'No se pudo guardar: '+res.error.message; return; }
+  // Guardar algo identico a lo que ya habia solo ensucia la bitacora y hace
+  // creer que se corrigio cuando no se corrigio nada.
+  var iguales = ['date','session_label','duration','rpe','sets_played'].every(function(k){
+    return (antes[k]==null ? null : antes[k]) === (despues[k]==null ? null : despues[k]);
+  });
+  if(iguales){ err.textContent='No cambiaste ningún valor.'; return; }
+
+  _editSaving = true;
+  var btn = document.getElementById('edit-save-btn');
+  var textoBtn = btn ? btn.textContent : null;
+  if(btn){ btn.disabled = true; btn.textContent = 'Guardando…'; }
+  err.textContent = '';
+
+  var res;
+  try { res = await sb.from('entries').update(despues).eq('id', _editId); }
+  catch(x){ res = { error:{ message: x.message || 'sin conexión' } }; }
+
+  if(res && res.error){
+    _editSaving = false;
+    if(btn){ btn.disabled = false; btn.textContent = textoBtn || 'Guardar corrección'; }
+    err.textContent = 'No se pudo guardar: '+res.error.message;
+    return;
+  }
 
   // Rastro de quien corrigio que. Si falla, la correccion no se deshace: el
   // registro es secundario respecto al dato.
@@ -4564,8 +4645,13 @@ async function saveEntryEdit(){
     });
   } catch(x){ console.error('entry_edits', x); }
 
+  _editSaving = false;
+  if(btn){ btn.disabled = false; btn.textContent = textoBtn || 'Guardar corrección'; }
   closeEditModal();
-  await loadAll();
+  // Si la recarga falla no puede quedarse todo mudo: el dato ya se guardo y
+  // el entrenador tiene que enterarse.
+  try { await loadAll(); }
+  catch(x){ console.error('loadAll', x); toast('Guardado, pero no se pudo refrescar la pantalla', true); return; }
   toast('Registro corregido');
   if(currentPage==='player'&&currentPlayerId) renderPlayerPage(currentPlayerId);
   else if(currentPage==='records') renderRecords();
