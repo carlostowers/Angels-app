@@ -229,7 +229,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opac
 
 /* CTA de check-in del jugador */
 .cta-checkin{width:100%;margin-top:14px;border:none;cursor:pointer;text-align:left;border-radius:22px;
-  padding:18px 20px;background:linear-gradient(120deg,var(--pink),var(--sky));display:flex;align-items:center;
+  padding:18px 20px;background:linear-gradient(120deg,var(--accent,var(--pink)),var(--sky));display:flex;align-items:center;
   gap:14px;box-shadow:0 14px 34px rgba(235,68,143,.26);transition:transform .15s;}
 .cta-checkin:hover{transform:translateY(-1px);}
 .cta-checkin b{display:block;font-family:var(--disp);font-size:22px;font-weight:800;letter-spacing:.06em;
@@ -254,7 +254,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opac
 .week-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-top:10px;}
 .week-day{display:flex;flex-direction:column;align-items:center;gap:7px;}
 .week-dot{width:100%;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--bg3);}
-.week-dot.done{background:linear-gradient(160deg,var(--sky),var(--pink));border-color:transparent;
+.week-dot.done{background:linear-gradient(160deg,var(--sky),var(--accent,var(--pink)));border-color:transparent;
   box-shadow:0 5px 14px rgba(81,183,228,.28);}
 .week-dot.miss{background:var(--coral-soft);border-color:rgba(255,93,108,.3);}
 .week-dot.today{box-shadow:0 0 0 2px var(--sky);}
@@ -724,6 +724,109 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
   100%{transform:rotate(0deg);}
 }
 @keyframes splashWord{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+/* ===== MODO OSCURO ===== */
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg0:#0B1220; --bg1:#141B2E; --bg2:#141B2E; --bg3:#1B2440;
+    --line:rgba(81,183,228,0.22); --line-strong:rgba(81,183,228,0.38);
+    --sky-soft:rgba(81,183,228,0.18); --mint-soft:rgba(52,227,165,0.16);
+    --amber-soft:rgba(255,140,0,0.18); --coral-soft:rgba(255,93,108,0.16);
+    --violet-soft:rgba(157,123,255,0.18);
+    --text:#EAF0FB; --dim:#9FB0D0; --faint:#5E6E93;
+    --glass:rgba(20,27,46,0.82); --glass-hi:rgba(20,27,46,0.96);
+    --shadow:0 10px 40px rgba(0,0,0,0.45); --shadow-sm:0 3px 14px rgba(0,0,0,0.3);
+    --shadow-lg:0 18px 50px rgba(0,0,0,0.55);
+  }
+}
+:root[data-theme="dark"]{
+  --bg0:#0B1220; --bg1:#141B2E; --bg2:#141B2E; --bg3:#1B2440;
+  --line:rgba(81,183,228,0.22); --line-strong:rgba(81,183,228,0.38);
+  --sky-soft:rgba(81,183,228,0.18); --mint-soft:rgba(52,227,165,0.16);
+  --amber-soft:rgba(255,140,0,0.18); --coral-soft:rgba(255,93,108,0.16);
+  --violet-soft:rgba(157,123,255,0.18);
+  --text:#EAF0FB; --dim:#9FB0D0; --faint:#5E6E93;
+  --glass:rgba(20,27,46,0.82); --glass-hi:rgba(20,27,46,0.96);
+  --shadow:0 10px 40px rgba(0,0,0,0.45); --shadow-sm:0 3px 14px rgba(0,0,0,0.3);
+  --shadow-lg:0 18px 50px rgba(0,0,0,0.55);
+}
+.halo-card{background:linear-gradient(160deg,var(--bg1),var(--bg3));}
+.theme-toggle-fixed{position:fixed;top:calc(14px + var(--sat));right:calc(14px + var(--sar));z-index:98000;}
+.icon-btn{width:38px;height:38px;border-radius:50%;background:var(--bg1);border:1px solid var(--line-strong);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;color:var(--dim);
+  box-shadow:var(--shadow-sm);}
+.icon-btn:hover{color:var(--text);border-color:var(--sky);}
+.icon-btn svg{display:block;}
+
+/* ===== ALITAS REUTILIZABLES (logros, banners, tarjeta) ===== */
+.wm-flap{animation:splashFlap .95s ease-in-out infinite;transform-origin:0 0;}
+
+/* ===== RECORDATORIO DE RACHA ===== */
+.streak-banner{display:flex;align-items:center;gap:12px;margin-bottom:1.2rem;border-radius:var(--r-lg);
+  padding:14px 16px;background:color-mix(in srgb,var(--accent,var(--pink)) 9%,var(--bg1));
+  border:1px solid color-mix(in srgb,var(--accent,var(--pink)) 32%,var(--line-strong));}
+.streak-banner .sb-ic{flex-shrink:0;width:34px;}
+.streak-banner .sb-txt b{display:block;font-size:13.5px;}
+.streak-banner .sb-txt span{display:block;font-size:12px;color:var(--dim);margin-top:3px;line-height:1.5;}
+
+/* ===== GAME DAY INTENSO ===== */
+.gold-banner{display:flex;align-items:center;gap:10px;}
+.gold-banner.intense{background:linear-gradient(120deg,rgba(235,68,143,.24),rgba(81,183,228,.24),rgba(235,68,143,.24));
+  background-size:220% 100%;animation:goldShimmer 3.2s ease-in-out infinite;
+  border-color:rgba(235,68,143,.5);box-shadow:0 8px 22px rgba(235,68,143,.2);}
+.gold-banner.intense svg{flex-shrink:0;}
+@keyframes goldShimmer{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+
+/* ===== PANELES LIVIANOS (logros, equipo hoy) ===== */
+.panel-lite{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;
+  box-shadow:var(--shadow-sm);}
+.pl-head{display:flex;align-items:center;justify-content:space-between;}
+.pl-head span:first-child{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);}
+.pl-count{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text);}
+
+/* ===== NIVEL DE CONSTANCIA ===== */
+.tier-card{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow-sm);}
+.tier-top{display:flex;align-items:center;justify-content:space-between;}
+.tier-eyebrow{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);}
+.tier-pct{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--dim);}
+.tier-name{font-family:var(--disp);font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:6px;}
+.tier-desc{font-size:12.5px;color:var(--dim);margin-top:5px;line-height:1.5;}
+.tier-bar{height:7px;border-radius:5px;background:var(--bg3);margin-top:11px;overflow:hidden;}
+.tier-fill{height:100%;border-radius:5px;transition:width .5s ease;}
+
+/* ===== LOGROS ===== */
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:9px;margin-top:12px;}
+.ach-tile{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;padding:12px 6px;
+  border-radius:14px;background:var(--bg3);border:1px solid var(--line);opacity:.5;}
+.ach-tile.earned{opacity:1;background:linear-gradient(160deg,color-mix(in srgb,var(--pink) 10%,var(--bg1)),var(--bg1));
+  border-color:rgba(235,68,143,.32);}
+.ach-tile .ach-ic{width:26px;height:26px;border-radius:50%;background:var(--bg1);border:1px solid var(--line-strong);
+  display:flex;align-items:center;justify-content:center;}
+.ach-tile.earned .ach-ic{background:linear-gradient(140deg,var(--pink),var(--sky));border-color:transparent;}
+.ach-tile span{font-size:10px;line-height:1.3;color:var(--dim);}
+.ach-tile.earned span{color:var(--text);font-weight:600;}
+
+/* ===== EQUIPO HOY (resumen en la pantalla de inicio) ===== */
+.team-pulse-teaser{display:block;width:100%;text-align:left;background:var(--bg1);border:1px solid var(--line);
+  border-radius:var(--r-lg);padding:14px 16px;cursor:pointer;box-shadow:var(--shadow-sm);position:relative;}
+.tpt-bar{height:5px;border-radius:4px;background:var(--bg3);overflow:hidden;}
+.tpt-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+.tpt-txt{font-size:12.5px;color:var(--dim);margin-top:10px;padding-right:26px;}
+.tpt-txt b{color:var(--text);}
+.tpt-arrow{position:absolute;right:14px;top:50%;transform:translateY(-50%);opacity:.5;}
+
+/* ===== CELEBRACION DE HITO DE RACHA ===== */
+.milestone-hero{text-align:center;padding:6px 0 18px;}
+.milestone-hero svg{margin:0 auto;}
+.mh-title{font-family:var(--disp);font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;
+  margin-top:10px;background:linear-gradient(120deg,var(--pink),var(--sky));-webkit-background-clip:text;
+  background-clip:text;color:transparent;}
+.mh-sub{font-size:13px;color:var(--dim);margin-top:6px;}
+
+/* ===== SWATCHES DE COLOR (perfil) ===== */
+.swatch-row{display:flex;gap:10px;flex-wrap:wrap;}
+.swatch-btn{width:34px;height:34px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;}
+.swatch-btn.sel{border-color:var(--text);box-shadow:0 0 0 2px var(--bg1),0 0 0 3px var(--text);}
 </style>
 <body>
 
@@ -754,6 +857,28 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
   }, MIN_SHOW);
 })();
 </script>
+
+<button class="icon-btn theme-toggle-fixed" id="theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema"></button>
+
+<!-- PERFIL DEL JUGADOR (apodo y color, guardado en este dispositivo) -->
+<div class="modal-overlay" id="settings-modal" style="display:none" onclick="if(event.target===this) closeSettingsModal()">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-title" style="font-size:19px">Tu perfil</div>
+    <div class="modal-subtitle">Esto es solo tuyo: se guarda en este dispositivo, no en el servidor.</div>
+    <div class="form-block">
+      <label class="form-label">Apodo (opcional)</label>
+      <input type="text" id="settings-nick" class="form-input" maxlength="16" placeholder="Cómo te dicen">
+    </div>
+    <div class="form-block" style="margin-top:16px">
+      <label class="form-label">Color</label>
+      <div class="swatch-row" id="settings-swatches" style="margin-top:8px"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="saveSettingsModal()">Guardar</button>
+      <button class="btn-ghost" onclick="closeSettingsModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
 
 <nav id="main-nav">
   <div class="nav-inner">
@@ -2138,8 +2263,374 @@ function showInvalidLink(legacy){
       '</p></div>';
 }
 
+// ============ TEMA (modo oscuro) ============
+// Preferencia por dispositivo, nunca por servidor: no hay nada que sincronizar
+// ni ningun cambio de esquema. 'light'/'dark' fuerza; sin valor, sigue al
+// sistema (prefers-color-scheme), ya cubierto en el CSS.
+var THEME_KEY = 'angels.theme';
+function sunSVG(){
+  return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>';
+}
+function moonSVG(){
+  return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg>';
+}
+function currentThemeIsDark(){
+  var forced = null;
+  try{ forced = localStorage.getItem(THEME_KEY); }catch(e){}
+  if(forced==='dark') return true;
+  if(forced==='light') return false;
+  return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+}
+function renderThemeToggleBtn(){
+  var btn = document.getElementById('theme-toggle-btn');
+  if(!btn) return;
+  var dark = currentThemeIsDark();
+  btn.innerHTML = dark ? sunSVG() : moonSVG();
+  btn.title = dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+}
+function updateThemeColorMeta(){
+  var m = document.querySelector('meta[name="theme-color"]');
+  if(m) m.setAttribute('content', currentThemeIsDark() ? '#0B1220' : '#F3F7FB');
+}
+function initTheme(){
+  var forced = null;
+  try{ forced = localStorage.getItem(THEME_KEY); }catch(e){}
+  if(forced==='dark' || forced==='light'){
+    document.documentElement.setAttribute('data-theme', forced);
+  }
+  updateThemeColorMeta();
+  renderThemeToggleBtn();
+}
+function toggleTheme(){
+  var next = currentThemeIsDark() ? 'light' : 'dark';
+  try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+  document.documentElement.setAttribute('data-theme', next);
+  updateThemeColorMeta();
+  renderThemeToggleBtn();
+}
+
+// ============ PERFIL DEL JUGADOR (apodo y color) ============
+// Preferencia por dispositivo (localStorage), no por jugador en el servidor:
+// es decoracion, no dato de equipo, asi que no necesita tabla ni RLS nueva.
+var ACCENT_SWATCHES = [
+  {key:'pink', css:'var(--pink)'}, {key:'sky', css:'var(--sky)'}, {key:'mint', css:'var(--mint)'},
+  {key:'amber', css:'var(--amber)'}, {key:'violet', css:'var(--violet)'}, {key:'coral', css:'var(--coral)'}
+];
+function prefsKey(pid){ return 'angels.prefs.' + pid; }
+function getPrefs(pid){
+  try{
+    var raw = localStorage.getItem(prefsKey(pid));
+    var o = raw ? JSON.parse(raw) : null;
+    return (o && typeof o==='object') ? o : {};
+  }catch(e){ return {}; }
+}
+function savePrefs(pid, prefs){
+  try{ localStorage.setItem(prefsKey(pid), JSON.stringify(prefs)); }catch(e){}
+}
+function displayName(p){
+  var prefs = getPrefs(p.id);
+  return (prefs.nick && String(prefs.nick).trim()) ? String(prefs.nick).trim() : firstName(p.name);
+}
+function applyAccent(pid){
+  var prefs = getPrefs(pid);
+  var sw = ACCENT_SWATCHES.filter(function(s){ return s.key===prefs.accent; })[0];
+  var root = document.documentElement;
+  if(sw) root.style.setProperty('--accent', sw.css);
+  else root.style.removeProperty('--accent');
+}
+function openSettingsModal(pid){
+  var prefs = getPrefs(pid);
+  var nickEl = document.getElementById('settings-nick');
+  if(nickEl) nickEl.value = prefs.nick || '';
+  var box = document.getElementById('settings-swatches');
+  if(box){
+    box.innerHTML = ACCENT_SWATCHES.map(function(s){
+      var sel = (prefs.accent===s.key) ? ' sel' : '';
+      return '<button type="button" class="swatch-btn'+sel+'" data-key="'+s.key+'" '+
+        'style="background:'+s.css+'" onclick="pickSwatch(this)" title="'+s.key+'"></button>';
+    }).join('');
+  }
+  var modal = document.getElementById('settings-modal');
+  if(modal){ modal.style.display='flex'; modal.dataset.pid = pid; }
+}
+function pickSwatch(btn){
+  var box = document.getElementById('settings-swatches');
+  if(box) box.querySelectorAll('.swatch-btn').forEach(function(b){ b.classList.remove('sel'); });
+  btn.classList.add('sel');
+}
+function closeSettingsModal(){
+  var modal = document.getElementById('settings-modal');
+  if(modal) modal.style.display='none';
+}
+function saveSettingsModal(){
+  var modal = document.getElementById('settings-modal');
+  var pid = modal ? modal.dataset.pid : null;
+  if(!pid) return closeSettingsModal();
+  var nick = (document.getElementById('settings-nick')||{}).value || '';
+  var sel = document.querySelector('#settings-swatches .swatch-btn.sel');
+  var accent = sel ? sel.dataset.key : null;
+  savePrefs(pid, { nick: nick.trim().slice(0,16), accent: accent });
+  applyAccent(pid);
+  closeSettingsModal();
+  toast('Perfil actualizado');
+  if(typeof renderPlayerApp==='function' && currentPlayerId) renderPlayerApp(currentPlayerId);
+}
+
+// ============ ALITAS REUTILIZABLES ============
+var WING_PATH_D = 'M0,0 C70,-40 160,-50 240,-34 C300,-22 345,8 362,52 C348,90 325,122 364,164 C320,162 286,146 260,118 C260,146 245,162 260,184 C220,172 196,148 180,118 C176,138 166,148 174,162 C140,144 112,118 96,88 C70,82 40,64 20,38 C8,26 0,14 0,0 Z';
+function wingMarkSVG(px, opts){
+  opts = opts || {};
+  var h = Math.round(px * 260/780);
+  var flapClass = opts.flap ? ' wm-flap' : '';
+  var wingColor = opts.wingColor || 'var(--sky)';
+  var haloColorV = opts.haloColorCss || 'var(--pink)';
+  return '<svg width="'+px+'" height="'+h+'" viewBox="0 0 780 260" style="overflow:visible;display:block">'+
+    '<g transform="translate(390,60)"><g class="'+flapClass.trim()+'"><path style="fill:'+wingColor+'" d="'+WING_PATH_D+'"/></g></g>'+
+    '<g transform="translate(390,60) scale(-1,1)"><g class="'+flapClass.trim()+'"><path style="fill:'+wingColor+'" d="'+WING_PATH_D+'"/></g></g>'+
+    '<ellipse cx="390" cy="88" rx="118" ry="42" fill="none" style="stroke:'+haloColorV+'" stroke-width="24"/>'+
+  '</svg>';
+}
+function lockSVG(){
+  return '<svg width="12" height="13" viewBox="0 0 20 20" fill="none" stroke="#9BA8C4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9V6.5a4.5 4.5 0 019 0V9"/><rect x="3.5" y="9" width="13" height="9" rx="2.4"/></svg>';
+}
+function gearSVG(){
+  return '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1.04 1.56V19a2 2 0 11-4 0v-.09A1.7 1.7 0 009 17.36a1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.7 1.7 0 004.64 13 1.7 1.7 0 003.08 12H3a2 2 0 110-4h.09A1.7 1.7 0 004.64 7 1.7 1.7 0 004.3 5.13l-.06-.06a2 2 0 112.83-2.83l.06.06A1.7 1.7 0 009 2.64 1.7 1.7 0 0010 1.08V1a2 2 0 114 0v.09A1.7 1.7 0 0015 2.64a1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06A1.7 1.7 0 0019.36 7c.14.36.44.63.94.78.5.15.86.15 1 0h.09a2 2 0 110 4h-.09a1.7 1.7 0 00-1.56 1.04z"/></svg>';
+}
+
+// ============ HITOS DE RACHA ============
+function isStreakMilestone(n){
+  if(!n || n<3) return false;
+  if(n===3 || n===9 || n===15) return true;
+  return n>15 && ((n-15)%6===0);
+}
+function milestoneMessage(n){
+  if(n===3) return { title:'¡Arrancaste con todo!', sub:'3 días seguidos de check-in. Así se empieza.' };
+  if(n===9) return { title:'¡Ya vas en serio!', sub:'9 días seguidos. Esto ya es hábito.' };
+  if(n===15) return { title:'¡Racha de 15!', sub:'15 días seguidos. Muy pocos aguantan este ritmo.' };
+  return { title:'¡Racha de '+n+' días!', sub:'Sigues sumando. No la sueltes.' };
+}
+function milestoneHeroHTML(n){
+  var msg = milestoneMessage(n);
+  return '<div class="milestone-hero">'+
+    wingMarkSVG(130,{flap:true})+
+    '<div class="mh-title">'+msg.title+'</div>'+
+    '<div class="mh-sub">'+msg.sub+'</div>'+
+  '</div>';
+}
+
+// ============ SONIDO + VIBRACION ============
+// Sintetizado con Web Audio: nada que descargar, funciona sin conexion.
+var _audioCtx = null;
+function _getAudioCtx(){
+  try{
+    if(!_audioCtx) _audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if(_audioCtx.state==='suspended') _audioCtx.resume();
+    return _audioCtx;
+  }catch(e){ return null; }
+}
+function _tone(ctx, freq, startAt, dur, vol){
+  var o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, ctx.currentTime+startAt);
+  g.gain.linearRampToValueAtTime(vol, ctx.currentTime+startAt+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+startAt+dur);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(ctx.currentTime+startAt); o.stop(ctx.currentTime+startAt+dur+0.03);
+}
+function feedbackPulse(kind){
+  try{
+    var ctx = _getAudioCtx();
+    if(ctx){
+      if(kind==='milestone'){
+        _tone(ctx,523.25,0,.16,.05); _tone(ctx,659.25,.12,.16,.05); _tone(ctx,783.99,.24,.32,.06);
+      } else {
+        _tone(ctx,660,0,.09,.04); _tone(ctx,880,.07,.14,.045);
+      }
+    }
+  }catch(e){}
+  try{
+    if(navigator.vibrate) navigator.vibrate(kind==='milestone' ? [40,60,40,60,90] : [30]);
+  }catch(e){}
+}
+
+// ============ INSIGNIAS POR CONSTANCIA ============
+// A proposito, ninguna insignia depende de dolor, sueno ni animo: premian que
+// se presenten a reportar, nunca lo que reportan. Si dependieran de "verse
+// bien", incentivarian maquillar los datos, y eso rompe el proposito de la app.
+var ACHIEVEMENTS = [
+  { id:'racha3', label:'Racha de 3', desc:'3 días seguidos de check-in.', test:function(m){ return m.streak>=3; } },
+  { id:'racha9', label:'Racha de 9', desc:'9 días seguidos de check-in.', test:function(m){ return m.streak>=9; } },
+  { id:'racha15', label:'Racha de 15', desc:'15 días seguidos de check-in.', test:function(m){ return m.streak>=15; } },
+  { id:'aldia', label:'Al día', desc:'Ninguna práctica pendiente de registrar ahora mismo.', test:function(m){ return m.entries.length>0 && (m.staleDays===0 || m.staleDays===null); } },
+  { id:'gameday', label:'Debut Game Day', desc:'Completaste tu primer check-in de partido.', test:function(m){ return m.entries.some(function(e){ return e.sessionLabel==='partido'; }); } },
+  { id:'total50', label:'50 check-ins', desc:'Llenaste 50 check-ins en total.', test:function(m){ return m.entries.length>=50; } },
+  { id:'total100', label:'100 check-ins', desc:'Llenaste 100 check-ins en total.', test:function(m){ return m.entries.length>=100; } }
+];
+function computeAchievements(pid){
+  var m = getMetrics(pid);
+  return ACHIEVEMENTS.map(function(a){
+    var earned = false;
+    try{ earned = !!a.test(m); }catch(e){}
+    return { id:a.id, label:a.label, desc:a.desc, earned:earned };
+  });
+}
+function achievementsPanelHTML(pid){
+  var list = computeAchievements(pid);
+  var earnedN = list.filter(function(a){ return a.earned; }).length;
+  var tiles = list.map(function(a){
+    return '<div class="ach-tile'+(a.earned?' earned':'')+'" title="'+attrEscape(a.desc)+'">'+
+      '<div class="ach-ic">'+(a.earned?checkSVG('#fff',13):lockSVG())+'</div>'+
+      '<span>'+htmlEscape(a.label)+'</span></div>';
+  }).join('');
+  return '<div class="panel-lite" style="margin-top:14px">'+
+    '<div class="pl-head"><span>Tus logros</span><span class="pl-count">'+earnedN+' / '+list.length+'</span></div>'+
+    '<div class="ach-grid">'+tiles+'</div></div>';
+}
+
+// ============ NIVEL DE CONSTANCIA ============
+// Basado en adherencia (te presentaste o no), nunca en como te sentiste.
+function constancyTier(pid){
+  var m = getMetrics(pid);
+  var pct = (m.adherence && m.adherence.pct!=null) ? m.adherence.pct : null;
+  if(pct==null) return { label:'Arrancando', color:'var(--faint)', pct:null, desc:'Todavía no hay suficientes prácticas este mes para calcularlo.' };
+  if(pct>=90) return { label:'Halo Dorado', color:'#E8B93A', pct:pct, desc:'Constancia sobresaliente en el último mes.' };
+  if(pct>=75) return { label:'Oro', color:'var(--amber)', pct:pct, desc:'Muy constante en el último mes.' };
+  if(pct>=55) return { label:'Plata', color:'var(--sky)', pct:pct, desc:'Buena constancia. Sigue así.' };
+  if(pct>=35) return { label:'Bronce', color:'var(--coral)', pct:pct, desc:'Arrancando el ritmo. Cada check-in suma.' };
+  return { label:'Arrancando', color:'var(--faint)', pct:pct, desc:'Cada check-in cuenta. Hoy es un buen día para empezar.' };
+}
+function tierCardHTML(pid){
+  var t = constancyTier(pid);
+  return '<div class="tier-card" style="margin-top:14px">'+
+    '<div class="tier-top"><span class="tier-eyebrow">Nivel de constancia</span>'+
+    (t.pct!=null?'<span class="tier-pct">'+t.pct+'%</span>':'')+'</div>'+
+    '<div class="tier-name" style="color:'+t.color+'">'+t.label+'</div>'+
+    '<div class="tier-desc">'+t.desc+'</div>'+
+    (t.pct!=null?'<div class="tier-bar"><div class="tier-fill" style="width:'+t.pct+'%;background:'+t.color+'"></div></div>':'')+
+  '</div>';
+}
+
+// ============ EQUIPO HOY (resumen, sin contenido de nadie) ============
+// La vista completa ya vive en la pestana "Equipo"; esto es solo un vistazo
+// desde Hoy que enlaza para alla, reusando hasCheckinOn (presencia, no dato).
+function teamPulseTeaserHTML(pid){
+  var me = DB.players.find(function(x){ return x.id===pid; });
+  if(!me) return '';
+  var mates = DB.players.filter(function(x){ return x.team===me.team; });
+  if(mates.length<2) return '';
+  var t = today();
+  var done = mates.filter(function(x){ return hasCheckinOn(x.id, t); }).length;
+  var pct = Math.round(done/mates.length*100);
+  var col = pct>=90 ? 'var(--mint)' : pct>=60 ? 'var(--sky)' : 'var(--amber)';
+  return '<button type="button" class="team-pulse-teaser" style="margin-top:14px" onclick="setPlayerView(\'equipo\')">'+
+    '<div class="pl-head"><span>Equipo hoy</span><span class="pl-count">'+done+' / '+mates.length+'</span></div>'+
+    '<div class="tpt-bar" style="margin-top:9px"><div class="tpt-fill" style="width:'+pct+'%;background:'+col+'"></div></div>'+
+    '<div class="tpt-txt">Toca para ver quién falta.</div>'+
+    '<span class="tpt-arrow">'+arrowSVG()+'</span>'+
+  '</button>';
+}
+
+// ============ RECORDATORIO DE RACHA (dentro del app) ============
+// Version liviana del "aviso con tono de reto": vive en la pantalla de inicio,
+// no requiere permisos de notificacion ni service worker. Las notificaciones
+// push de verdad quedan para mas adelante (piden su propia infraestructura).
+function reminderBannerHTML(pid, m, doneToday, kind){
+  if(doneToday || kind==='gameday') return '';
+  if(!isPracticeDay()) return '';
+  if(!m.streak || m.streak<3) return '';
+  return '<div class="streak-banner">'+
+    '<div class="sb-ic">'+wingMarkSVG(30,{})+'</div>'+
+    '<div class="sb-txt"><b>Tu racha de '+m.streak+' días sigue viva.</b>'+
+    '<span>No la rompas hoy — el check-in toma menos de un minuto.</span></div>'+
+  '</div>';
+}
+
+// ============ TARJETA PARA COMPARTIR ============
+function _shareCanvas(p, s){
+  var W=1080, H=1350;
+  var c = document.createElement('canvas'); c.width=W; c.height=H;
+  var ctx = c.getContext('2d');
+  var g = ctx.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,'#0B1220'); g.addColorStop(1,'#1B2440');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.save();
+  ctx.globalAlpha=.16;
+  var rg = ctx.createRadialGradient(W*0.5,H*0.22,40,W*0.5,H*0.22,W*0.7);
+  rg.addColorStop(0,'#51B7E4'); rg.addColorStop(1,'rgba(81,183,228,0)');
+  ctx.fillStyle=rg; ctx.fillRect(0,0,W,H);
+  ctx.restore();
+
+  function wingPath(ctx2, cx, cy, scale, mirror){
+    var p2 = new Path2D('M0,0 C70,-40 160,-50 240,-34 C300,-22 345,8 362,52 C348,90 325,122 364,164 C320,162 286,146 260,118 C260,146 245,162 260,184 C220,172 196,148 180,118 C176,138 166,148 174,162 C140,144 112,118 96,88 C70,82 40,64 20,38 C8,26 0,14 0,0 Z');
+    ctx2.save();
+    ctx2.translate(cx,cy); ctx2.scale(scale*(mirror?-1:1), scale);
+    ctx2.fillStyle='#51B7E4'; ctx2.fill(p2);
+    ctx2.restore();
+  }
+  var wingCx = W*0.5, wingCy = 210, wingScale = 0.62;
+  wingPath(ctx, wingCx, wingCy, wingScale, false);
+  wingPath(ctx, wingCx, wingCy, wingScale, true);
+  ctx.save();
+  ctx.strokeStyle='#EB448F'; ctx.lineWidth=15;
+  ctx.beginPath(); ctx.ellipse(wingCx, wingCy+17, 73, 26, 0, 0, Math.PI*2); ctx.stroke();
+  ctx.restore();
+
+  ctx.textAlign='center';
+  ctx.fillStyle='#EAF0FB';
+  ctx.font='800 40px "Barlow Condensed", sans-serif';
+  ctx.fillText('ANGELS PERFORMANCE OS', W/2, 400);
+
+  ctx.font='800 96px "Barlow Condensed", sans-serif';
+  ctx.fillStyle='#fff';
+  ctx.fillText(String(s.streak!=null?s.streak:0), W/2, 620);
+  ctx.font='700 30px "JetBrains Mono", monospace';
+  ctx.fillStyle='#9FB0D0';
+  ctx.fillText('DÍAS DE RACHA', W/2, 665);
+
+  if(s.halo!=null){
+    ctx.font='700 46px "JetBrains Mono", monospace';
+    ctx.fillStyle='#51B7E4';
+    ctx.fillText('Halo '+Math.round(s.halo)+' / 100', W/2, 760);
+  }
+
+  ctx.font='800 54px "Barlow Condensed", sans-serif';
+  ctx.fillStyle='#fff';
+  ctx.fillText(String(p.displayName||p.name||'').toUpperCase(), W/2, 960);
+
+  ctx.font='500 26px "Barlow", sans-serif';
+  ctx.fillStyle='#5E6E93';
+  ctx.fillText('adcangels', W/2, H-70);
+  return c;
+}
+async function shareCard(pid){
+  var p = DB.players.find(function(x){ return x.id===pid; });
+  if(!p) return;
+  var m = getMetrics(pid);
+  var s = { streak:m.streak, halo:m.vwi };
+  var pObj = Object.assign({}, p, { displayName: displayName(p) });
+  var canvas;
+  try{ canvas = _shareCanvas(pObj, s); }catch(e){ toast('No se pudo generar la tarjeta', true); return; }
+  canvas.toBlob(async function(blob){
+    if(!blob){ toast('No se pudo generar la tarjeta', true); return; }
+    var file = new File([blob], 'angels-racha.png', { type:'image/png' });
+    try{
+      if(navigator.canShare && navigator.canShare({ files:[file] })){
+        await navigator.share({ files:[file], title:'Mi racha en Angels' });
+        return;
+      }
+    }catch(e){}
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'angels-racha.png';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 4000);
+    toast('Tarjeta descargada');
+  }, 'image/png', 0.95);
+}
+
 // ============ ARRANQUE ============
 async function init() {
+  try { initTheme(); } catch(e) { console.log('theme init:', e); }
   var vEl = document.getElementById('app-version');
   if(vEl) vEl.textContent = APP_VERSION;
   PLAYER_TOKEN = playerTokenFromURL();
@@ -2175,6 +2666,7 @@ async function startApp() {
     catch(e) { console.error(e); }
     showLoading(false);
     if (!ok || !PLAYER_ID) { showInvalidLink(false); return; }
+    try { applyAccent(PLAYER_ID); } catch(e) {}
     enterPlayerShell();
     // La primera vez que abre su enlace no sabe que es esto ni quien lo ve.
     // Una pantalla, una sola vez, y despues nunca mas.
@@ -2439,6 +2931,10 @@ function toggleZone(btn, zone) {
 // los ultimos 3 dias y todavia no hizo check-in hoy.
 function recoveryDue(pid){
   var t = today(), lim = daysAgoStr(3);
+  // Si hoy es practica de verdad, siempre se registra como practica: nunca se
+  // le puede ofrecer el formulario liviano de recuperacion (sin duracion, sin
+  // tipo de sesion, sin RPE), o esa practica se pierde de la carga del equipo.
+  if(isPracticeDayOn(t)) return false;
   var ents = playerEntries(pid);
   if(ents.some(function(e){ return e.date===t; })) return false;
   return ents.some(function(e){ return e.sessionLabel==='partido' && e.date < t && e.date >= lim; });
@@ -2787,6 +3283,7 @@ async function attemptSave(){
   _pendingEntry = null; _pendingReplace = false;
   await refreshData();
   var m = getMetrics(pid);
+  var isPlayerSide = isPlayerMode() || !isStaff();
   lastSavedSummary = {
     pid: pid,
     date: saved.date,
@@ -2794,9 +3291,13 @@ async function attemptSave(){
     streak: m.streak,
     // Del registro que se acaba de guardar, no del mas reciente del jugador:
     // si registro una fecha pasada, el numero debe corresponder a esa.
-    halo: vwiFromEntry(normalizeEntry(saved))
+    halo: vwiFromEntry(normalizeEntry(saved)),
+    // Solo se celebra del lado del jugador, y solo si el numero de racha que
+    // acaba de quedar es justo un hito. Un check-in normal no celebra nada.
+    milestone: (isPlayerSide && isStreakMilestone(m.streak)) ? m.streak : null
   };
-  if(isPlayerMode() || !isStaff()){
+  if(isPlayerSide){
+    feedbackPulse(lastSavedSummary.milestone ? 'milestone' : 'save');
     setPlayerView('done', true);
   } else {
     toast('Check-in guardado');
@@ -3007,6 +3508,7 @@ function playerHomeView(p){
   var doneToday = DB.entries.some(function(e){ return e.playerId===pid && e.date===today(); });
   var last = m.lastEntry;
   var promise = checkinPromise(pid);
+  var kind = promise.kind;
 
   var msg;
   if(!last) msg = 'Tu halo aparece con el primer check-in.';
@@ -3023,9 +3525,15 @@ function playerHomeView(p){
 
   var streakChip = m.streak>0
     ? '<div style="display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:999px;'+
-      'background:rgba(235,68,143,.1);border:1px solid rgba(235,68,143,.3);flex-shrink:0">'+
-      '<span style="font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--pink)">'+m.streak+'</span>'+
-      '<span style="font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--pink)">racha</span></div>'
+      'background:color-mix(in srgb,var(--accent,var(--pink)) 12%,transparent);'+
+      'border:1px solid color-mix(in srgb,var(--accent,var(--pink)) 32%,transparent);flex-shrink:0">'+
+      '<span style="font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--accent,var(--pink))">'+m.streak+'</span>'+
+      '<span style="font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent,var(--pink))">racha</span></div>'
+    : '';
+
+  var gamedayRibbon = (kind==='gameday')
+    ? '<div class="gold-banner intense" style="margin-top:16px">'+wingMarkSVG(30,{flap:true,wingColor:'#fff',haloColorCss:'#fff'})+
+      '<span>Modo Torneo activado — hoy el check-in es de Game Day</span></div>'
     : '';
 
   // Si viene arrastrando una molestia y no ha hecho el seguimiento semanal,
@@ -3036,6 +3544,8 @@ function playerHomeView(p){
       '<p>Marcaste esa zona esta semana. Cuatro preguntas para saber si va cediendo.</p>'+
       '<button class="btn-secondary" style="width:100%" onclick="startOveruse(\''+zonaPend+'\')">Contestar</button></div>'
     : '';
+
+  var reminderBanner = reminderBannerHTML(pid, m, doneToday, kind);
 
   var cta;
   if(doneToday){
@@ -3055,14 +3565,17 @@ function playerHomeView(p){
     }
   }
 
-  return '<div style="display:flex;align-items:center;gap:12px">'+
+  return '<div style="display:flex;align-items:center;gap:10px">'+
       '<div style="flex:1;min-width:0">'+
-        '<div style="font-family:var(--disp);font-size:27px;font-weight:800;letter-spacing:.02em;line-height:1.05;text-transform:uppercase">Hola, '+htmlEscape(firstName(p.name))+'</div>'+
+        '<div style="font-family:var(--disp);font-size:27px;font-weight:800;letter-spacing:.02em;line-height:1.05;text-transform:uppercase">Hola, '+htmlEscape(displayName(p))+'</div>'+
         '<div style="font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:6px">'+formatDateLong(today())+'</div>'+
       '</div>'+ streakChip +
+      '<button class="icon-btn" onclick="openSettingsModal(\''+pid+'\')" title="Tu perfil">'+gearSVG()+'</button>'+
     '</div>'+
 
+    gamedayRibbon +
     ostrcCard +
+    reminderBanner +
 
     '<div class="halo-card" style="margin-top:16px">'+
       '<img class="hc-mark" src="/angels-mark.png" alt="">'+
@@ -3085,7 +3598,11 @@ function playerHomeView(p){
     (p.injury_note ? '<div class="coach-card" style="background:var(--amber-soft);border-color:rgba(255,140,0,.3)">'+
       '<div class="ct" style="color:var(--amber)">Restricción registrada</div>'+
       '<div class="cb">'+htmlEscape(p.injury_note)+'</div></div>' : '') +
-    miniStatsHTML(pid);
+    miniStatsHTML(pid) +
+    tierCardHTML(pid) +
+    teamPulseTeaserHTML(pid) +
+    achievementsPanelHTML(pid) +
+    '<button class="btn-secondary" style="width:100%;margin-top:14px" onclick="shareCard(\''+pid+'\')">Compartir mi racha</button>';
 }
 function weekStripHTML(pid){
   var days = [];
@@ -3129,7 +3646,8 @@ function playerCheckinView(p){
   var kind = checkinKind(p.id);
   var head = '';
   if(kind==='gameday'){
-    head = '<div class="gold-banner">Modo Torneo — check-in de Game Day</div>';
+    head = '<div class="gold-banner intense">'+wingMarkSVG(26,{flap:true,wingColor:'#fff',haloColorCss:'#fff'})+
+      '<span>Modo Torneo — check-in de Game Day</span></div>';
   } else if(kind==='recovery'){
     head = '<div class="coach-card" style="margin-top:0;margin-bottom:1.2rem"><div class="ct">Check-in de recuperación</div>'+
       '<div class="cb">Jugaste hace poco. Cuéntanos cómo amaneciste hoy: no hay entrenamiento que registrar.</div></div>';
@@ -3142,14 +3660,15 @@ function playerCheckinView(p){
 function playerDoneView(p){
   var s = lastSavedSummary || {};
   var halo = s.halo!=null ? Math.round(s.halo) : null;
+  var milestoneHero = s.milestone ? milestoneHeroHTML(s.milestone) : '';
   return '<div class="confirm-wrap">'+
-    '<div class="confirm-mark"><img src="/angels-mark.png" alt=""></div>'+
-    '<div class="confirm-title">Listo, '+htmlEscape(firstName(p.name))+'</div>'+
+    (milestoneHero || '<div class="confirm-mark"><img src="/angels-mark.png" alt=""></div>')+
+    '<div class="confirm-title">Listo, '+htmlEscape(displayName(p))+'</div>'+
     '<div class="confirm-sub">Tu carga de hoy quedó registrada. El staff ya la tiene en el tablero.</div>'+
     '<div class="confirm-cards">'+
-      '<div class="confirm-card" style="background:rgba(235,68,143,.09);border:1px solid rgba(235,68,143,.28)">'+
-        '<div class="cl" style="color:var(--pink)">Racha</div>'+
-        '<b style="color:var(--pink)">'+(s.streak!=null?s.streak:'—')+'</b></div>'+
+      '<div class="confirm-card" style="background:color-mix(in srgb,var(--accent,var(--pink)) 9%,transparent);border:1px solid color-mix(in srgb,var(--accent,var(--pink)) 28%,transparent)">'+
+        '<div class="cl" style="color:var(--accent,var(--pink))">Racha</div>'+
+        '<b style="color:var(--accent,var(--pink))">'+(s.streak!=null?s.streak:'—')+'</b></div>'+
       '<div class="confirm-card" style="background:var(--sky-soft);border:1px solid var(--line-strong)">'+
         '<div class="cl" style="color:var(--sky)">Carga de hoy</div>'+
         '<b style="color:var(--sky)">'+(s.load!=null?s.load.toLocaleString():'—')+'</b></div>'+
@@ -3158,7 +3677,8 @@ function playerDoneView(p){
         '<b style="color:'+haloColor(halo)+'">'+halo+'</b></div>' : '')+
     '</div>'+
     '<div class="confirm-next"><div class="cl">Qué viene</div><p>'+htmlEscape(tomorrowText())+'</p></div>'+
-    '<button class="btn-primary" style="width:100%;margin-top:20px" onclick="setPlayerView(\'hoy\')">Volver al inicio</button>'+
+    '<button class="btn-secondary" style="width:100%;margin-top:14px" onclick="shareCard(\''+p.id+'\')">Compartir'+(s.milestone?' este hito':' mi racha')+'</button>'+
+    '<button class="btn-primary" style="width:100%;margin-top:10px" onclick="setPlayerView(\'hoy\')">Volver al inicio</button>'+
   '</div>';
 }
 // Descriptivo: lee el calendario, no propone conducta de entrenamiento.
