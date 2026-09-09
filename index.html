@@ -702,21 +702,14 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
 }
 
 /* ===== SPLASH DE ARRANQUE ===== */
-/* Intro real: un clip corto recortado del video de marca — las alitas se
-   pliegan en un haz de luz y vuelven a abrirse formando el logo. El fondo
-   gris parejo del video original se sustituye (con colorkey + composicion,
-   hecho una sola vez al exportar, no en el navegador) por el mismo color de
-   fondo que usa el app en cada tema — angels-splash-light.* sobre #F3F7FB y
-   angels-splash-dark.* sobre #0B1220 — para que no se vea como "un video
-   flotando en una caja gris" sino como una animacion nativa del logo sobre
-   el fondo real del app. El clip tambien se recorto para saltarse el
-   instante donde el pliegue queda mas "poligonal" (asi se ve el video
-   generado por IA a mitad de la transformacion) y pasar directo, con un
-   crossfade corto, a la reapertura limpia. Se retira con el mismo fundido de
-   opacidad de siempre. Si el video falla, no carga, o el dispositivo pide
-   "reduced motion", cae de vuelta a la animacion CSS del logo real
-   (angels-mark.png) partido en dos mitades con clip-path, que ya estaba
-   probada y sigue intacta como respaldo. */
+/* Intro real: un clip corto (video/angels-splash.mp4|webm) recortado del
+   video de marca — las alitas se pliegan en un haz de luz y vuelven a abrirse
+   formando el logo. Vive a pantalla completa sobre su propio fondo gris
+   (el mismo tono del video, para que no haya costura visible) y se retira
+   con el mismo fundido de opacidad de siempre. Si el video falla, no carga,
+   o el dispositivo pide "reduced motion", cae de vuelta a la animacion
+   CSS del logo real (angels-mark.png) partido en dos mitades con clip-path,
+   que ya estaba probada y sigue intacta como respaldo. */
 .app-splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;
   justify-content:center;gap:22px;background:var(--bg0);transition:opacity .6s cubic-bezier(.4,0,.2,1),visibility .6s;
   overflow:hidden;}
@@ -724,7 +717,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
   background:radial-gradient(ellipse 70% 50% at 50% 32%,rgba(81,183,228,.2) 0%,transparent 65%),
              radial-gradient(ellipse 45% 35% at 82% 78%,rgba(235,68,143,.09) 0%,transparent 60%);}
 .app-splash.hide{opacity:0;visibility:hidden;pointer-events:none;}
-.splash-video{position:fixed;inset:0;width:100%;height:100%;object-fit:contain;background:var(--bg0);z-index:2;}
+.splash-video{position:fixed;inset:0;width:100%;height:100%;object-fit:contain;background:#828282;z-index:2;}
 .splash-mark{position:relative;width:216px;aspect-ratio:776/248;perspective:1100px;z-index:1;}
 .splash-glow{position:absolute;inset:-70% -20%;border-radius:50%;pointer-events:none;
   background:radial-gradient(ellipse closest-side,rgba(81,183,228,.4) 0%,rgba(235,68,143,.16) 46%,transparent 72%);
@@ -882,7 +875,10 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
 
 <div class="app-splash" id="app-splash" aria-hidden="true">
   <video class="splash-video" id="splash-video" autoplay muted playsinline webkit-playsinline="true"
-    disablePictureInPicture disableRemotePlayback preload="auto"></video>
+    disablePictureInPicture disableRemotePlayback preload="auto" poster="/angels-splash-poster.jpg">
+    <source src="/angels-splash.webm" type="video/webm">
+    <source src="/angels-splash.mp4" type="video/mp4">
+  </video>
   <div class="splash-mark" id="splash-fallback-mark" hidden>
     <div class="splash-glow"></div>
     <div class="splash-half splash-half-l"><img src="/angels-mark.png" alt=""></div>
@@ -927,28 +923,6 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
     return;
   }
 
-  // Mismo criterio que currentThemeIsDark() (definida mas abajo, todavia no
-  // disponible aqui): preferencia guardada en este dispositivo, si no,
-  // sigue al sistema. El clip de video viene ya compuesto sobre el fondo
-  // exacto de cada tema (no es el mismo archivo con un filtro CSS encima),
-  // por eso hay que elegir el correcto ANTES de reproducir.
-  var isDark = false;
-  try{
-    var forcedTheme = localStorage.getItem('angels.theme');
-    if(forcedTheme === 'dark'){ isDark = true; }
-    else if(forcedTheme !== 'light'){ isDark = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); }
-  } catch(e){}
-  var variant = isDark ? 'dark' : 'light';
-  video.poster = '/angels-splash-' + variant + '-poster.jpg';
-  var sourceWebm = document.createElement('source');
-  sourceWebm.type = 'video/webm';
-  sourceWebm.src = '/angels-splash-' + variant + '.webm';
-  var sourceMp4 = document.createElement('source');
-  sourceMp4.type = 'video/mp4';
-  sourceMp4.src = '/angels-splash-' + variant + '.mp4';
-  video.appendChild(sourceWebm);
-  video.appendChild(sourceMp4);
-
   var usedFallback = false;
   function onVideoFail(){
     if(usedFallback || done) return;
@@ -960,7 +934,6 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
   video.addEventListener('ended', function(){ setTimeout(finish, 120); });
 
   try{
-    video.load();
     var playPromise = video.play();
     if(playPromise && typeof playPromise.catch === 'function'){ playPromise.catch(onVideoFail); }
   } catch(e){ onVideoFail(); }
