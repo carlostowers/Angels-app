@@ -1306,21 +1306,12 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
     </div>
     <div class="form-block">
       <label class="form-label">Tipo de sesión</label>
-      <select id="edit-session" class="form-input" onchange="editSessionChanged()">
+      <select id="edit-session" class="form-input">
         <option value="">Sin especificar</option>
         <option value="tecnica">Técnica</option>
         <option value="fisico">Físico</option>
         <option value="scrimmage">Scrimmage</option>
         <option value="partido">Partido</option>
-        <option value="recuperacion">Recuperación</option>
-      </select>
-    </div>
-    <div class="form-block" id="edit-recmode-wrap" style="display:none">
-      <label class="form-label">Modo de recuperación</label>
-      <select id="edit-recmode" class="form-input" onchange="editSessionChanged()">
-        <option value="">Elige un modo</option>
-        <option value="activa">Activa</option>
-        <option value="descanso">Descanso</option>
       </select>
     </div>
     <div class="form-grid">
@@ -2886,29 +2877,6 @@ function wellnessField(key, label, help, labels) {
     '<input type="hidden" id="f-'+key+'" value="">'+
   '</div>';
 }
-// Selector de modo de recuperacion: activa (con carga real) vs descanso (sin
-// carga). Nunca trae nada preseleccionado -- el jugador o el staff tiene que
-// tocar un boton a proposito para elegir uno. De ahi sale si el paso de
-// duracion+RPE se muestra o no, y si esos campos se validan como obligatorios
-// o se guardan en null a proposito.
-function recoveryModeField(){
-  return '<div class="form-block">'+
-    '<div class="opt-grid" style="grid-template-columns:repeat(2,1fr)">'+
-      '<button type="button" class="btn-option" onclick="selectOption(this,\'recMode\',\'activa\')">Activa</button>'+
-      '<button type="button" class="btn-option" onclick="selectOption(this,\'recMode\',\'descanso\')">Descanso</button>'+
-    '</div>'+
-    '<div class="form-help">Activa: hiciste algo de movimiento (caminar, bici suave, movilidad…). Descanso: no hiciste nada físico hoy.</div>'+
-    '<input type="hidden" id="f-recMode" value="">'+
-  '</div>';
-}
-// Duracion + RPE de una recuperacion activa. Mismo formato que el RPE normal;
-// sin valor por defecto en duracion a proposito (la recuperacion activa suele
-// ser mas corta que una practica, no tiene sentido heredar el 80 de practica).
-function recoveryLoadField(){
-  return '<div class="form-grid"><div class="form-block"><label class="form-label">Duración (minutos)</label>'+
-    '<input type="number" id="f-duration" class="form-input" placeholder="Ej. 20" min="1" step="5" inputmode="numeric"></div></div>'+
-    rpeField('Esfuerzo percibido (RPE)','1 = muy suave, 10 = esfuerzo máximo');
-}
 function painConcernField(label) {
   const lab=label||'Dolor preocupante';
   return '<div class="form-block">'+
@@ -3076,24 +3044,10 @@ function toggleZone(btn, zone) {
 }
 
 /* ---------- Que formulario toca hoy ---------- */
-// El lunes despues de un fin de semana de torneo es donde se decide si el
-// equipo llega entero. Se ofrece cuando el jugador registro un partido en
-// los ultimos 3 dias y todavia no hizo check-in hoy.
-function recoveryDue(pid){
-  var t = today(), lim = daysAgoStr(3);
-  // Si hoy es practica de verdad, siempre se registra como practica: nunca se
-  // le puede ofrecer el formulario liviano de recuperacion (sin duracion, sin
-  // tipo de sesion, sin RPE), o esa practica se pierde de la carga del equipo.
-  if(isPracticeDayOn(t)) return false;
-  var ents = playerEntries(pid);
-  if(ents.some(function(e){ return e.date===t; })) return false;
-  return ents.some(function(e){ return e.sessionLabel==='partido' && e.date < t && e.date >= lim; });
-}
 function checkinKind(pid){
   var p = DB.players.find(function(x){ return x.id===pid; });
   var isTournament = !!(p && TEAM_SETTINGS[p.team] && TEAM_SETTINGS[p.team].tournamentMode);
   if(isTournament) return 'gameday';
-  if(recoveryDue(pid)) return 'recovery';
   return 'practice';
 }
 
@@ -3129,44 +3083,15 @@ function checkinSteps(kind){
              playerNoteField('Mensaje al coach (opcional)','¿Algo que quieras decir sobre los juegos de hoy?'), req:'' }
     ];
   }
-  if(kind === 'recovery'){
-    return [
-      { q:'¿Cómo amaneciste?', sub:'Jugaste hace poco. Hoy no hay entrenamiento que registrar.',
-        body:'<div class="form-grid">'+dateChipBlock('Fecha')+'</div>'+
-             wellnessField('fatigue','Fatiga hoy','Cómo se siente tu cuerpo después de jugar',['1 Muy cansado','2 Bastante','3 Normal','4 Bien','5 Muy fresco']),
-        req:'f-fatigue' },
-      { q:'¿Qué tipo de recuperación fue hoy?', sub:'Elige uno antes de seguir.',
-        body:recoveryModeField(), req:'f-recMode' },
-      { q:'¿Cuánto duró y qué tan duro estuvo?', sub:'Del 1 (muy suave) al 10 (esfuerzo máximo).',
-        body:recoveryLoadField(), req:'f-duration,f-rpe',
-        visible:function(){ return wzFieldVal('f-recMode')==='activa'; } },
-      { q:'¿Cuerpo y sueño?', sub:'Lo que más cuesta recuperar después de competir.',
-        body:wellnessField('soreness','Dolor muscular','Dolor general de músculos',['1 Muy fuerte','2 Fuerte','3 Moderado','4 Leve','5 Sin dolor'])+
-             wellnessField('sleepQuality','Calidad de sueño','Cómo dormiste anoche',['1 Muy mal','2 Mal','3 Normal','4 Bien','5 Excelente']),
-        req:'f-soreness,f-sleepQuality' },
-      { q:'¿Cómo te sientes?', sub:'Ánimo y molestias.',
-        body:wellnessField('mood','Ánimo hoy','Cómo te sientes emocionalmente',['1 Muy mal','2 Mal','3 Normal','4 Bien','5 Muy bien'])+
-             painConcernField(),
-        req:'f-mood' },
-      { q:'¿Algo para el coach?', sub:'Opcional.',
-        body:playerNoteField('Mensaje al coach (opcional)','¿Algo que quieras decirle al coach?')+
-             '<input type="hidden" id="f-sessionType" value="recuperacion">',
-        req:'' }
-    ];
-  }
   return [
     { q:'¿Qué día registras?', sub:'Casi siempre es hoy. Si se te pasó ayer, también puedes.',
-      body:'<div class="form-grid">'+dateChipBlock('Fecha')+'</div>'+sessionTypeField(),
-      req:'f-sessionType' },
-    { q:'¿Qué tipo de recuperación fue hoy?', sub:'Elige uno antes de seguir.',
-      body:recoveryModeField(), req:'f-recMode',
-      visible:function(){ return wzFieldVal('f-sessionType')==='recuperacion'; } },
-    { q:'¿Cuánto duró y qué tan duro estuvo?', sub:'Del 1 (muy fácil) al 10 (esfuerzo máximo).',
-      body:'<div class="form-grid"><div class="form-block"><label class="form-label">Duración (minutos)</label>'+
+      body:'<div class="form-grid">'+dateChipBlock('Fecha')+
+           '<div class="form-block"><label class="form-label">Duración (minutos)</label>'+
            '<input type="number" id="f-duration" class="form-input" value="80" min="0" step="5" inputmode="numeric"></div></div>'+
-           rpeField('Esfuerzo percibido (RPE)','1 = muy fácil, 10 = esfuerzo máximo'),
-      req:'f-duration,f-rpe',
-      visible:function(){ return wzFieldVal('f-sessionType')!=='recuperacion' || wzFieldVal('f-recMode')==='activa'; } },
+           sessionTypeField(),
+      req:'f-sessionType' },
+    { q:'¿Qué tan duro estuvo?', sub:'Del 1 (muy fácil) al 10 (esfuerzo máximo).',
+      body:rpeField('Esfuerzo percibido (RPE)','1 = muy fácil, 10 = esfuerzo máximo'), req:'f-rpe' },
     { q:'¿Cómo llegas hoy?', sub:'Ánimo y sueño de anoche.',
       body:wellnessField('mood','Ánimo hoy','Cómo te sientes emocionalmente',['1 Muy mal','2 Mal','3 Normal','4 Bien','5 Muy bien'])+
            wellnessField('sleepQuality','Calidad de sueño','Cómo dormiste la noche anterior',['1 Muy mal','2 Mal','3 Normal','4 Bien','5 Excelente']),
@@ -3186,7 +3111,6 @@ function checkinSteps(kind){
 }
 function checkinTitle(kind){
   if(kind==='gameday') return 'Guardar check-in Game Day';
-  if(kind==='recovery') return 'Guardar recuperación';
   return 'Guardar check-in';
 }
 // Promesa de tiempo calculada sobre el formulario real de ese dia.
@@ -3202,12 +3126,10 @@ function checkinPromise(pid){
 }
 
 /* ---------- Wizard ---------- */
-var _wzStep = 0, _wzTotal = 0, _wzScroll = false, _wzKind = 'practice', _wzSteps = [];
-function wzFieldVal(id){ var el=document.getElementById(id); return el ? String(el.value||'') : ''; }
+var _wzStep = 0, _wzTotal = 0, _wzScroll = false, _wzKind = 'practice';
 function buildCheckinForm(kind){
   var steps = checkinSteps(kind);
   _wzKind = kind;
-  _wzSteps = steps;
   var body = steps.map(function(s){
     return '<section class="wz-step" data-req="'+(s.req||'')+'">'+
       '<div class="wz-q">'+s.q+'</div>'+
@@ -3230,13 +3152,6 @@ function buildCheckinForm(kind){
     '</form></div>';
 }
 function wzStepEls(){ return Array.prototype.slice.call(document.querySelectorAll('#checkin-wizard .wz-step')); }
-// Un paso puede declarar visible():boolean (ej. el de duracion+RPE de
-// recuperacion, que solo aplica en modo activa). Sin esa funcion, siempre es
-// visible -- asi el resto de pasos (gameday, practica normal) no cambia.
-function wzStepVisible(i){
-  var s = _wzSteps[i];
-  return !s || typeof s.visible !== 'function' || !!s.visible();
-}
 function wzRender(){
   var steps = wzStepEls();
   if(!steps.length) return;
@@ -3264,9 +3179,6 @@ function wzRender(){
   _wzScroll = true;
 }
 function wzStepComplete(i){
-  // Un paso oculto (ej. duracion+RPE cuando la recuperacion es de descanso)
-  // nunca bloquea el avance -- no aplica, no se exige.
-  if(!wzStepVisible(i)) return true;
   var s = wzStepEls()[i];
   if(!s) return true;
   var req = (s.dataset.req||'').split(',').filter(Boolean);
@@ -3277,26 +3189,16 @@ function wzStepComplete(i){
 }
 function wzNext(){
   if(!wzStepComplete(_wzStep)){ toast('Completa esta pregunta para seguir', true); return; }
-  do { _wzStep++; } while(_wzStep < _wzTotal-1 && !wzStepVisible(_wzStep));
-  wzRender();
+  _wzStep++; wzRender();
 }
-function wzPrev(){
-  if(_wzStep<=0) return;
-  do { _wzStep--; } while(_wzStep > 0 && !wzStepVisible(_wzStep));
-  wzRender();
-}
-// Auto-avance: al completar todas las respuestas del paso, salta solo (y
-// salta de largo cualquier paso que haya quedado oculto, ej. si se eligio
-// modo descanso el paso de duracion+RPE no se muestra).
+function wzPrev(){ if(_wzStep>0){ _wzStep--; wzRender(); } }
+// Auto-avance: al completar todas las respuestas del paso, salta solo.
 function wzMaybeAdvance(){
   if(!document.getElementById('checkin-wizard')) return;
   if(_wzStep >= _wzTotal-1) return;
   if(!wzStepComplete(_wzStep)) return;
   setTimeout(function(){
-    if(wzStepComplete(_wzStep) && _wzStep < _wzTotal-1){
-      do { _wzStep++; } while(_wzStep < _wzTotal-1 && !wzStepVisible(_wzStep));
-      wzRender();
-    }
+    if(wzStepComplete(_wzStep) && _wzStep < _wzTotal-1){ _wzStep++; wzRender(); }
   }, 280);
 }
 function initCheckinForm(pid) {
@@ -3347,20 +3249,14 @@ function collectEntry(pid){
   try{ pain_zones=JSON.parse(val('f-pain-zones')||'[]'); }catch(e){}
   var pain_sides={};
   try{ pain_sides=JSON.parse(val('f-pain-sides')||'{}'); }catch(e){}
-  // Recuperacion activa (RPE/duracion reales, elegido a proposito por el
-  // jugador) guarda esos valores; recuperacion descanso sigue guardando null
-  // a proposito -- pero el modo se lee del selector explicito f-recMode, no
-  // se infiere ni se asume por el tipo de sesion solo.
-  var isRecovery = val('f-sessionType')==='recuperacion';
-  var isActivaRecovery = isRecovery && val('f-recMode')==='activa';
   return {
     id:uid(), player_id:pid,
     date: val('f-date')||today(),
     session_label: val('f-sessionType') || (document.getElementById('f-setsPlayed')?'partido':null),
     role_in_event: val('f-roleInEvent')||null,
     sets_played: num('f-setsPlayed'),
-    duration: (isRecovery && !isActivaRecovery) ? null : (parseInt(val('f-duration'))||0),
-    rpe: (isRecovery && !isActivaRecovery) ? null : (parseInt(val('f-rpe'))||0),
+    duration: parseInt(val('f-duration'))||0,
+    rpe: parseInt(val('f-rpe'))||0,
     mood: num('f-mood'),
     sleep_quality: num('f-sleepQuality'),
     soreness: num('f-soreness'),
@@ -3378,22 +3274,15 @@ async function saveEntry(pid, keepId) {
   if(_saving) return;
   var val = function(id){ var el=document.getElementById(id); return el ? el.value : ''; };
 
-  const isRecovery=(val('f-sessionType'))==='recuperacion';
-  const recMode=val('f-recMode')||'';
-  // El modo de recuperacion nunca se asume: si el tipo es recuperacion y
-  // todavia no se eligio activa/descanso explicitamente, no se guarda nada.
-  if(isRecovery && !recMode){ toast('Indica si la recuperación fue activa o de descanso antes de guardar',true); return; }
-  const isActivaRecovery = isRecovery && recMode==='activa';
-  const requiresLoad = !isRecovery || isActivaRecovery;
   const rpe=parseInt(val('f-rpe')||'0');
-  if(requiresLoad && !rpe){ toast(isActivaRecovery?'Indica el RPE de la recuperación activa antes de guardar':'Selecciona un RPE antes de guardar',true); return; }
+  if(!rpe){ toast('Selecciona un RPE antes de guardar',true); return; }
   const durVal=parseInt(val('f-duration')||'0');
-  if(requiresLoad && (!durVal||durVal<=0)){ toast(isActivaRecovery?'Indica cuántos minutos duró la recuperación activa':'Indica la duración antes de guardar',true); return; }
+  if(!durVal||durVal<=0){ toast('Indica la duración antes de guardar',true); return; }
   const dateVal=val('f-date')||today();
   if(dateVal>today()){ toast('No se permiten fechas futuras',true); return; }
   const sessVal=val('f-sessionType')||'';
   const isGameDay=!!document.getElementById('f-setsPlayed');
-  if(!isGameDay&&!isRecovery&&!sessVal){ toast('Selecciona el tipo de sesión',true); return; }
+  if(!isGameDay&&!sessVal){ toast('Selecciona el tipo de sesión',true); return; }
   const moodVal=parseInt(val('f-mood')||'0');
   const sleepVal=parseInt(val('f-sleepQuality')||'0');
   if(!moodVal||!sleepVal){ toast('Completa al menos Ánimo y Sueño',true); return; }
@@ -3512,8 +3401,7 @@ async function retrySave(){
 // lo contestado. Ahora avisa antes de salir.
 function checkinHasAnswers(){
   if(!document.getElementById('checkin-form')) return false;
-  var ids = ['f-mood','f-sleepQuality','f-soreness','f-stress','f-fatigue','f-motivation','f-setsPlayed','f-roleInEvent'];
-  if(_wzKind !== 'recovery') ids.push('f-rpe','f-sessionType');
+  var ids = ['f-mood','f-sleepQuality','f-soreness','f-stress','f-fatigue','f-motivation','f-setsPlayed','f-roleInEvent','f-rpe','f-sessionType'];
   var answered = ids.some(function(id){
     var el = document.getElementById(id);
     return el && String(el.value||'').trim()!=='';
@@ -3839,9 +3727,6 @@ function playerCheckinView(p){
   if(kind==='gameday'){
     head = '<div class="gold-banner intense">'+wingMarkSVG(26,{flap:true,wingColor:'#fff',haloColorCss:'#fff'})+
       '<span>Modo Torneo — check-in de Game Day</span></div>';
-  } else if(kind==='recovery'){
-    head = '<div class="coach-card" style="margin-top:0;margin-bottom:1.2rem"><div class="ct">Check-in de recuperación</div>'+
-      '<div class="cb">Jugaste hace poco. Cuéntanos cómo amaneciste hoy: no hay entrenamiento que registrar.</div></div>';
   }
   return '<button class="btn-ghost" onclick="setPlayerView(\'hoy\')" style="margin-bottom:1.1rem">← Volver</button>'+
     head + buildCheckinForm(kind);
@@ -5300,16 +5185,6 @@ function editEntryDate(entryId){
   document.getElementById('edit-duration').value = (e.duration!=null ? e.duration : '');
   document.getElementById('edit-session').value = e.sessionLabel || '';
   document.getElementById('edit-rpe').value = (e.rpe!=null ? e.rpe : '');
-  // El modo no se guarda como columna aparte -- se refleja de lo que ya hay:
-  // si es recuperacion con RPE/duracion reales, fue activa; si los dos estan
-  // en null, fue descanso. Si por algun motivo quedo a medias (dato viejo
-  // inconsistente), no se asume nada: se deja sin elegir.
-  var recModeInicial = '';
-  if(e.sessionLabel==='recuperacion'){
-    if(e.duration!=null && e.rpe!=null) recModeInicial='activa';
-    else if(e.duration==null && e.rpe==null) recModeInicial='descanso';
-  }
-  document.getElementById('edit-recmode').value = recModeInicial;
   document.getElementById('edit-sets').value = (e.setsPlayed!=null ? e.setsPlayed : '');
   var loc = [];
   if(e.sleepQuality!=null) loc.push('sueño '+e.sleepQuality);
@@ -5322,45 +5197,12 @@ function editEntryDate(entryId){
   _editSaving = false;
   var btn = document.getElementById('edit-save-btn');
   if(btn){ btn.disabled = false; btn.textContent = 'Guardar corrección'; }
-  editSessionChanged();
   document.getElementById('edit-modal').style.display = 'flex';
 }
 function closeEditModal(ev){
   if(ev && ev.target !== ev.currentTarget) return;
   document.getElementById('edit-modal').style.display = 'none';
   _editId = null;
-}
-// Un dia de recuperacion no tiene sesion que medir, asi que sus campos de
-// duracion y RPE quedan cerrados. Antes se vaciaban en silencio al guardar:
-// escribias los minutos reales, el editor los borraba y no avisaba de nada.
-// Si la entrada se marco mal, primero se cambia el tipo; entonces se abren.
-function editSessionChanged(){
-  var sel = document.getElementById('edit-session');
-  var help = document.getElementById('edit-session-help');
-  var dur = document.getElementById('edit-duration');
-  var rpe = document.getElementById('edit-rpe');
-  var modeWrap = document.getElementById('edit-recmode-wrap');
-  var modeSel = document.getElementById('edit-recmode');
-  if(!sel || !dur || !rpe) return;
-  var esRec = sel.value === 'recuperacion';
-  if(modeWrap) modeWrap.style.display = esRec ? '' : 'none';
-  if(!esRec && modeSel) modeSel.value = '';
-  // Recuperacion activa: duracion/RPE reales y obligatorios, igual que
-  // cualquier otro tipo de sesion. Recuperacion descanso (o recuperacion sin
-  // modo elegido todavia): campos bloqueados y vacios, nunca a medias.
-  var modo = esRec ? (modeSel ? modeSel.value : '') : '';
-  var esActivaRec = esRec && modo === 'activa';
-  var bloquear = esRec && !esActivaRec;
-  dur.disabled = bloquear; rpe.disabled = bloquear;
-  dur.style.opacity = bloquear ? '.45' : '';
-  rpe.style.opacity = bloquear ? '.45' : '';
-  if(bloquear){ dur.value = ''; rpe.value = ''; }
-  if(help){
-    help.textContent = !esRec ? ''
-      : !modo ? 'Elige si la recuperación fue activa o de descanso.'
-      : esActivaRec ? 'Recuperación activa: escribe la duración y el RPE reales.'
-      : 'Un día de recuperación de descanso no lleva duración ni RPE. Si en realidad hubo carga, cambia el modo a activa.';
-  }
 }
 
 var _editSaving = false;
@@ -5375,31 +5217,12 @@ async function saveEntryEdit(){
   if(nd > today()){ err.textContent='No se permiten fechas futuras.'; return; }
 
   var sess = v('edit-session');
-  var esRec = sess === 'recuperacion';
-  var modo = v('edit-recmode');
-  var esActivaRec = esRec && modo === 'activa';
   var dur = v('edit-duration')==='' ? null : parseInt(v('edit-duration'), 10);
   var rpe = v('edit-rpe')==='' ? null : parseInt(v('edit-rpe'), 10);
   var sets = v('edit-sets')==='' ? null : parseInt(v('edit-sets'), 10);
 
-  if(esRec){
-    if(!modo){ err.textContent='Elige si la recuperación fue activa o de descanso.'; return; }
-    if(esActivaRec){
-      // Activa: RPE y duracion son obligatorios -- nunca se cuela un null.
-      if(dur==null || isNaN(dur) || dur < 1 || dur > 600){ err.textContent='La recuperación activa necesita una duración entre 1 y 600 minutos.'; return; }
-      if(rpe==null || isNaN(rpe) || rpe < 1 || rpe > 10){ err.textContent='La recuperación activa necesita un RPE entre 1 y 10.'; return; }
-    } else {
-      // Descanso: sigue sin llevar duracion ni RPE, a proposito. No se borra
-      // nada a espaldas del entrenador: si hay numeros, se le dice.
-      if(dur!=null || rpe!=null){
-        err.textContent='Marcaste el modo como descanso, que no lleva duración ni RPE. Si en realidad hubo carga, cambia el modo a activa.';
-        return;
-      }
-    }
-  } else {
-    if(dur==null || isNaN(dur) || dur < 1 || dur > 600){ err.textContent='La duración debe estar entre 1 y 600 minutos.'; return; }
-    if(rpe==null || isNaN(rpe) || rpe < 1 || rpe > 10){ err.textContent='El RPE debe estar entre 1 y 10.'; return; }
-  }
+  if(dur==null || isNaN(dur) || dur < 1 || dur > 600){ err.textContent='La duración debe estar entre 1 y 600 minutos.'; return; }
+  if(rpe==null || isNaN(rpe) || rpe < 1 || rpe > 10){ err.textContent='El RPE debe estar entre 1 y 10.'; return; }
   if(sets!=null && (isNaN(sets) || sets < 0 || sets > 10)){ err.textContent='Los sets deben estar entre 0 y 10.'; return; }
 
   var antes = { date:e.date, session_label:e.sessionLabel, duration:e.duration, rpe:e.rpe, sets_played:e.setsPlayed };
