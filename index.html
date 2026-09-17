@@ -31,8 +31,8 @@
   if (tok || q.get('player')) {
     var style = document.createElement('style');
     style.textContent = '#main-nav{display:none!important}#mobile-menu{display:none!important}' +
-      '#page-dashboard,#page-roster,#page-records,#page-import,#page-gameday,#page-taper,#page-tournaments{display:none!important}' +
-      'footer{display:none!important}';
+      '#page-dashboard,#page-roster,#page-records,#page-import,#page-gameday,#page-taper,#page-tournaments{display:none!important}';
+    // El footer (con el credito del creador) se ve tambien en modo jugador.
     document.head && document.head.appendChild(style);
   }
 })();
@@ -274,6 +274,17 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opac
 
 /* ===== BARRAS DE CARGA ===== */
 .loadbars{display:flex;align-items:flex-end;gap:5px;height:132px;}
+.halo-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;}
+.halo-legend span{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);}
+.halo-legend i{width:9px;height:9px;border-radius:3px;display:inline-block;}
+.hw-row{display:grid;grid-template-columns:92px 1fr 34px;align-items:center;gap:10px;padding:6px 0;}
+.hw-row .hw-l{font-family:var(--mono);font-size:10px;color:var(--dim);white-space:nowrap;}
+.hw-row .hw-t{height:8px;border-radius:5px;background:var(--bg3);overflow:hidden;}
+.hw-row .hw-t i{display:block;height:100%;border-radius:5px;}
+.hw-row b{font-family:var(--mono);font-size:12px;text-align:right;color:var(--text);}
+.focus-card{margin-top:14px;border-radius:var(--r-lg);padding:16px 18px;background:var(--sky-soft);border:1px solid var(--line-strong);}
+.focus-card .ct{font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--sky);}
+.focus-card .cb{font-size:14px;line-height:1.6;color:var(--text);margin-top:8px;white-space:pre-wrap;}
 .loadbar{flex:1;border-radius:5px 5px 3px 3px;min-height:4px;transition:height .5s cubic-bezier(.2,.7,.3,1);}
 .loadbars-axis{display:flex;justify-content:space-between;margin-top:10px;font-family:var(--mono);
   font-size:9px;color:var(--faint);}
@@ -663,6 +674,8 @@ body.player-shell .toast{bottom:calc(92px + var(--sab));}
 footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:40px;padding:22px 30px;}
 .footer-inner{max-width:1360px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
 .footer-link{display:inline-flex;align-items:center;gap:8px;color:var(--dim);font-size:13px;}
+.footer-credit{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);opacity:.75;}
+body.player-shell footer{margin-top:24px;}
 .conn{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11.5px;color:var(--dim);}
 .conn i{width:8px;height:8px;border-radius:50%;background:var(--mint);display:block;}
 
@@ -810,7 +823,15 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
   --shadow-lg:0 18px 50px rgba(0,0,0,0.55);
 }
 .halo-card{background:linear-gradient(160deg,var(--bg1),var(--bg3));}
-.theme-toggle-fixed{position:fixed;top:calc(14px + var(--sat));right:calc(14px + var(--sar));z-index:98000;}
+/* Boton de tema: vive dentro de la barra (staff) y junto al engranaje (jugador).
+   Ya no flota fijo, asi no tapa el menu, los modales ni el panel lateral. */
+.nav-theme{margin:0 0 10px;}
+@media(max-width:1099px){ .nav-theme{margin:0;} }
+@media(prefers-color-scheme:dark){ :root:not([data-theme="light"]) .loading-overlay{background:rgba(11,18,32,.92);} }
+@media(prefers-color-scheme:dark){ :root:not([data-theme="light"]) .toast:not(.err){background:#EAF0FB;color:#0B1220;} :root:not([data-theme="light"]) .pbar{background:linear-gradient(to top,var(--bg0) 62%,rgba(11,18,32,0));} }
+:root[data-theme="dark"] .loading-overlay{background:rgba(11,18,32,.92);}
+:root[data-theme="dark"] .toast:not(.err){background:#EAF0FB;color:#0B1220;}
+:root[data-theme="dark"] .pbar{background:linear-gradient(to top,var(--bg0) 62%,rgba(11,18,32,0));}
 .icon-btn{width:38px;height:38px;border-radius:50%;background:var(--bg1);border:1px solid var(--line-strong);
   display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;color:var(--dim);
   box-shadow:var(--shadow-sm);}
@@ -977,7 +998,6 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
 })();
 </script>
 
-<button class="icon-btn theme-toggle-fixed" id="theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema"></button>
 
 <!-- PERFIL DEL JUGADOR (apodo y color, guardado en este dispositivo) -->
 <div class="modal-overlay" id="settings-modal" style="display:none" onclick="if(event.target===this) closeSettingsModal()">
@@ -1018,6 +1038,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
     <div class="nav-spacer"></div>
     <div class="nav-badge" id="alert-badge" style="display:none"></div>
     <div class="nav-foot"><button class="btn-logout" id="logout-btn" onclick="doStaffLogout()" style="display:none">Salir</button></div>
+    <button class="icon-btn nav-theme js-theme-btn" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema"></button>
     <button class="hamburger" id="hamburger-btn" onclick="toggleMobileMenu()" aria-label="Menú">
       <span></span><span></span><span></span>
     </button>
@@ -1067,6 +1088,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
   <div id="dash-controls"></div>
   <div id="dash-kpis"></div>
   <div id="dash-actions"></div>
+  <div id="dash-focus"></div>
   <div id="dash-reminder"></div>
   <div id="dash-semaforo"></div>
 
@@ -1164,7 +1186,17 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
 
   <div class="panel section-gap">
     <div class="panel-title"><span class="dot" style="background:var(--pink)"></span>Reporte semanal</div>
-    <p style="font-size:13px;color:var(--dim);margin-bottom:1rem;line-height:1.6">Resumen descriptivo de los últimos 7 días: cumplimiento, carga, bienestar, molestias y restricciones activas.</p>
+    <p style="font-size:13px;color:var(--dim);margin-bottom:1rem;line-height:1.6">Resumen descriptivo del rango de fechas que elijas: cumplimiento, carga, molestias y restricciones activas. Si dejas las fechas vacías, usa los últimos 7 días.</p>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:1rem">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:11.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em">Desde</span>
+        <input class="filter-input" type="date" id="rep-desde">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:11.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em">Hasta</span>
+        <input class="filter-input" type="date" id="rep-hasta">
+      </div>
+    </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn-secondary" onclick="copyWeeklyReport()">Copiar reporte</button>
       <button class="btn-secondary" onclick="downloadWeeklyReport()">Descargar .txt</button>
@@ -1203,6 +1235,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
 <footer>
   <div class="footer-inner">
     <span class="mono-note" style="margin-top:0">Angels Performance OS · <span id="app-version"></span></span>
+    <span class="footer-credit">VOLEII · by Carlos Torres</span>
   </div>
 </footer>
 
@@ -1424,7 +1457,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:4
 <script>
 // Version visible en pantalla. Cuando alguien reporte algo raro, lo primero
 // es saber que version esta corriendo su telefono.
-const APP_VERSION = 'v3.1 · 19 ago 2026';
+const APP_VERSION = 'v3.2 · 17 sep 2026';
 
 // ============ SUPABASE ============
 const sb = window.supabase.createClient(
@@ -1497,11 +1530,65 @@ document.addEventListener('keydown', function(e) {
 });
 
 let TEAM_SETTINGS = { 'ADCJVBoys':{tournamentMode:false} };
+// Enfoque de la semana (traido de Plataneros): lo escribe el staff para todo
+// el equipo y solo se muestra durante la semana para la que se escribio
+// (week = lunes de esa semana). Un enfoque viejo confunde mas de lo que ayuda.
+let WEEK_FOCUS = { text:null, week:null };
+function readWeekFocus(row){
+  try { WEEK_FOCUS = { text: row.week_focus || null, week: row.week_focus_week || null }; }
+  catch(e){ console.log('readWeekFocus:', e); }
+}
+function weekFocusActive(){
+  return !!(WEEK_FOCUS.text && WEEK_FOCUS.week === weekStart(today()));
+}
+function weekFocusCardHTML(){
+  if(!weekFocusActive()) return '';
+  return '<div class="focus-card"><div class="ct">Enfoque de la semana</div><div class="cb">'+htmlEscape(WEEK_FOCUS.text)+'</div></div>';
+}
+function renderWeekFocusEditor(){
+  try {
+    var slot = document.getElementById('dash-focus');
+    if(!slot) return;
+    var vigente = weekFocusActive();
+    var nota = !WEEK_FOCUS.text
+      ? 'Sin enfoque escrito. Los jugadores no ven nada.'
+      : (vigente ? 'Visible para todo el equipo esta semana.'
+                 : 'No visible: se escribió para la semana del '+WEEK_FOCUS.week+'. Guárdalo de nuevo para mostrarlo esta semana.');
+    var abierto = slot.querySelector('details') ? slot.querySelector('details').open : false;
+    slot.innerHTML = '<details class="panel section-gap"'+(abierto?' open':'')+'>'+
+      '<summary class="panel-title" style="cursor:pointer;margin-bottom:0"><span class="dot" style="background:var(--pink)"></span>Enfoque de la semana'+
+        '<span class="mono-note" style="margin:0 0 0 auto">'+(vigente?'visible':'oculto')+'</span></summary>'+
+      '<p style="font-size:13px;color:var(--dim);line-height:1.6;margin:.8rem 0">Mensaje corto para todo el equipo, visible en la pantalla de inicio de cada jugador durante esta semana (lunes a domingo). Es distinto del mensaje individual del roster.</p>'+
+      '<textarea id="wf-text" class="form-textarea" rows="3" maxlength="400" placeholder="Ej: Semana de dos juegos. Prioridad: dormir 8 horas y llegar completos al calentamiento.">'+htmlEscape(WEEK_FOCUS.text||'')+'</textarea>'+
+      '<div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:10px">'+
+        '<button class="btn-primary" onclick="saveWeekFocus()">Guardar para esta semana</button>'+
+        (WEEK_FOCUS.text ? '<button class="btn-ghost" onclick="clearWeekFocus()">Quitar</button>' : '')+
+        '<span class="mono-note" style="margin-top:0">'+nota+'</span>'+
+      '</div></details>';
+  } catch(e){ console.log('renderWeekFocusEditor:', e); }
+}
+async function writeWeekFocus(text){
+  var row = { team:PRACTICE_TEAM, week_focus: text || null, week_focus_week: text ? weekStart(today()) : null };
+  try {
+    const { error } = await sb.from('team_settings').upsert(row);
+    if(error) throw error;
+    WEEK_FOCUS = { text: row.week_focus, week: row.week_focus_week };
+    toast(text ? 'Enfoque de la semana guardado' : 'Enfoque de la semana quitado');
+    renderWeekFocusEditor();
+  } catch(e){ console.error('week focus', e); toast('No se pudo guardar el enfoque de la semana', true); }
+}
+function saveWeekFocus(){
+  var t = String((document.getElementById('wf-text')||{}).value||'').trim();
+  if(!t){ toast('Escribe el enfoque antes de guardar', true); return; }
+  writeWeekFocus(t);
+}
+function clearWeekFocus(){ writeWeekFocus(null); }
 async function loadTeamSettings() {
   try {
     const { data } = await sb.from('team_settings').select('*');
     if (data) data.forEach(function(row){
       if (TEAM_SETTINGS[row.team] !== undefined) TEAM_SETTINGS[row.team].tournamentMode = row.tournament_mode;
+      if (row.team === PRACTICE_TEAM) readWeekFocus(row);
       if (row.team === PRACTICE_TEAM && row.timezone) TEAM_TZ = row.timezone;
     });
   } catch(e) { console.error('team_settings', e); }
@@ -1637,6 +1724,7 @@ function applyBootstrap(b){
   TOURNAMENTS = (b.tournaments || []).map(normalizeTournament);
   (b.team_settings || []).forEach(function(row){
     if(TEAM_SETTINGS[row.team] !== undefined) TEAM_SETTINGS[row.team].tournamentMode = row.tournament_mode;
+    if(row.team === PRACTICE_TEAM) readWeekFocus(row);
     if(row.timezone) TEAM_TZ = row.timezone;
   });
   OVERUSE = (b.overuse || []).map(normalizeOveruse);
@@ -1668,6 +1756,7 @@ function normalizeEntry(e) {
     mood:e.mood, sleepQuality:e.sleep_quality, soreness:e.soreness, stress:e.stress,
     fatigue:e.fatigue, motivation:e.motivation,
     painConcern:e.pain_concern, painZones:e.pain_zones, painSides:e.pain_sides || {},
+    illness:(e.illness==null ? null : e.illness),
     notes:e.notes, playerNote:e.player_note, createdAt:e.created_at
   };
 }
@@ -2006,6 +2095,7 @@ function isAlert(e) {
   if(e.soreness<=2) r.push('Dolor muscular alto');
   if(e.stress<=2) r.push('Estrés alto');
   if((e.painConcern||0)>=2) r.push('Dolor preocupante');
+  if((e.illness||0)>=1) r.push('Enfermo: '+(ILLNESS_LABELS[e.illness]||e.illness));
   return r.length?r:null;
 }
 // Marca las entradas rellenadas en un dia distinto al que registran. Ayuda a
@@ -2048,6 +2138,10 @@ function playerStatus(pid){
   if((last.painConcern||0) >= 2){
     graves.push('Dolor preocupante ' + last.painConcern +
       ((last.painZones && last.painZones.length) ? ' en ' + painZonesText(last) : ''));
+  }
+  if((last.illness||0) >= 1 && last.date >= daysAgoStr(1)){
+    var txtEnf = 'Enfermedad: ' + (ILLNESS_LABELS[last.illness] || last.illness);
+    if(last.illness >= 2) graves.push(txtEnf); else leves.push(txtEnf);
   }
   meter(señal('sleepQuality', 'Sueño', 2));
   meter(señal('soreness', 'Dolor muscular', 2));
@@ -2400,11 +2494,14 @@ function currentThemeIsDark(){
   return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
 }
 function renderThemeToggleBtn(){
-  var btn = document.getElementById('theme-toggle-btn');
-  if(!btn) return;
-  var dark = currentThemeIsDark();
-  btn.innerHTML = dark ? sunSVG() : moonSVG();
-  btn.title = dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+  try {
+    var dark = currentThemeIsDark();
+    var btns = document.querySelectorAll('.js-theme-btn');
+    for(var i=0;i<btns.length;i++){
+      btns[i].innerHTML = dark ? sunSVG() : moonSVG();
+      btns[i].title = dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+    }
+  } catch(e){ console.log('renderThemeToggleBtn:', e); }
 }
 function updateThemeColorMeta(){
   var m = document.querySelector('meta[name="theme-color"]');
@@ -2581,14 +2678,37 @@ var ACHIEVEMENTS = [
   { id:'racha15', label:'Racha de 15', desc:'15 días seguidos de check-in.', test:function(m){ return m.streak>=15; } },
   { id:'aldia', label:'Al día', desc:'Ninguna práctica pendiente de registrar ahora mismo.', test:function(m){ return m.entries.length>0 && (m.staleDays===0 || m.staleDays===null); } },
   { id:'gameday', label:'Debut Game Day', desc:'Completaste tu primer check-in de partido.', test:function(m){ return m.entries.some(function(e){ return e.sessionLabel==='partido'; }); } },
+  { id:'semana', label:'Semana completa', desc:'Registraste todos los días de práctica o partido de la semana pasada (lunes a domingo).', test:function(m, pid){ var fw = lastFullWeekCompliance(pid); return !!(fw && fw.total>0 && fw.done===fw.total); } },
   { id:'total50', label:'50 check-ins', desc:'Llenaste 50 check-ins en total.', test:function(m){ return m.entries.length>=50; } },
   { id:'total100', label:'100 check-ins', desc:'Llenaste 100 check-ins en total.', test:function(m){ return m.entries.length>=100; } }
 ];
+// Suma dias a una fecha ISO (YYYY-MM-DD) sin depender de la zona del telefono.
+function isoAddDays(iso, n){
+  var d = dateFromISO(iso);
+  d.setDate(d.getDate() + n);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+// Semana completa: la ultima semana cerrada (lunes a domingo), con todos sus
+// dias de practica o partido registrados. Solo mira si registro, no el contenido.
+function lastFullWeekCompliance(pid){
+  try {
+    var ini = isoAddDays(weekStart(today()), -7);
+    var fin = isoAddDays(ini, 6);
+    var dias = {};
+    practiceDatesDesc().forEach(function(d){ if(d >= ini && d <= fin) dias[d] = true; });
+    (TOURNAMENTS || []).forEach(function(t){ if(t.startDate && t.startDate >= ini && t.startDate <= fin) dias[t.startDate] = true; });
+    var lista = Object.keys(dias);
+    if(!lista.length) return null;
+    var hechos = {};
+    playerEntries(pid).forEach(function(e){ hechos[e.date] = true; });
+    return { done: lista.filter(function(d){ return hechos[d]; }).length, total: lista.length };
+  } catch(e){ console.log('lastFullWeekCompliance:', e); return null; }
+}
 function computeAchievements(pid){
   var m = getMetrics(pid);
   return ACHIEVEMENTS.map(function(a){
     var earned = false;
-    try{ earned = !!a.test(m); }catch(e){}
+    try{ earned = !!a.test(m, pid); }catch(e){}
     return { id:a.id, label:a.label, desc:a.desc, earned:earned };
   });
 }
@@ -2806,6 +2926,7 @@ async function startApp() {
   updateGameDayNav();
   updateTaperNav();
   document.body.classList.add('staff-shell');
+  initReportRangeInputs();
   renderDashboard();
 }
 function showLoading(v) {
@@ -2875,6 +2996,22 @@ function wellnessField(key, label, help, labels) {
     '</div>'+
     '<div class="form-help">'+help+'</div>'+
     '<input type="hidden" id="f-'+key+'" value="">'+
+  '</div>';
+}
+// Sintomas de enfermedad (traido de Plataneros): pregunta corta en cada
+// check-in. Entre escuela, practicas y juegos, un virus que pasa
+// desapercibido un dia se riega por el equipo en una semana.
+var ILLNESS_LABELS = ['Nada','Leve','Moderado','Con fiebre'];
+function illnessField(){
+  return '<div class="form-block">'+
+    '<label class="form-label">¿Te sientes enfermo?</label>'+
+    '<div class="opt-grid" style="grid-template-columns:repeat(4,1fr)">'+
+      ['0 Nada','1 Leve','2 Moderado','3 Con fiebre'].map(function(t,i){
+        return '<button type="button" class="btn-option'+(i===0?' selected':'')+'" onclick="selectOption(this,\'illness\','+i+')">'+t+'</button>';
+      }).join('')+
+    '</div>'+
+    '<div class="form-help">Gripe, catarro, malestar de estómago o fiebre. Avisar temprano evita contagiar al equipo.</div>'+
+    '<input type="hidden" id="f-illness" value="0">'+
   '</div>';
 }
 function painConcernField(label) {
@@ -3021,7 +3158,7 @@ function selectOption(btn, key, value) {
   document.getElementById('f-'+key).value=value;
   // El paso de dolor no auto-avanza: marcar el nivel es solo la mitad, hay
   // que dejar tiempo para senalar las zonas.
-  if(key!=='painConcern') wzMaybeAdvance();
+  if(key!=='painConcern' && key!=='illness') wzMaybeAdvance();
 }
 function toggleZone(btn, zone) {
   btn.classList.toggle('selected');
@@ -3077,7 +3214,7 @@ function checkinSteps(kind){
              wellnessField('motivation','Motivación para el próximo juego','¿Qué tantas ganas tienes de jugar el próximo partido?',['1 Sin ganas','2 Pocas','3 Normal','4 Con ganas','5 Súper motivado']),
         req:'f-soreness,f-stress,f-fatigue,f-motivation' },
       { q:'¿Te duele algo?', sub:'Después de competir es cuando más importa.',
-        body:painConcernField('Nivel de preocupación por dolor'), req:'' },
+        body:painConcernField('Nivel de preocupación por dolor')+illnessField(), req:'' },
       { q:'¿Algo más del día?', sub:'Opcional. El coach lo lee.',
         body:notesField('Notas del día de juego (opcional)','Ej: me dolió la rodilla en el segundo juego…')+
              playerNoteField('Mensaje al coach (opcional)','¿Algo que quieras decir sobre los juegos de hoy?'), req:'' }
@@ -3103,7 +3240,7 @@ function checkinSteps(kind){
            wellnessField('motivation','Ganas de entrenar','Qué tantas ganas tienes ahora',['1 Sin ganas','2 Pocas','3 Normal','4 Con ganas','5 Súper motivado']),
       req:'f-soreness,f-stress,f-fatigue,f-motivation' },
     { q:'¿Te duele algo?', sub:'Sé honesto: esto es lo que evita lesiones.',
-      body:painConcernField(), req:'' },
+      body:painConcernField()+illnessField(), req:'' },
     { q:'¿Algo más?', sub:'Opcional. El coach lo lee.',
       body:notesField('Notas libres (opcional)','Ej: rodilla cargada, cansancio de torneo…')+
            playerNoteField('Mensaje al coach (opcional)','¿Algo que quieras decirle al coach?'), req:'' }
@@ -3264,6 +3401,7 @@ function collectEntry(pid){
     fatigue: num('f-fatigue'),
     motivation: num('f-motivation'),
     pain_concern: parseInt(val('f-painConcern'))||0,
+    illness: (function(){ var n = parseInt(val('f-illness')); return (isNaN(n) || n<0 || n>3) ? 0 : n; })(),
     pain_zones: pain_zones,
     pain_sides: pain_sides,
     notes: val('f-notes')||'',
@@ -3414,6 +3552,8 @@ function checkinHasAnswers(){
   if(texts) return true;
   var zEl = document.getElementById('f-pain-zones');
   try { if(zEl && JSON.parse(zEl.value||'[]').length) return true; } catch(e){}
+  var il = document.getElementById('f-illness');
+  if(il && String(il.value||'0') !== '0') return true;
   var pc = document.getElementById('f-painConcern');
   return !!(pc && String(pc.value||'0') !== '0');
 }
@@ -3649,6 +3789,7 @@ function playerHomeView(p){
         '<div style="font-family:var(--disp);font-size:27px;font-weight:800;letter-spacing:.02em;line-height:1.05;text-transform:uppercase">Hola, '+htmlEscape(displayName(p))+'</div>'+
         '<div style="font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:6px">'+formatDateLong(today())+'</div>'+
       '</div>'+ streakChip +
+      '<button class="icon-btn js-theme-btn" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema">'+(currentThemeIsDark() ? sunSVG() : moonSVG())+'</button>'+
       '<button class="icon-btn" onclick="openSettingsModal(\''+pid+'\')" title="Tu perfil">'+gearSVG()+'</button>'+
     '</div>'+
 
@@ -3672,6 +3813,7 @@ function playerHomeView(p){
 
     cta +
 
+    weekFocusCardHTML() +
     weekStripHTML(pid) +
     (p.coach_message ? '<div class="coach-card"><div class="ct">Del staff, para ti</div><div class="cb">'+htmlEscape(p.coach_message)+'</div></div>' : '') +
     (p.injury_note ? '<div class="coach-card" style="background:var(--amber-soft);border-color:rgba(255,140,0,.3)">'+
@@ -3775,6 +3917,70 @@ function tomorrowText(){
   return 'No hay eventos próximos en el calendario del equipo.';
 }
 
+/* ---------- Halo en la temporada (traido de Plataneros) ---------- */
+// Un valor por dia: la entrada del dia que trae bienestar (sueno/animo).
+function dailyHaloSeries(pid){
+  var porDia = {};
+  playerEntries(pid).slice().reverse().forEach(function(e){
+    var ya = porDia[e.date];
+    if(!ya || (ya.mood==null && e.mood!=null)) porDia[e.date] = e;
+  });
+  var out = {};
+  Object.keys(porDia).forEach(function(d){
+    var v = null;
+    var en = porDia[d];
+    if(en.mood==null && en.sleepQuality==null) return; // sin bienestar ese dia
+    try { v = vwiFromEntry(en); } catch(e){ v = null; }
+    if(v!=null && !isNaN(v)) out[d] = Math.round(v);
+  });
+  return out;
+}
+var MON_SHORT_ES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function haloHistoryHTML(pid){
+  try {
+    var serie = dailyHaloSeries(pid);
+    var fechas = Object.keys(serie).sort();
+    var titulo = '<div class="panel-title" style="font-size:14px"><span class="dot" style="background:var(--mint)"></span>Tu halo en la temporada</div>';
+    if(fechas.length < 2){
+      return '<div class="panel" style="margin-top:13px">'+titulo+
+        '<div style="font-size:12.5px;color:var(--dim);line-height:1.6">Con unos cuantos check-ins más vas a ver aquí cómo se mueve tu bienestar semana a semana.</div></div>';
+    }
+    var dias = []; for(var i=27;i>=0;i--) dias.push(daysAgoStr(i));
+    var bars = dias.map(function(d){
+      var v = serie[d];
+      if(v==null) return '<div class="loadbar" style="height:4%;background:var(--bg3)" title="'+d+' · sin registro"></div>';
+      return '<div class="loadbar" style="height:'+Math.max(6,v)+'%;background:'+haloColor(v)+'" title="'+d+' · halo '+v+'"></div>';
+    }).join('');
+    var semanas = {};
+    fechas.forEach(function(d){ var w = weekStart(d); (semanas[w] = semanas[w] || []).push(serie[d]); });
+    var prom = Object.keys(semanas).sort().map(function(w){
+      var a = semanas[w];
+      return { w:w, v: Math.round(a.reduce(function(t,x){ return t+x; },0)/a.length) };
+    });
+    var todos = fechas.map(function(d){ return serie[d]; });
+    var mediaTemp = Math.round(todos.reduce(function(t,x){ return t+x; },0)/todos.length);
+    var filas = prom.slice(-8).reverse().map(function(r){
+      var dd = dateFromISO(r.w);
+      return '<div class="hw-row" title="Semana del '+r.w+' · halo '+r.v+'">'+
+        '<span class="hw-l">sem. '+dd.getDate()+' '+MON_SHORT_ES[dd.getMonth()]+'</span>'+
+        '<div class="hw-t"><i style="width:'+Math.max(3,r.v)+'%;background:'+haloColor(r.v)+'"></i></div>'+
+        '<b>'+r.v+'</b></div>';
+    }).join('');
+    return '<div class="panel" style="margin-top:13px">'+titulo+
+      '<div class="loadbars" style="height:96px;gap:3px">'+bars+'</div>'+
+      '<div class="loadbars-axis"><span>hace 28 días</span><span>hoy</span></div>'+
+      '<div class="halo-legend">'+
+        '<span><i style="background:'+haloColor(80)+'"></i>Disponible 75+</span>'+
+        '<span><i style="background:'+haloColor(65)+'"></i>Aceptable 60–74</span>'+
+        '<span><i style="background:'+haloColor(50)+'"></i>Precaución 45–59</span>'+
+        '<span><i style="background:'+haloColor(30)+'"></i>Cuidado &lt;45</span>'+
+      '</div>'+
+      '<div class="week-head" style="margin-top:18px"><span>Promedio por semana</span><span>temporada: '+mediaTemp+'</span></div>'+
+      '<div style="margin-top:6px">'+filas+'</div>'+
+    '</div>';
+  } catch(e){ console.log('haloHistoryHTML:', e); return ''; }
+}
+
 /* ---------- Mi carga ---------- */
 function playerCargaView(p){
   var pid = p.id;
@@ -3821,6 +4027,8 @@ function playerCargaView(p){
       '<div class="loadbars-axis"><span>hace 14 días</span><span>hoy</span></div>'+
       '<div style="font-size:12.5px;color:var(--dim);margin-top:14px;line-height:1.55">Carga interna = esfuerzo percibido × minutos. Los días sin barra son días sin registro.</div>'+
     '</div>'+
+
+    haloHistoryHTML(pid)+
 
     '<div class="panel" style="margin-top:13px">'+
       '<div class="panel-title" style="font-size:14px"><span class="dot"></span>Tú vs. tu línea base</div>'+
@@ -4067,6 +4275,7 @@ function renderDashboard(teamFilter) {
 
   renderKPIs(tf);
   try { renderReminder(tf); } catch(e){ console.log('reminder:', e); }
+  renderWeekFocusEditor();
   updateAlertBadge();
   renderSemaforo(tf);
   renderProgresionBoard();
@@ -4587,10 +4796,13 @@ function dailyReportText(){
   var avg = teamAvgVWI('ALL');
   if(avg!=null) L.push('Bienestar promedio del equipo (VWI): ' + avg + '/100');
   L.push('');
-  var att = [], obs = [], pain = [];
+  var att = [], obs = [], pain = [], enf = [];
   players.forEach(function(p){
     var st = playerStatus(p.id);
     var line = '  #'+p.number+' '+p.name+' — '+st.reasons.join('; ');
+    var eEnf = DB.entries.filter(function(x){ return x.playerId===p.id && x.date===t && (x.illness||0)>=1; })
+      .sort(function(a,b){ return (b.illness||0)-(a.illness||0); })[0];
+    if(eEnf) enf.push('  #'+p.number+' '+p.name+' — '+(ILLNESS_LABELS[eEnf.illness]||eEnf.illness));
     if(st.key==='atencion') att.push(line);
     else if(st.key==='observar') obs.push(line);
     var e = DB.entries.find(function(x){ return x.playerId===p.id && x.date===t; });
@@ -4602,6 +4814,7 @@ function dailyReportText(){
   if(att.length){ L.push('REQUIEREN ATENCIÓN:'); att.forEach(function(x){ L.push(x); }); L.push(''); }
   if(obs.length){ L.push('PARA OBSERVAR:'); obs.forEach(function(x){ L.push(x); }); L.push(''); }
   if(pain.length){ L.push('DOLOR REPORTADO HOY:'); pain.forEach(function(x){ L.push(x); }); L.push(''); }
+  if(enf.length){ L.push('SÍNTOMAS DE ENFERMEDAD HOY:'); enf.forEach(function(x){ L.push(x); }); L.push(''); }
   var missing = playersWithoutCheckinToday('ALL');
   if(missing.length){
     L.push('SIN CHECK-IN HOY:');
@@ -5192,6 +5405,7 @@ function editEntryDate(entryId){
   if(e.soreness!=null) loc.push('dolor muscular '+e.soreness);
   if(e.mood!=null) loc.push('ánimo '+e.mood);
   if((e.painConcern||0)>0) loc.push('dolor '+e.painConcern+(e.painZones&&e.painZones.length?' en '+painZonesText(e):''));
+  if((e.illness||0)>0) loc.push('enfermedad: '+(ILLNESS_LABELS[e.illness]||e.illness));
   document.getElementById('edit-locked').textContent = loc.length ? 'Lo que contestó el jugador: '+loc.join(' · ') : '';
   document.getElementById('edit-error').textContent = '';
   _editSaving = false;
@@ -5775,8 +5989,11 @@ function renderGameDay(teamFilter) {
 /* =========================================================================
    REPORTE SEMANAL (descriptivo)
    ========================================================================= */
-function weeklyReportText(){
-  var from = daysAgoStr(6), to = today();
+function weeklyReportText(fromArg, toArg){
+  var from = fromArg || daysAgoStr(6);
+  var to = toArg || today();
+  // Sin limites de fecha (solo lo usa el staff). Si el rango viene al reves, se invierte.
+  if(to < from){ var tmp = from; from = to; to = tmp; }
   var players = DB.players.slice().sort(function(a,b){ return (parseInt(a.number)||0)-(parseInt(b.number)||0); });
   var L = [];
   L.push('ANGELS JV — REPORTE SEMANAL');
@@ -5822,6 +6039,25 @@ function weeklyReportText(){
       zoneCount[k]=(zoneCount[k]||0)+1;
     });
   });
+  var enfPorJugador = {};
+  week.forEach(function(e){
+    if((e.illness||0) < 1) return;
+    var k = e.playerId;
+    if(!enfPorJugador[k]) enfPorJugador[k] = { dias:{}, max:0 };
+    enfPorJugador[k].dias[e.date] = true;
+    if(e.illness > enfPorJugador[k].max) enfPorJugador[k].max = e.illness;
+  });
+  var enfIds = Object.keys(enfPorJugador);
+  if(enfIds.length){
+    L.push('SÍNTOMAS DE ENFERMEDAD EN EL RANGO:');
+    players.forEach(function(p){
+      var r = enfPorJugador[p.id];
+      if(!r) return;
+      var nd = Object.keys(r.dias).length;
+      L.push('  #'+p.number+' '+p.name+' — '+nd+' día'+(nd===1?'':'s')+', máximo: '+(ILLNESS_LABELS[r.max]||r.max));
+    });
+    L.push('');
+  }
   var zones = Object.keys(zoneCount).sort(function(a,b){ return zoneCount[b]-zoneCount[a]; });
   if(zones.length){
     L.push('ZONAS DE DOLOR MÁS REPORTADAS:');
@@ -5865,12 +6101,35 @@ function weeklyReportText(){
   L.push('Generado por Angels Performance OS');
   return L.join('\n');
 }
-function copyWeeklyReport(){ copyText(weeklyReportText(), 'Reporte semanal copiado'); }
+// Lee el rango de "Desde"/"Hasta" en Datos. Vacios = ultimos 7 dias.
+function reportRangeFromInputs(){
+  var elFrom = document.getElementById('rep-desde');
+  var elTo = document.getElementById('rep-hasta');
+  var from = (elFrom && elFrom.value) || daysAgoStr(6);
+  var to = (elTo && elTo.value) || today();
+  if(to < from){ var tmp = from; from = to; to = tmp; }
+  return { from:from, to:to };
+}
+// Precarga los campos (una sola vez) con los ultimos 7 dias, sin min ni max.
+function initReportRangeInputs(){
+  try {
+    var elFrom = document.getElementById('rep-desde');
+    var elTo = document.getElementById('rep-hasta');
+    if(!elFrom || !elTo) return;
+    if(!elFrom.value) elFrom.value = daysAgoStr(6);
+    if(!elTo.value) elTo.value = today();
+  } catch(e){ console.log('initReportRangeInputs:', e); }
+}
+function copyWeeklyReport(){
+  var r = reportRangeFromInputs();
+  copyText(weeklyReportText(r.from, r.to), 'Reporte semanal copiado');
+}
 function downloadWeeklyReport(){
-  var blob = new Blob([weeklyReportText()], {type:'text/plain;charset=utf-8'});
+  var r = reportRangeFromInputs();
+  var blob = new Blob([weeklyReportText(r.from, r.to)], {type:'text/plain;charset=utf-8'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'angels-reporte-semanal-' + today() + '.txt';
+  a.download = 'angels-reporte-' + r.from + '_' + r.to + '.txt';
   a.click();
   toast('Reporte semanal descargado');
 }
