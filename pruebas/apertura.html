@@ -32,6 +32,22 @@ button{display:block;margin:12px auto;padding:10px 16px;border-radius:10px;borde
 <button onclick="location.reload()">Ver otra vez</button>
 </div>
 <script>
+/* Solo prueba: ?lento=N pone la apertura en camara lenta (N veces). */
+(function(){ try {
+  var n = parseFloat(new URLSearchParams(location.search).get('lento') || '1');
+  if(!(n > 1)) return;
+  var base = performance.now(), real = performance.now.bind(performance);
+  performance.now = function(){ return base + (real() - base) / n; };
+  var raf = window.requestAnimationFrame.bind(window);
+  window.requestAnimationFrame = function(cb){ return raf(function(){ cb(performance.now()); }); };
+  var info = document.createElement('div'); info.id = 'gl-info';
+  info.style.cssText = 'position:fixed;left:8px;top:8px;z-index:999999;font:12px monospace;color:#fff;background:rgba(0,0,0,.5);padding:4px 6px;border-radius:6px';
+  var c = document.createElement('canvas'); var ok = !!(c.getContext('webgl2') || c.getContext('webgl'));
+  info.textContent = 'webgl ' + (ok ? 'si' : 'no') + ' · lento x' + n;
+  document.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(info); });
+} catch(e){} })();
+</script>
+<script>
 window.V2_APERTURA_PENDIENTE = true;
 window.V2_CONTENIDO_VISTA = 'hoy';
 window.v2AperturaCancelar = function(){ try { document.getElementById('v2-apertura').classList.remove('on'); document.getElementById('v2-halo-slot').classList.remove('oculto'); document.getElementById('v2-logo-slot').classList.add('fijo'); } catch(e){} };
