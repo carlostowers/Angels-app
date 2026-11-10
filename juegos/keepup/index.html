@@ -8,10 +8,10 @@
 <style>
 html,body{margin:0;height:100%;background:#0E1116;color:#F2EFE8;font-family:Archivo,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
 body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;overflow:hidden}
-#app{position:relative;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
-#c{display:block}
-#ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(14,17,22,0.5)}
-.card{background:rgba(14,17,22,0.9);border:1px solid rgba(242,239,232,0.14);border-radius:18px;padding:22px 22px;width:calc(100% - 40px);max-width:360px;text-align:center;box-sizing:border-box}
+#app{position:relative;user-select:none;-webkit-user-select:none;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+#c{display:block;touch-action:none}
+#ov{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;padding:12px 0;box-sizing:border-box;background:rgba(14,17,22,0.5)}
+.card{margin:auto;background:rgba(14,17,22,0.9);border:1px solid rgba(242,239,232,0.14);border-radius:18px;padding:22px 22px;width:calc(100% - 40px);max-width:360px;text-align:center;box-sizing:border-box}
 .card h1{margin:0;font-weight:800;font-stretch:118%;font-size:32px;line-height:1.05;color:#EB448F}
 .card .big{font-weight:800;font-stretch:118%;font-size:54px;line-height:1;color:#EB448F}
 .card p{margin:8px 0 0;font-size:14px;line-height:1.45}
@@ -33,7 +33,7 @@ footer{margin-top:10px;font-size:12px;color:rgba(242,239,232,0.55)}
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.5.0';
+var APP_VERSION='0.5.1';
 var W=300,H=460,G=800,PLAT=66,FLOOR=20;
 var AZUL='#1B2A6B',AMA='#EB448F',TINTA='#0E1116',HUESO='#F2EFE8',VOL='#C6F432',OLI='#4F6B00',ROJO='#d93a2b';
 var cv=document.getElementById('c'),cx=cv.getContext('2d'),app=document.getElementById('app'),ov=document.getElementById('ov');
@@ -199,7 +199,7 @@ function fin(){S.estado='fin';var n=false;
   ov.innerHTML='<div class="card"><div class="sub">Keep It Up</div><div class="big" style="margin-top:6px">'+fmt(S.pts)+'</div><p>'+(n?'New record':'Best: '+fmt(rec.pts))+'</p>'+
     '<p class="sub">Level '+S.L+' · '+S.toq+' touches</p><p class="sub">Records: level '+rec.niv+' · '+rec.toq+' touches</p>'+
     '<div id="topfin"></div><button class="btn" id="otra" type="button">Play again</button><p class="sub" style="margin-top:8px">Tap anywhere to go again</p></div>';
-  ov.style.display='flex';var b=document.getElementById('otra');b.addEventListener('pointerdown',function(ev){ev.stopPropagation();ev.preventDefault();nuevo();ov.style.display='none';});}catch(e){}},500);}
+  ov.style.display='flex';var b=document.getElementById('otra');b.addEventListener('click',function(ev){ev.stopPropagation();arranca();});}catch(e){}},500);}
 
 /* ---------- dibujo ---------- */
 function Y(y){return H-y;}
@@ -298,7 +298,9 @@ function size(){var port=window.innerHeight>window.innerWidth,hh=window.innerHei
 function mueve(ev){try{var r=cv.getBoundingClientRect();S.target=Math.max(26,Math.min(W-26,(ev.clientX-r.left)/r.width*W));}catch(e){}}
 app.addEventListener('pointermove',mueve);
 app.addEventListener('pointerdown',function(ev){try{if(ev.target&&ev.target.id==='snd')return;mueve(ev);
-  if(S.estado==='inicio'||S.estado==='fin'){if(S.estado==='fin'&&ov.style.display!=='flex')return;ev.preventDefault();var tg=S.target;nuevo();S.target=tg||150;S.px=S.target;ov.style.display='none';}}catch(e){}});
+  }catch(e){}});
+function arranca(){var tg=S.target;nuevo();S.target=tg||150;S.px=S.target;ov.style.display='none';}
+ov.addEventListener('click',function(ev){try{if(ov.style.display!=='flex')return;if(S.estado==='inicio'&&ev.target.closest&&ev.target.closest('.card'))return;if(S.estado==='inicio'||S.estado==='fin'){mueve(ev);arranca();}}catch(e){}});
 document.addEventListener('keydown',function(e){try{if(e.code==='ArrowLeft')S.target=Math.max(26,(S.target||150)-30);if(e.code==='ArrowRight')S.target=Math.min(W-26,(S.target||150)+30);
   if((e.code==='Space'||e.code==='Enter')&&(S.estado==='inicio'||(S.estado==='fin'&&ov.style.display==='flex'))){e.preventDefault();nuevo();ov.style.display='none';}}catch(er){}});
 document.getElementById('snd').addEventListener('click',function(ev){ev.stopPropagation();sonido=!sonido;this.textContent='Sound: '+(sonido?'on':'off');if(sonido)snd(660,0.15,'triangle');});
@@ -309,7 +311,7 @@ function inicio(){ov.innerHTML='<div class="card"><div class="sub">Angels · min
   '<div class="steps"><b>Move</b> your finger to move the player.<br><b>Aim:</b> the edge of your forearms sends the ball to that side; the center sends it straight up.<br><b>Clear</b> every coin and box to level up. Every 10 touches a new ball drops in. You only lose a life when your last ball falls. You have 3 lives.<br><b>Bars:</b> the ball goes up through the low ones. The top ones send it back onto the targets: bank shots score x1.5.<br><b>The yellow mark</b> on the floor shows where the ball will land.</div>'+
   '<div class="vals"><span><img src="'+BASE+'moneda.webp" alt="">10 / 25</span><span><img src="'+BASE+'mv_bloque.webp" alt="">75</span><span><img src="'+BASE+'mv_rayo.webp" alt="">100</span><span><img src="'+BASE+'botella.webp" alt="">+1 life</span></div>'+
   '<div id="top0"></div><button class="btn" id="jugar" type="button">Play</button></div>';ov.style.display='flex';vqPinta('top0','keepup','');
-  var b=document.getElementById('jugar');b.addEventListener('pointerdown',function(ev){ev.stopPropagation();ev.preventDefault();nuevo();ov.style.display='none';});}
+  var b=document.getElementById('jugar');b.addEventListener('click',function(ev){ev.stopPropagation();arranca();});}
 S={estado:'inicio',bars:barras(1),tg:objetivos(1),balls:[],drops:[],parts:[],txt:[],px:150,target:150,t:0,L:1,pts:0,toq:0,vidas:3,tGrande:0,tIman:0,piso:false,shake:0,flash:0,hit:0,lift:0,cel:0,lam:0,fondo:0,fondoPrev:-1,mix:1};
 size();
 var last=performance.now();
