@@ -6,9 +6,9 @@
 <title>Perfect Pass · Angels</title>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
 <style>
-html,body{margin:0;height:100%;background:#0E1116;color:#F2EFE8;font-family:Archivo,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
-body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;overflow:hidden}
-#app{position:relative;user-select:none;-webkit-user-select:none;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);background:#0E1116}
+html,body{margin:0;height:100%;background:#0E1116;color:#F2EFE8;font-family:Archivo,system-ui,sans-serif;-webkit-tap-highlight-color:transparent;overflow:hidden;overscroll-behavior:none}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#app{position:relative;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);background:#0E1116}
 #gl{display:block;touch-action:none}
 #hud{position:absolute;inset:0;pointer-events:none}
 #ov{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;padding:12px 0;box-sizing:border-box;background:rgba(14,17,22,0.55);backdrop-filter:blur(2px);z-index:3}
@@ -58,7 +58,7 @@ footer{margin-top:10px;font-size:12px;color:rgba(242,239,232,0.55)}
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.1.0';
+var APP_VERSION='0.1.1';
 /* Perfect Pass: recepcion de saque en 3D con los cuerpos y clips de VOLEII Action 3.0 (j3, j5, j7 a mitad de triangulos).
    Escala de pase de Carlos: # (zona A), + (zona B), ! (zona C); fuera de C, sobrepase o ace = falta. Cancha: x de 0 a 9 desde
    la lateral de zona 4 (mundo X = x - 4.5), y desde la malla hacia nuestra linea de fondo (mundo Z = y). Target del colocador
@@ -309,6 +309,11 @@ cv.addEventListener('pointermove',function(ev){if(!drag||ev.pointerId!==drag.id|
   REC.goal.x=clamp(drag.gx+(ev.clientX-drag.x)*k,-0.6,9.6);REC.goal.y=clamp(drag.gy+(ev.clientY-drag.y)*k*1.15,0.8,10.4);});
 function suelta(ev){if(!drag||(ev&&ev.pointerId!==drag.id))return;drag=null;intentaPase();}
 cv.addEventListener('pointerup',suelta);cv.addEventListener('pointercancel',function(){drag=null;});
+/* iPhone: que el arrastre mueva al jugador y no la pagina (sin jalar hacia abajo ni rebote) */
+function bloqueaPagina(ev){if(ov.style.display!=='none'&&ov.contains(ev.target))return;if(ev.cancelable)ev.preventDefault();}
+document.addEventListener('touchmove',bloqueaPagina,{passive:false});
+cv.addEventListener('touchstart',function(ev){if(ev.cancelable)ev.preventDefault();},{passive:false});
+document.addEventListener('gesturestart',function(ev){ev.preventDefault();});
 var KEYS={};
 document.addEventListener('keydown',function(e){if(e.code==='Space'||e.code==='Enter'){e.preventDefault();if(ov.style.display!=='none'){var b=ov.querySelector('.btn');if(b)b.click();}else intentaPase();return;}KEYS[e.code]=true;});
 document.addEventListener('keyup',function(e){KEYS[e.code]=false;});
