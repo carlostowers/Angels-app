@@ -15,5 +15,8 @@ El esquema `angels` ya esta expuesto en Supabase.
 El uno contra uno en linea usa las funciones `bb_room_create`, `bb_room_join`, `bb_room_result` y `bb_record` del esquema `station` (migracion 0015 de STATION), que validan el enlace del jugador de Angels contra `angels.players`. En el esquema `angels` no hay tablas de salas.
 El archivo `juegos/bareboru/index.html` es el mismo de STATION: en este dominio usa los colores, el esquema y el top de Angels. No se edita aqui; se copia desde `carlostowers/stationvaqueros`.
 
-0021 (BAREBORU 6x6, cuarto juego): agrega `bareboru6` a los records, tops, borrado del staff y registro anonimo de partidas, con la misma validacion del 3v3 (set a 15). Sin DROP de tablas, DELETE ni TRUNCATE.
+0021 (BAREBORU 6x6, cuarto juego) aplicada el 2026-11-12: agrega `bareboru6` a los records, tops, borrado del staff y registro anonimo de partidas, con la misma validacion del 3v3 (set a 15). Sin DROP de tablas, DELETE ni TRUNCATE.
 Los archivos de `juegos/bareboru6/` son los mismos de STATION (salvo la portada, que lleva el uniforme de Angels): en este dominio usan los colores, el esquema y el top de Angels.
+
+0022 (cierra las funciones de `public`) aplicada el 2026-11-12 con el permiso de Carlos: quita el permiso de ejecucion de `anon` y `authenticated` en `public.player_bootstrap`, `player_mark_welcomed`, `player_submit_checkin`, `player_submit_overuse` y `make_backup`. No borra funciones, tablas ni datos; el cron `respaldo_semanal` sigue corriendo. Verificado antes: los 461 check-ins y los 11 jugadores de `public` estan en `angels`.
+Decision de Carlos (delegada): la copia de datos de salud en `public` se borra el 2026-12-10, 30 dias despues de publicar la v4, con una migracion aparte, verificacion previa y su permiso ese dia.
