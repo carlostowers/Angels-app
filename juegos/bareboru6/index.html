@@ -135,11 +135,12 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.2.0';
+var APP_VERSION='0.2.1';
 /* BAREBORU by VOLEII 6x6: voleibol seis contra seis contra la maquina, a 15 con ventaja de 2.
    Sistema 5-1 con libero y las seis rotaciones del Playbook de Vaqueros (formaciones de recepcion, target, defensa Middle/Middle y cobertura).
    Sale del motor del 3x3 (juegos/bareboru): mismos cuerpos, clips y controles. Controlas al jugador que le toca jugar el balon; los demas van solos.
    Colocacion: tu escoges a quien con la direccion (izquierda Z4, arriba 1T, derecha Z2 o D, abajo ataque de atras). El colocador coloca de frente a Z4.
+   Si el colocador toma el primer toque, el segundo es del punta zaguero: acomoda bola alta (Z4 o Z2; con el opuesto zaguero, el opuesto ataca por Z1) o ataca de segunda.
    Mundo: X de -4.5 a 4.5 (derecha de la camara positiva), Z = distancia a la malla (nuestro lado positivo), Y arriba.
    Records del equipo con el juego 'bareboru6' (migraciones 0016 de STATION y 0021 de Angels). El uno contra uno en linea llega despues. */
 var CFG={team:'Vaqueros',rival:'Rival',acc:'#FFCF27',azul:'#023B9F',
@@ -509,6 +510,10 @@ function mmDef(p,o,hx,b){var a=Math.abs(hx)<1.6?0:sgn(hx);
 function optStart(t,p){var o=LU(t),tb=PB[rotOf(t)].o,s=t===0?1:-1;for(var i=0;i<4;i++){var e=tb[DKEYS[i]];if(e&&o[e[1]]===p&&!p.lib){var a=ATK[e[0]];return {x:a.sx*s,z:a.sz*s};}}return null;}
 /* opciones de colocacion segun el pase: # las cuatro; + sin 1T; ! solo balon alto a las puntas; 0 solo bola alta a Z4 */
 function mkOpts(team,gr,setter){var o=LU(team),tb=PB[rotOf(team)].o,out=[],s=team===0?1:-1;
+  /* el colocador tomo el primer toque: el punta zaguero acomoda bola alta a Z4 o a Z2; con el opuesto zaguero, el opuesto ataca por Z1 */
+  if(R&&R.pass&&R.pass.sd){var tk2=gr==='a'?'h':(gr==='b'?'s':'e'),ks=[['L','Z4',o.ohF]],j;if(gr!=='d')ks.push(['R',o.sF?'D':'Z2',o.OPP]);
+    for(j=0;j<ks.length;j++){var a2=ATK[ks[j][1]];out.push({k:'att',key:ks[j][0],kind:ks[j][1],pl:ks[j][2],tempo:tk2,x:a2.x*s,z:a2.z*s,back:!!a2.back,nb:0,bl:null});}
+    return out;}
   for(var i=0;i<4;i++){var e=tb[DKEYS[i]];if(!e)continue;var kind=e[0],pl=o[e[1]],a=ATK[kind];if(pl===setter||pl.lib)continue;
     if(gr==='d'&&kind!=='Z4')continue;if(gr==='c'&&(a.back||kind==='T1'))continue;if(gr==='b'&&kind==='T1')continue;
     var tk=kind==='T1'?'q':(gr==='a'?'f':(gr==='b'?'h':(gr==='c'?'s':'e')));
@@ -528,7 +533,7 @@ function cover(team,hitter,hp){try{var s=team===0?1:-1,lx=hp.x*s,lz=hp.z*s,c=lx<
   for(j=0;j<sp.length;j++){var best=-1,bd=1e9;for(i=0;i<6;i++){var p=P[i];if(p===hitter||used[i])continue;var d=hyp(p.x-sp[j][0]*s,p.z-sp[j][1]*s);if(d<bd){bd=d;best=i;}}
     if(best>=0){used[best]=1;P[best].task={x:clamp(sp[j][0],-4.3,4.3)*s,z:Math.max(0.9,sp[j][1])*s};P[best].maxV=team===0?MATE_V:D.ai.spd;}}}catch(e){}}
 /* el central salta al 1T aunque no le coloquen: fija al central rival */
-function decoy(team,o){try{var mb=LU(team).MB,s=team===0?1:-1;if(R.pass.grade!=='a'||o.kind==='T1'||mb===R.pass.setter||mb===o.pl||!CLIPS.ataque_corto)return;
+function decoy(team,o){try{var mb=LU(team).MB,s=team===0?1:-1;if(R.pass.sd||R.pass.grade!=='a'||o.kind==='T1'||mb===R.pass.setter||mb===o.pl||!CLIPS.ataque_corto)return;
   var tC=tG+0.3,qx=ATK.T1.x*s,qz=ATK.T1.z*s;if(hyp(mb.x-qx,mb.z-qz)>2.6)return;
   setAct(mb,'ataque_corto',tC,{lead:0.3,fin:0.12,tail:0.4,boost:0.3});mb.task=null;mb.glide={x:qx,z:qz+0.3*s,t:tC};mb.lock=tC+0.4;mb.fn=tC+0.6;
   if(team===0&&R.aiBlk&&R.aiBlk.commit){var rb=LU(1).MB;if(rb.lock<tG){setAct(rb,'bloqueo_frente',tC+0.05,{lead:0.3,fin:0.1,tail:0.45,boost:0.28});rb.lock=tC+0.5;}}}catch(e){}}
@@ -655,23 +660,38 @@ function resolveFirst(n,F){var pl=n.pl;
   sBump();if(F.pace>0.6)shakeA=Math.max(shakeA,0.06);burst(ball.position.clone(),['#ffffff',CFG.acc],8);
   makePass(0,pl,gr);}
 
-function makePass(team,pl,gr){var s=team===0?1:-1,tgt=LW(team,0.5,0.9),gi='abcd'.indexOf(gr),em=gr==='d',o=LU(team),i;
-  var setter=o.S!==pl?o.S:(o.OPP!==pl?o.OPP:o.L);
+function makePass(team,pl,gr){var s=team===0?1:-1,gi='abcd'.indexOf(gr),em=gr==='d',o=LU(team),i;
+  /* regla del Playbook: si el colocador toma el primer toque, busca un contacto alto al centro, cerca de los 3 m,
+     y el segundo toque es del punta zaguero, que acomoda o ataca de segunda */
+  var sd=pl===o.S,setter=sd?o.ohB:o.S,tgt=sd?LW(team,0,2.4):LW(team,0.5,0.9),wz=(sd&&!em)?0.55:0.1;
   var ux=pl.x-tgt.x,uz=pl.z-tgt.z,ul=hyp(ux,uz)||1;ux/=ul;uz/=ul;var err=[0.2,0.9,1.9,3.3][gi],lat=rnd(-0.6,0.6);
-  var px=clamp(tgt.x+ux*err*0.75-uz*err*lat,-4.1,4.1),pz=clamp((tgt.z+uz*err*0.75+ux*err*lat)*s,0.7,7.5)*s;
-  var h=em?0.85:H_SET,T=[1.25,1.3,1.4,1.55][gi],p1=new V3(px,h,pz);
+  var px=clamp(tgt.x+ux*err*0.75-uz*err*lat,-4.1,4.1),pz=clamp((tgt.z+uz*err*0.75+ux*err*lat)*s,sd?2.2:0.7,7.5)*s;
+  var h=em?0.85:H_SET,T=(sd?[1.7,1.7,1.55,1.55]:[1.25,1.3,1.4,1.55])[gi],p1=new V3(px,h,pz);
   var F=mkFlight('pass',ball.position,p1,T);R.F=F;F.to=team;R.touches=1;R.last={team:team,pl:pl,type:'pass'};
   R.next={type:em?'emg':'set',team:team,pl:setter,t:T,p:p1,grade:gr};
-  var ds=hyp(setter.x-px,setter.z-pz);setter.task={x:px,z:pz+0.1*s};setter.maxV=clamp(ds/Math.max(0.2,T-0.25),5.5,9.5);
+  var ds=hyp(setter.x-px,setter.z-pz);setter.task={x:px,z:pz+wz*s};setter.maxV=clamp(ds/Math.max(0.2,T-0.25),5.5,9.5);
   setAct(setter,em?'recibo_frente':'voleo_frente',F.t0+T,{lead:0.6,tail:0.35});
   /* el colocador espera y coloca de frente a Z4 y de espalda a Z2 */
-  if(!em){setter.fy=team===0?-Math.PI/2:Math.PI/2;setter.fyT=F.t0+T+0.4;}
-  R.mode[team]='att';R.mode[1-team]='def';R.pass={grade:gr,setter:setter,passer:pl,team:team};R.setDone=false;
+  if(sd)setter.fy=null;else if(!em){setter.fy=team===0?-Math.PI/2:Math.PI/2;setter.fyT=F.t0+T+0.4;}
+  R.mode[team]='att';R.mode[1-team]='def';R.pass={grade:gr,setter:setter,passer:pl,team:team,sd:sd};R.setDone=false;
   R.opts=mkOpts(team,gr,setter);for(i=0;i<R.opts.length;i++){R.opts[i].pl.task=null;R.opts[i].pl.maxV=team===0?MATE_V:D.ai.spd;}
   R.att=null;R.blkU=null;R.aiBlk=null;R.choose=null;R.aiSet=null;
   var db=LU(1-team).b;for(i=0;i<3;i++)db[i].fn=tG+6;
   if(team===0){setCtrl(null);buildChoose(gr,setter);}
-  else{aiPlanSet(gr,setter);var mb=LU(0).MB;setCtrl(mb);R.blkU={jumped:false,press:null,pl:mb,wing:null};}}
+  else{aiPlanSet(gr,setter);var mb=LU(0).MB;setCtrl(mb);R.blkU={jumped:false,press:null,pl:mb,wing:null};
+    if(R.aiSet.two){if(startTwo(1,setter)){R.aiSet.att=setter;R.aiSet.kind='PIPE';R.aiSet.x=R.next.p.x;R.aiSet.z=R.next.p.z;R.aiSet.back=true;}else R.aiSet.two=false;}}}
+/* ataque de segunda del punta zaguero: remata el primer toque alto del colocador cuando el balon baja por la altura de remate.
+   Despega detras de la linea de 3 m. */
+function twoPoint(F){try{var th=tAtHeight(F,H_SPIKE);if(th==null||th<=F.t+0.05)return null;return {t:th,p:fPos(F,th,new V3())};}catch(e){return null;}}
+function startTwo(team,pl){var n0=R.next,sd0=R.setDone;try{var F=R.F,s=team===0?1:-1,q=twoPoint(F);if(!q)return false;var hp={x:q.p.x,z:q.p.z},spz=Math.max(Math.abs(hp.z)+0.95,3.15)*s;
+  R.next={type:'hit',team:team,pl:pl,t:q.t,p:q.p,gl:false};R.setDone=true;pl.fy=null;pl.fn=tG+6;
+  if(team===0){var bl=planBlock({kind:'PIPE',x:hp.x,tempo:'h'},false);
+    R.att={pl:pl,hp:hp,spot:{x:hp.x,z:spz},tTake:q.t-TAKE,jumped:false,press:null,tip:false,set:true,posOk:true,done:false,hitTap:null,tHit:0,armed:false,
+      aim:{x:Math.random()<0.5?-3:3,z:-6.4},tempo:'h',opt:{k:'att',kind:'PIPE',key:'D',pl:pl,x:hp.x,z:hp.z,back:true,nb:bl.n,bl:bl},two:true};
+    R.aiBlk={list:bl.list,commit:false,dec:false,tGo:0};setCtrl(pl);cover(0,pl,hp);}
+  else{var sp={x:hp.x,z:spz};pl.maxV=clamp(hyp(pl.x-sp.x,pl.z-sp.z)/Math.max(0.15,(q.t-F.t)-TAKE-0.05),D.ai.spd,9);
+    setAct(pl,'ataque',F.t0+q.t,{lead:0.8,tail:0.45,boost:0.35});cover(1,pl,hp);pl.task=sp;}
+  return true;}catch(e){if(window.console)console.error(e);R.next=n0;R.setDone=sd0;if(team===0)R.att=null;return false;}}
 
 var TEMPO={q:{t:0.62,es:'primer tiempo',en:'quick'},f:{t:0.95,es:'rápida',en:'fast'},h:{t:1.15,es:'alta',en:'high'},s:{t:1.45,es:'alta lenta',en:'slow high'},e:{t:1.7,es:'bola alta',en:'high ball'}};
 function buildChoose(gr,setter){var opts=R.opts,td=G.tend,i,hasQ=false,map={};
@@ -680,6 +700,7 @@ function buildChoose(gr,setter){var opts=R.opts,td=G.tend,i,hasQ=false,map={};
   var tot=td.L+td.U+td.R+td.D,commit=hasQ&&Math.random()<D.ai.commit+((tot>=4&&td.U/tot>0.35)?0.3:0);
   for(i=0;i<opts.length;i++){opts[i].bl=planBlock(opts[i],commit);opts[i].nb=opts[i].bl.n;}
   var o0=LU(0),seg=null;if((gr==='a'||gr==='b')&&setter===o0.S&&o0.sF)seg={k:'seg',pl:setter,nb:0};
+  if(R.pass.sd&&(gr==='a'||gr==='b')){var q2=twoPoint(R.F);if(q2)seg={k:'at2',pl:setter,nb:1,tD:q2.t-TAKE-0.22};}
   R.aiBlk={list:[],commit:commit,dec:false,tGo:0};
   R.choose={opts:opts,map:map,seg:seg,useSeg:false,sel:-1,held:0,made:false,deadline:R.next.t-0.16,grade:gr,pick:null};
   if(opts.length===1){R.choose.sel=0;confirmChoice();}else showBubbles(opts);}
@@ -694,7 +715,11 @@ function confirmChoice(ix){var c=R.choose,o=null,j;if(!c||c.made)return;if(ix!=n
       aim:{x:o.x<-1?2.4:(o.x>1?-2.4:(Math.random()<0.5?-3:3)),z:-6.4},tempo:o.tempo,opt:o};
     R.aiBlk.list=o.bl.list;setCtrl(o.pl);o.pl.fn=tG+6;
     /* a Z2 y a la D el colocador coloca de espalda */
-    var st=R.pass.setter;if(st.act&&st.fy!=null&&(o.x-st.x)>0.3)st.act.back=true;}
+    var st=R.pass.setter;if(st.act&&st.fy!=null&&(o.x-st.x)>0.3)st.act.back=true;
+    /* el punta zaguero da el paso al balon y acomoda de frente a su atacante */
+    if(R.pass.sd&&R.next&&R.next.pl===st){st.task={x:R.next.p.x,z:R.next.p.z+0.1};st.fy=Math.atan2(o.x-R.next.p.x,o.z-R.next.p.z);st.fyT=R.F.t0+R.next.t+0.4;}}
+  else if(o.k==='at2'){R.aiBlk.list=[];if(startTwo(0,o.pl)){if(!BOT.sim)pop('',L('Ataque de segunda','Attack on two'),CFG.acc);}
+    else{c.made=false;c.useSeg=false;c.seg=null;confirmChoice();}}
   else R.aiBlk.list=[];}
 
 function resolveSet(n,F){var team=n.team,s=team===0?1:-1,setter=n.pl,em=n.type==='emg';R.contacts++;
@@ -722,7 +747,10 @@ function aiPlanSet(gr,setter){var opts=R.opts,mbx=LU(0).MB.x,i,best=null,bs=-1e9
     if(Math.random()<D.ai.smart)sc+=center?Math.abs(mbx)*1.1:Math.abs(o.x-mbx)*0.45;
     if(o.kind==='T1')sc-=0.5;if(o.back)sc-=0.6;if(sc>bs){bs=sc;best=o;}}
   R.aiSet={att:best.pl,tempo:best.tempo,kind:best.kind,x:best.x,z:best.z,back:best.back,free:gr==='d'&&Math.random()<0.5,opt:best};
-  if(!R.aiSet.free&&setter.act&&setter.fy!=null&&(best.x-setter.x)<-0.3)setter.act.back=true;}
+  if(!R.aiSet.free&&setter.act&&setter.fy!=null&&(best.x-setter.x)<-0.3)setter.act.back=true;
+  /* su colocador tomo el primer toque: su punta zaguero acomoda de frente al atacante o ataca de segunda */
+  if(R.pass.sd){if(setter.task){setter.fy=Math.atan2(best.x-setter.task.x,best.z-setter.task.z);setter.fyT=R.F.t0+R.next.t+0.4;}
+    R.aiSet.two=(gr==='a'||gr==='b')&&Math.random()<0.25+D.ai.smart*0.3;}}
 
 /* ---------- remate ---------- */
 function userJump(e){var A=R.att,pl=A.pl,n=R.next,F=R.F,d=hyp(pl.x-A.spot.x,pl.z-A.spot.z);
@@ -855,7 +883,9 @@ function goalOf(p,t,m,o){var s=t===0?1:-1,b,n=R.next,i,e,g,w;
     if(p===o.S)return LW(t,0.55,0.95);
     if(p!==o.L&&p!==o.OH1&&p!==o.OH2){g=optStart(t,p);if(g)return g;}
     return null;}
-  if(m==='att'){if(!R.setDone&&!(R.pass&&R.pass.setter===p)){g=optStart(t,p);if(g)return g;}return null;}
+  if(m==='att'){if(!R.setDone&&!(R.pass&&R.pass.setter===p)){
+      if(R.pass&&R.pass.sd&&R.pass.team===t&&p===o.OPP){var ak=ATK[o.sF?'D':'Z2'];return {x:ak.sx*s,z:ak.sz*s};}
+      g=optStart(t,p);if(g)return g;}return null;}
   b=defBase(p,o);
   if(n&&n.type==='hit'&&n.team!==t){g=mmDef(p,o,n.p.x*s,b);w=LW(t,g[0],g[1]);
     /* el rival lee tu mira cuando ya saltaste */
@@ -1068,7 +1098,8 @@ function botStep(){var b=BOT;JX=0;JZ=0;if(!R)return;
   if(G.phase!=='live')return;var n=R.next,F=R.F;if(!n||!F)return;
   if(b.ctx!==n){b.ctx=n;b.e=gauss()*b.sd;b.no=Math.random()<b.skip;b.t0=tG;b.e2=gauss()*b.sd*0.8;b.no2=Math.random()<b.skip;b.dir=Math.random()<0.5?-1:1;}
   var slow=(F.kind==='spike'||F.kind==='blockback')?D.spikeTS:1,awake=tG-b.t0>=b.react*slow;
-  var c=R.choose;if(c&&!c.made){if(b.pctx!==c){b.pctx=c;var ix=0,jq;if(b.aim==='open'){var mn=9,cand=[];for(jq=0;jq<c.opts.length;jq++)mn=Math.min(mn,c.opts[jq].nb);for(jq=0;jq<c.opts.length;jq++)if(c.opts[jq].nb<=mn+(Math.random()<0.35?1:0))cand.push(jq);ix=cand[(Math.random()*cand.length)|0];}else ix=(Math.random()*c.opts.length)|0;b.pick=ix;}
+  var c=R.choose;if(c&&!c.made){if(b.pctx!==c){b.pctx=c;b.two=!!(c.seg&&c.seg.k==='at2'&&Math.random()<0.4);var ix=0,jq;if(b.aim==='open'){var mn=9,cand=[];for(jq=0;jq<c.opts.length;jq++)mn=Math.min(mn,c.opts[jq].nb);for(jq=0;jq<c.opts.length;jq++)if(c.opts[jq].nb<=mn+(Math.random()<0.35?1:0))cand.push(jq);ix=cand[(Math.random()*cand.length)|0];}else ix=(Math.random()*c.opts.length)|0;b.pick=ix;}
+    if(b.two){b.two=false;actionPress();return;}
     var ky=c.opts[b.pick].key;JX=ky==='L'?-1:(ky==='R'?1:0);JZ=ky==='U'?-1:(ky==='D'?1:0);return;}
   var p=CTRL,dx,dz,d;
   if(n.team===0&&n.type==='first'&&p){dx=n.p.x-p.x;dz=n.p.z-p.z;d=hyp(dx,dz);if(d>0.2&&F.inb&&awake){JX=dx/d;JZ=dz/d;}
@@ -1113,10 +1144,10 @@ function actionPress(){if(!G||paused||!R)return;var e;if(REP.on){repEnd();return
   if(G.phase==='pre'){if(G.serving===0&&G.tPh>0.6)startWindup();return;}
   if(G.phase==='windup'){if(G.serving===0&&R.srv.press==null){e=tG-(R.srv.tC-REC_LEAD);if(e>-0.6)R.srv.press=e;}return;}
   if(G.phase!=='live')return;var n=R.next,F=R.F,c=R.choose;
-  if(c&&!c.made){if(c.seg){c.useSeg=!c.useSeg;sUi();}return;}
+  if(c&&!c.made){if(c.seg){if(c.seg.k==='at2'){if(F&&F.t<c.seg.tD){c.useSeg=true;sUi();confirmChoice();}}else{c.useSeg=!c.useSeg;sUi();}}return;}
   if(!n||!F)return;
   if(n.team===0&&n.type==='first'){if(R.recv.press==null){e=F.t-(n.t-REC_LEAD);if(e>-0.7)R.recv.press=e;}return;}
-  if(n.team===0&&n.type==='hit'&&R.att){if(R.att.jumped)userHit();else if(!R.att.late){e=F.t-R.att.tTake;if(e>-0.7)userJump(e);}return;}
+  if(n.team===0&&n.type==='hit'&&R.att){if(R.att.jumped)userHit();else if(!R.att.late){e=F.t-R.att.tTake;if(e>(R.att.two?-0.3:-0.7))userJump(e);}return;}
   if(n.team===0&&(n.type==='set'||n.type==='emg')&&R.att&&!R.att.jumped&&R.att.preT==null){e=tG-(F.t0+n.t+TEMPO[R.att.tempo].t-TAKE);if(e>-0.7){R.att.preT=tG;sUi();}return;}
   if(n.team===1&&n.type==='hit'&&R.blkU&&!R.blkU.jumped){userBlockJump();return;}}
 function secondaryPress(){if(!G||paused||!R)return;
@@ -1160,7 +1191,7 @@ function labelsFrame(){try{var on=!!(G&&G.sc&&(G.phase==='pre'||G.phase==='windu
   for(var i=0;i<LBL.length;i++){var o=LBL[i],p=o.p;_pl.set(p.x,1.98+p.air,p.z).project(camera);
     o.el.style.transform=_pl.z>1?'translate(-999px,-999px)':('translate('+((_pl.x*0.5+0.5)*appW).toFixed(1)+'px,'+((-_pl.y*0.5+0.5)*appH).toFixed(1)+'px) translate(-50%,-100%)');}}catch(e){}}
 function ctxNow(){if(!G||!R||!G.sc)return 'wait';if(G.phase==='pre')return G.serving===0?'srv0':'wait';if(G.phase==='windup')return G.serving===0?(R.srv.press==null?'srv1':'wait'):'wait';if(G.phase!=='live')return 'wait';
-  var n=R.next,c=R.choose,A=R.att;if(c&&!c.made&&c.opts.length>1)return c.seg?'cho':'cho2';if(A&&A.jumped&&!A.done)return 'aim';if(A&&!A.done&&!A.jumped&&!A.late&&CTRL===A.pl)return 'att';
+  var n=R.next,c=R.choose,A=R.att;if(c&&!c.made&&c.opts.length>1)return c.seg?(c.seg.k==='at2'?((R.F&&R.F.t<c.seg.tD)?'cho3':'cho2'):'cho'):'cho2';if(A&&A.jumped&&!A.done)return 'aim';if(A&&!A.done&&!A.jumped&&!A.late&&CTRL===A.pl)return 'att';
   if(n&&n.team===0&&n.type==='first')return R.recv&&R.recv.press!=null?'wait':(R.F.inb?'rec':'out');
   if(n&&n.team===1&&R.blkU&&!R.blkU.jumped&&CTRL===R.blkU.pl)return n.type==='hit'?'blk':'blk0';return 'wait';}
 var CTXT={
@@ -1168,6 +1199,7 @@ var CTXT={
   srv1:{b:['Golpear','Hit'],h:['Toca otra vez cuando los aros se junten','Tap again when the rings meet']},
   cho:{b:['Segunda','Dump'],h:['Escoge a quién colocar: empuja el control hacia la flecha de su burbuja o tócala. Sin escoger, sale bola alta a Z4','Choose who to set: push the stick toward the arrow on a bubble, or tap it. With no call it is a high ball to Z4']},
   cho2:{b:['',''],h:['Escoge a quién colocar: empuja el control hacia la flecha de su burbuja o tócala. Sin escoger, sale bola alta a Z4','Choose who to set: push the stick toward the arrow on a bubble, or tap it. With no call it is a high ball to Z4'],off:true},
+  cho3:{b:['Atacar','Attack'],h:['Tu colocador tomó el primer toque. Punta zaguero: empuja el control para acomodar o toca Atacar para rematar de segunda','Your setter took the first ball. Back-row outside: push the stick to set, or tap Attack to hit on two']},
   att:{b:['Saltar','Jump'],h:['Tu atacante corre solo: apunta con el control y toca Saltar cuando el aro se cierre','Your hitter runs by himself: aim with the stick and tap Jump when the ring closes']},
   aim:{b:['Rematar','Spike'],h:['Toca Rematar en lo más alto del salto','Tap Spike at the top of the jump']},
   rec:{b:['Recibir','Pass'],h:['Corre a la marca blanca y toca Recibir cuando los aros se junten','Run to the white mark and tap Pass when the rings meet']},
@@ -1228,9 +1260,14 @@ function showBubbles(opts){try{hideBubbles();if(BOT.sim||opts.length<2)return;va
   opts.forEach(function(o,i){var d=document.createElement('div'),a=ATK[o.kind];d.className='bb up';
     d.innerHTML='<span class="ar">'+DARR[o.key]+'</span> '+L(a.es,a.en)+'<small class="'+(o.nb===0?'ok':(o.nb===1?'md':'no'))+'">'+codeOf(o.pl)+' · '+nbText(o)+'</small>';
     d.addEventListener('pointerdown',function(ev){try{ev.stopPropagation();if(ev.cancelable)ev.preventDefault();confirmChoice(i);}catch(e){}});
-    box.appendChild(d);bubEls.push({el:d,o:o});});}catch(e){}}
+    box.appendChild(d);bubEls.push({el:d,o:o});});
+  var sg=R.choose&&R.choose.seg;if(sg&&sg.k==='at2'){var d2=document.createElement('div');d2.className='bb up';
+    d2.innerHTML=L('Atacar de segunda','Attack on two')+'<small class="ok">'+codeOf(sg.pl)+' · '+L('botón Atacar','Attack button')+'</small>';
+    d2.addEventListener('pointerdown',function(ev){try{ev.stopPropagation();if(ev.cancelable)ev.preventDefault();actionPress();}catch(e){}});
+    box.appendChild(d2);bubEls.push({el:d2,o:sg});}}catch(e){}}
 function markBubble(i){try{for(var k=0;k<bubEls.length;k++)bubEls[k].el.className='bb up'+(k===i?' sel':'');}catch(e){}}
 function bubblesFrame(){try{if(!bubEls.length)return;for(var i=0;i<bubEls.length;i++){var b=bubEls[i],o=b.o;
+  if(o.k==='at2'){var von=!!(R&&R.choose&&!R.choose.made&&R.F&&R.F.t<o.tD);if(b.el.style.display!==(von?'':'none'))b.el.style.display=von?'':'none';}
   tmpV.set(o.pl.x,2.25,o.pl.z);tmpV.project(camera);var x=clamp((tmpV.x*0.5+0.5)*appW,64,appW-64),y=clamp((-tmpV.y*0.5+0.5)*appH,96,appH-70);b.el.style.left=x+'px';b.el.style.top=y+'px';}}catch(e){}}
 
 /* ======================= TARJETAS ======================= */
