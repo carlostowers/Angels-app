@@ -35,7 +35,7 @@ footer{margin-top:10px;font-size:12px;color:rgba(242,239,232,0.55)}
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.5.4';
+var APP_VERSION='0.5.5';
 var AZUL='#1B2A6B',AMA='#EB448F',TINTA='#0E1116',HUESO='#F2EFE8',VOL='#C6F432',OLI='#4F6B00';
 var SETX=74,VH=300,GY=44,IH=340,PX_M=10,G=600,R_BALL=6;
 var cv=document.getElementById('c'),cx=cv.getContext('2d'),app=document.getElementById('app'),ov=document.getElementById('ov');
@@ -89,16 +89,16 @@ function sw(nm,w){var im=IMG[nm];if(!im||!im.width)return {w:w,h:w};return {w:w,
 function swh(nm,h){var im=IMG[nm];if(!im||!im.width)return {w:h,h:h};return {w:h*im.width/im.height,h:h};}
 
 /* ---------- mundo del día ---------- */
-// 0.5.4: menos carros azules (uno de cada 7 en el estacionamiento y ninguno
-// en la calle; su lugar lo toman conos y charcos), pelicanos como antes y
-// uno de cada 4 pelicanos es malo: se lleva el balon para atras.
-var MALO=0.25;
-var TIPOS={gradas:['trampolin','abanico','cono','trampolin','pelicano'],estac:['carro','trampolin','charco','cono','pelicano','cono','trampolin'],
-  calle:['guagua','charco','charco','cono','pelicano','trampolin','guagua'],playa:['surf','red','pelicano','surf','charco','surf'],
+// 0.5.5: unos 20 pelicanos por partida (1 de cada 4 malo, se lleva el balon
+// para atras), carros azules como en 0.5.4 (uno de cada 8 en el estacionamiento,
+// ninguno en la calle) y 1 de cada 3 guaguas con la puerta de atras abierta.
+var MALO=0.25,ABIERTA=0.33;
+var TIPOS={gradas:['trampolin','abanico','cono','trampolin','pelicano'],estac:['carro','trampolin','charco','cono','pelicano','cono','trampolin','pelicano'],
+  calle:['guagua','charco','charco','cono','pelicano','trampolin','guagua','cono','pelicano'],playa:['surf','red','pelicano','surf','charco','surf'],
   muelle:['bote','trampolin','pelicano','bote','cono','trampolin'],mar:['bote','pelicano','bote','surf']};
 function nuevoObj(tp,x,R){var o={tp:tp,x:x},s;
   if(tp==='trampolin'){s=sw('trampolin',56);}else if(tp==='abanico'){s=swh('abanico',66);}else if(tp==='carro'){s=sw('carro',92);}
-  else if(tp==='guagua'){s=sw('guagua',190);}else if(tp==='surf'){s=sw('surf',80);}else if(tp==='cono'){s=swh('cono',26);}
+  else if(tp==='guagua'){s=sw('guagua',190);o.abierta=R()<ABIERTA;}else if(tp==='surf'){s=sw('surf',80);}else if(tp==='cono'){s=swh('cono',26);}
   else if(tp==='red'){s=sw('red',66);}else if(tp==='bote'){s=sw('bote',110);}else if(tp==='pelicano'){s=sw('pelicano',64);o.y=55+R()*120;o.bx=x;o.ph=R()*6;o.malo=R()<MALO;}
   else{s={w:58,h:6};}
   o.w=s.w;o.h=s.h;return o;}
@@ -116,6 +116,8 @@ function mundo(sd){var W={ob:[],co:[],R:mul(sd||SEED),x:700,cx:150};extiende(W,3
 function pasoBalon(b,dt,W,fx){
   if(W.x<b.x+2500)extiende(W,b.x+4000);techo(b);
   var i,o,z=zonaDe(b.x),bg=BG[z.k],px=b.x,py=b.y,m=1+0.12*(b.cad||0);
+  if(b.bus){var u=b.bus;b.vx=Math.min(1300,b.vx+700*dt);b.x+=b.vx*dt;b.y=u.h*0.54;b.vy=0;
+    if(b.x>=u.x+u.w+R_BALL){b.bus=null;b.x=u.x+u.w+R_BALL;b.vx=Math.min(1300,Math.max((b.vin||0)*1.35,450)*m);b.vy=90;techo(b);cadena(b,fx);fx('turbo',b,u);}return;}
   if(b.carry>0){var pc=b.pel,dm=pc.malo?-1:1;b.carry-=dt;pc.x+=320*dm*dt;pc.y+=40*dt;b.x=pc.x+(pc.malo?pc.w-10:10);b.y=pc.y-16;b.vx=320*dm;b.vy=40;
     if(b.carry<=0){if(pc.malo){b.vx=40;b.vy=20;}else{b.vx=Math.max(360,b.vin||0)*m;b.vy=110;}pc.gone=true;b.carry=0;fx('suelta',b,pc);}return;}
   var ax=b.y>R_BALL+1?WIND:0;
@@ -127,6 +129,7 @@ function pasoBalon(b,dt,W,fx){
     else if(o.tp==='trampolin'&&inx&&!o.lanzo&&b.y-R_BALL<o.h&&b.vx>40){o.lanzo=true;b.y=o.h+R_BALL;b.vy=Math.min(560,140+0.55*Math.abs(b.vx))*Math.sqrt(m);b.vx=b.vx*1.02;o.anim=1;cadena(b,fx);fx('rampa',b,o);}
     else if((o.tp==='carro'||o.tp==='guagua'||o.tp==='bote')&&inx){var top=o.h*(o.tp==='guagua'?0.93:o.tp==='bote'?0.62:0.86),big=o.tp!=='carro';
       if(py-R_BALL>=top-4&&b.y-R_BALL<top&&b.vy<0){b.y=top+R_BALL;b.vy=(Math.abs(b.vy)*0.75+(big?0.16:0.13)*b.v0)*Math.sqrt(m);b.vx=b.vx*(big?1.12:1.06)+0.03*b.v0*m;o.anim=1;cadena(b,fx);fx(o.tp==='bote'?'barco':o.tp,b,o);}
+      else if(o.abierta&&px+R_BALL<=o.x+3&&b.vx>0&&b.y>o.h*0.28+2&&b.y<o.h*0.80-2){b.bus=o;b.x=o.x;b.y=o.h*0.54;b.vin=b.vx;b.vx=Math.max(b.vx,300);b.vy=0;o.anim=1;fx('entra',b,o);}
       else if(b.y-R_BALL<top-4&&px+R_BALL<=o.x+3&&b.vx>0){b.x=o.x-R_BALL;b.vx*=0.55;b.vy=Math.max(b.vy,0)+Math.min(260,top*4.5);fx('choque',b,o);}}
     else if(o.tp==='surf'&&inx&&b.y<R_BALL+6&&!o.used){o.used=true;b.vx+=0.3*b.v0*m;b.vy=60;cadena(b,fx);fx('surf',b,o);}
     else if(o.tp==='charco'&&inx&&b.y<R_BALL+3&&!o.used){o.used=true;if(b.escudo>0){b.escudo--;fx('escudo',b,o);}else{b.vx*=0.55;b.vy=Math.min(Math.abs(b.vy)*0.3,60);fx('charco',b,o);}}
@@ -224,6 +227,8 @@ function fx(k,b,o){var z=zonaDe(b.x),gc=BG[z.k].gc;
   else if(k==='cono'){burst(b.x,b.y,['#e8692c','#ffffff'],8);txt(b.x,b.y+28,'Cone',TINTA);snd(260,0.12,'square');}
   else if(k==='red'){txt(b.x,b.y+30,'Caught in the net',TINTA);snd(110,0.5,'sawtooth');SHK=3;}
   else if(k==='pelicano'){txt(b.x,b.y+32,'Pelican',AZUL);snd(520,0.4,'triangle');}
+  else if(k==='entra'){txt(b.x,b.y+30,'Open bus',AZUL);snd(300,0.25,'triangle');SHK=2;}
+  else if(k==='turbo'){burst(b.x,b.y,[AMA,VOL,'#ffffff'],22);txt(b.x,b.y+30,'Bus turbo',OLI);snd(780,0.3,'square');SHK=6;}
   else if(k==='pelmalo'){txt(b.x,b.y+32,'Bad pelican',TINTA);snd(180,0.5,'sawtooth');SHK=3;}
   else if(k==='suelta'){txt(b.x,b.y+26,'Dropped',TINTA);}
   else if(k==='bote'){if(Math.abs(b.vy)>70){burst(b.x,2,[gc,'#ffffff'],7,true);snd(160,0.08,'sine',0.08);}}
@@ -300,7 +305,7 @@ function step(rdt){if(!S)return;
     var tc=S.t-S.tcon;if(!S.air&&S.land)S.pose=mezcla(POSE.aterriza,S.fase==='fin'?POSE.celebra:POSE.idle,ease((S.t-S.land)/0.5));else S.pose=tc<0.12?mezcla(POSE.arma,POSE.contacto,ease(tc/0.06)):mezcla(POSE.contacto,POSE.sigue,ease((tc-0.12)/0.25));
     if(S.fase==='vuelo'){var n=3,vyAntes=b.vy;for(i=0;i<n;i++)pasoBalon(b,dt/n,W,fx);b.rot+=b.vx/R_BALL*dt*0.35;
       if(vyAntes<0&&b.vy>0&&b.y<R_BALL+4){S.ultBoteT=S.t;if(!S.tapBote)S.racha=0;S.tapBote=false;S.boteNormal=!b.ultAct;b.ultAct=null;}
-      S.trail.push({x:b.x,y:b.y});if(S.trail.length>16)S.trail.shift();
+      if(!b.bus)S.trail.push({x:b.x,y:b.y});if(S.trail.length>16)S.trail.shift();
       for(i=0;i<W.co.length;i++){var c=W.co[i];if(!c.got&&Math.abs(b.x-c.x)<R_BALL+7&&Math.abs(b.y-c.y)<R_BALL+8){c.got=true;
         if(c.tp==='bot'){b.escudo=Math.min(2,(b.escudo||0)+1);S.man=Math.min(4,S.man+1);txt(c.x,c.y+16,'+1 boost, +1 shield',AZUL);burst(c.x,c.y,['#9fc4f0','#ffffff'],12);snd(880,0.2,'triangle');}
         else{S.mon++;burst(c.x,c.y,[AMA,'#FBD3E5'],6);snd(1250,0.05,'square',0.07);}}}
@@ -366,7 +371,12 @@ function obstaculos(){var i,c=cx;for(i=0;i<W.ob.length;i++){var o=W.ob[i],X=sx(o
   if(o.tp==='cono'&&o.cae){c.save();c.translate(sx(o.x+o.w/2),sy(0));c.rotate(Math.min(1.45,o.cae*0.9));if(IMG.cono.width)c.drawImage(IMG.cono,-o.w/2*Z,-o.h*Z,o.w*Z,o.h*Z);c.restore();continue;}
   if(o.tp==='bote'){var bob=Math.sin(S.t*2+o.x)*1.5*Z;c.save();c.translate(sx(o.x),sy(0)+o.h*0.25*Z+bob);if(IMG.bote.width)c.drawImage(IMG.bote,0,-o.h*Z,o.w*Z,o.h*Z);c.restore();continue;}
   var sq=o.anim?1-Math.sin(o.anim*Math.PI)*(o.tp==='trampolin'?0.32:0.12):1;sombra(o.x+o.w/2,o.w*0.52);
-  c.save();c.translate(sx(o.x),sy(0));c.scale(1,sq);if(IMG[o.tp]&&IMG[o.tp].width)c.drawImage(IMG[o.tp],0,-o.h*Z,o.w*Z,o.h*Z);c.restore();}}
+  c.save();c.translate(sx(o.x),sy(0));c.scale(1,sq);if(IMG[o.tp]&&IMG[o.tp].width)c.drawImage(IMG[o.tp],0,-o.h*Z,o.w*Z,o.h*Z);if(o.abierta)puerta(c,o);c.restore();}}
+// Guagua abierta (0.5.5): hueco oscuro atras y la puerta abierta hacia afuera.
+function puerta(c,o){var y0=o.h*0.28*Z,y1=o.h*0.80*Z;c.fillStyle='#141414';c.fillRect(0,-y1,7*Z,y1-y0);
+  c.fillStyle='rgba(255,207,39,0.35)';c.fillRect(2*Z,-y1+3*Z,4*Z,y1-y0-6*Z);
+  c.fillStyle='#F2B01E';c.strokeStyle='#5a3d00';c.lineWidth=1.2*Z;c.beginPath();c.moveTo(0,-y1);c.lineTo(-15*Z,-y1+4*Z);c.lineTo(-15*Z,-y0-4*Z);c.lineTo(0,-y0);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#2b2b33';c.beginPath();c.moveTo(-2*Z,-y1+4*Z);c.lineTo(-12*Z,-y1+7*Z);c.lineTo(-12*Z,-y1+18*Z);c.lineTo(-2*Z,-y1+16*Z);c.closePath();c.fill();}
 function letreros(){var c=cx,i;if(best>0){var bx=sx(best*PX_M);if(bx>-40&&bx<VW+40){c.fillStyle=HUESO;c.fillRect(bx-1*Z,sy(64),2*Z,64*Z);c.fillStyle=AMA;c.beginPath();c.moveTo(bx+1*Z,sy(64));c.lineTo(bx+34*Z,sy(64)+7*Z);c.lineTo(bx+1*Z,sy(64)+14*Z);c.fill();c.fillStyle=TINTA;c.font='800 '+(7*Z)+'px Archivo, sans-serif';c.textAlign='left';c.textBaseline='middle';c.fillText('Best',bx+4*Z,sy(64)+7*Z);}}for(i=1;i<ZONAS.length;i++){var x=ZONAS[i].x0,X=sx(x);if(X<-80||X>VW+80)continue;
     c.fillStyle='#2a2f3a';c.fillRect(X-1.2*Z,sy(70),2.4*Z,70*Z);c.font='800 '+(9*Z)+'px Archivo, sans-serif';var tw=c.measureText(ZONAS[i].n).width+14*Z;
     rr(X-tw/2,sy(84),tw,17*Z,8*Z,AZUL);c.fillStyle=HUESO;c.textAlign='center';c.textBaseline='middle';c.fillText(ZONAS[i].n,X,sy(84)+8.8*Z);}
@@ -404,7 +414,7 @@ function frame(now){var rdt=Math.min(0.04,(now-last)/1000);last=now;
     if(aroVisible(b)){var tp=tiempoAlPiso(b),wv=ventanas(),ra=(R_BALL+tp*90)*Z,enP=tp<=wv.p,enG=tp<=wv.g;
       c.strokeStyle=enP?VOL:enG?AMA:'rgba(242,239,232,0.85)';c.lineWidth=(enP?3:2)*Z*0.8;c.beginPath();c.arc(sx(b.x),sy(b.y),ra,0,7);c.stroke();
       c.strokeStyle='rgba(242,239,232,0.35)';c.lineWidth=1*Z;c.beginPath();c.arc(sx(b.x),sy(b.y),(R_BALL+3)*Z,0,7);c.stroke();}
-    balon(b.x,b.y,b.rot);
+    if(!b.bus)balon(b.x,b.y,b.rot);
     for(var j=0;j<S.parts.length;j++){var p=S.parts[j];c.globalAlpha=Math.min(1,p.life*2);c.fillStyle=p.c;c.beginPath();c.arc(sx(p.x),sy(p.y),p.s*Z,0,7);c.fill();}c.globalAlpha=1;
     for(var t=0;t<S.txt.length;t++){var tx=S.txt[t];c.globalAlpha=Math.min(1,tx.life*1.4);c.font='800 '+(15)+'px Archivo, sans-serif';c.textAlign='center';c.textBaseline='alphabetic';
       c.lineWidth=3.5;c.strokeStyle='rgba(242,239,232,0.85)';c.strokeText(tx.s,sx(tx.x),sy(tx.y));c.fillStyle=tx.c;c.fillText(tx.s,sx(tx.x),sy(tx.y));}c.globalAlpha=1;
@@ -439,7 +449,7 @@ window.addEventListener('resize',function(){try{size();}catch(e){}});
 
 function inicio(){var f=(hoy.getMonth()+1)+'/'+hoy.getDate();
   ov.innerHTML='<div class="card"><div class="sub">Angels · mini game</div><h1 style="margin-top:4px">Long Spike</h1>'+
-  '<div class="steps"><b>1.</b> Lock your approach speed when the bar hits the yellow zone.<br><b>2.</b> Jump right before the line.<br><b>3.</b> Spike at the top of your jump. Time slows down to help you.<br><b>Bounce:</b> when the ball is about to hit the ground, a ring closes on it. Tap right when it closes: perfect keeps the ball flying, good gives you a medium bounce.<br><b>Boost:</b> tap in the air when there is no ring. You get 3.<br><b>Water bottles:</b> one more boost and a shield against the net or a puddle.<br><b>Pelicans:</b> they carry the ball forward. Dark ones carry it backward.</div>'+
+  '<div class="steps"><b>1.</b> Lock your approach speed when the bar hits the yellow zone.<br><b>2.</b> Jump right before the line.<br><b>3.</b> Spike at the top of your jump. Time slows down to help you.<br><b>Bounce:</b> when the ball is about to hit the ground, a ring closes on it. Tap right when it closes: perfect keeps the ball flying, good gives you a medium bounce.<br><b>Boost:</b> tap in the air when there is no ring. You get 3.<br><b>Water bottles:</b> one more boost and a shield against the net or a puddle.<br><b>Pelicans:</b> they carry the ball forward. Dark ones carry it backward.<br><b>Open buses:</b> some buses have the back door open. Get the ball inside and it shoots out the front faster.</div>'+
   '<p class="sub" style="margin-top:12px">Daily spike '+f+': same wind and same course for everyone today.</p>'+
   '<div id="top0"></div><button class="btn" id="jugar" type="button">Play</button></div>';ov.style.display='flex';vqPinta('top0','longspike',' m');
   var b=document.getElementById('jugar');b.addEventListener('click',function(ev){ev.stopPropagation();nuevo();});b.addEventListener('pointerdown',function(ev){ev.stopPropagation();});}
