@@ -35,7 +35,7 @@ footer{margin-top:10px;font-size:12px;color:rgba(242,239,232,0.55)}
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.5.7';
+var APP_VERSION='0.5.8';
 var AZUL='#1B2A6B',AMA='#EB448F',TINTA='#0E1116',HUESO='#F2EFE8',VOL='#C6F432',OLI='#4F6B00';
 var SETX=74,VH=300,GY=44,IH=340,PX_M=10,G=600,R_BALL=6;
 var cv=document.getElementById('c'),cx=cv.getContext('2d'),app=document.getElementById('app'),ov=document.getElementById('ov');
@@ -92,6 +92,7 @@ function swh(nm,h){var im=IMG[nm];if(!im||!im.width)return {w:h,h:h};return {w:h
 // 0.5.5: unos 20 pelicanos por partida (1 de cada 4 malo, se lleva el balon
 // para atras), carros azules como en 0.5.4 (uno de cada 8 en el estacionamiento,
 // ninguno en la calle; nunca dos seguidos y maximo 2 por partida) y 1 de cada 3 guaguas con la puerta de atras abierta.
+// 0.5.8: ninguna guagua entre los 690 y 750 m (la de antes de los 750 m paraba la bola).
 var MALO=0.25,ABIERTA=0.33;
 var TIPOS={gradas:['trampolin','abanico','cono','trampolin','pelicano'],estac:['carro','trampolin','charco','cono','pelicano','cono','trampolin','pelicano'],
   calle:['guagua','charco','charco','cono','pelicano','trampolin','guagua','cono','pelicano'],playa:['surf','red','pelicano','surf','charco','surf'],
@@ -106,7 +107,7 @@ function extiende(W,hasta){var R=W.R;
   while(W.x<hasta){var z=zonaDe(W.x),l=TIPOS[z.k];if(!l){W.x+=200;continue;}var tp=l[Math.floor(R()*l.length)];
     if(tp==='carro'&&((W.nc||0)>=2||(W.ob.length&&W.ob[W.ob.length-1].tp==='carro'))){var l2=l.filter(function(t){return t!=='carro';});tp=l2[Math.floor(R()*l2.length)];}
     var o=nuevoObj(tp,W.x,R);
-    if(z.k!==zonaDe(W.x+o.w+20).k){W.x+=80;continue;}W.ob.push(o);if(o.tp==='carro')W.nc=(W.nc||0)+1;var esp=z.k==='mar'?210:z.k==='muelle'?170:140;W.x+=esp+R()*220;}
+    if(z.k!==zonaDe(W.x+o.w+20).k){W.x+=80;continue;}if(!(o.tp==='guagua'&&o.x>=6900&&o.x<7500))W.ob.push(o);if(o.tp==='carro')W.nc=(W.nc||0)+1;var esp=z.k==='mar'?210:z.k==='muelle'?170:140;W.x+=esp+R()*220;}
   while(W.cx<hasta){var n=4+Math.floor(R()*4),y0=30+R()*140,amp=15+R()*35,i;
     for(i=0;i<n;i++)W.co.push({x:W.cx+i*22,y:y0+Math.sin(i/(n-1)*Math.PI)*amp,tp:'mon',ph:i*0.5});
     if(R()<0.22)W.co.push({x:W.cx+n*22+30,y:y0+amp+30,tp:'bot',ph:0});
