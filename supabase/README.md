@@ -17,6 +17,7 @@ El archivo `juegos/bareboru/index.html` es el mismo de STATION: en este dominio 
 
 0021 (BAREBORU 6x6, cuarto juego) aplicada el 2026-11-12: agrega `bareboru6` a los records, tops, borrado del staff y registro anonimo de partidas, con la misma validacion del 3v3 (set a 15). Sin DROP de tablas, DELETE ni TRUNCATE.
 Los archivos de `juegos/bareboru6/` son los mismos de STATION (salvo la portada, que lleva el uniforme de Angels): en este dominio usan los colores, el esquema y el top de Angels.
+El uno contra uno en linea del 6x6 (juego 0.3.0, app v4.3.0) usa las funciones `bb6_room_create`, `bb6_room_join`, `bb6_room_result` y `bb6_record` del esquema `station` (migracion 0018 de STATION, aplicada el 2026-11-12), con record propio separado del 3v3. En el esquema `angels` no hay tablas de salas.
 
 0022 (cierra las funciones de `public`) aplicada el 2026-11-12 con el permiso de Carlos: quita el permiso de ejecucion de `anon` y `authenticated` en `public.player_bootstrap`, `player_mark_welcomed`, `player_submit_checkin`, `player_submit_overuse` y `make_backup`. No borra funciones, tablas ni datos; el cron `respaldo_semanal` sigue corriendo. Verificado antes: los 461 check-ins y los 11 jugadores de `public` estan en `angels`.
 Decision de Carlos (delegada): la copia de datos de salud en `public` se borra el 2026-12-10, 30 dias despues de publicar la v4, con una migracion aparte, verificacion previa y su permiso ese dia.
