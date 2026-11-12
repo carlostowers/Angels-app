@@ -35,7 +35,7 @@ footer{margin-top:10px;font-size:12px;color:rgba(242,239,232,0.55)}
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.5.2';
+var APP_VERSION='0.5.3';
 var AZUL='#1B2A6B',AMA='#EB448F',TINTA='#0E1116',HUESO='#F2EFE8',VOL='#C6F432',OLI='#4F6B00';
 var SETX=74,VH=300,GY=44,IH=340,PX_M=10,G=600,R_BALL=6;
 var cv=document.getElementById('c'),cx=cv.getContext('2d'),app=document.getElementById('app'),ov=document.getElementById('ov');
@@ -89,9 +89,11 @@ function sw(nm,w){var im=IMG[nm];if(!im||!im.width)return {w:w,h:w};return {w:w,
 function swh(nm,h){var im=IMG[nm];if(!im||!im.width)return {w:h,h:h};return {w:h*im.width/im.height,h:h};}
 
 /* ---------- mundo del día ---------- */
-var TIPOS={gradas:['trampolin','abanico','cono','trampolin','pelicano'],estac:['carro','trampolin','charco','cono','pelicano','carro','trampolin'],
-  calle:['guagua','carro','charco','cono','pelicano','trampolin','guagua'],playa:['surf','red','pelicano','surf','charco','surf'],
-  muelle:['bote','trampolin','pelicano','bote','cono','trampolin'],mar:['bote','pelicano','bote','surf']};
+// 0.5.3: menos carros azules (solo uno de cada 8 en el estacionamiento y
+// ninguno en la calle) y mas pelicanos que se llevan el balon en todas las zonas.
+var TIPOS={gradas:['trampolin','abanico','cono','trampolin','pelicano','pelicano'],estac:['carro','trampolin','charco','cono','pelicano','pelicano','trampolin','pelicano'],
+  calle:['guagua','pelicano','charco','cono','pelicano','trampolin','guagua'],playa:['surf','red','pelicano','surf','charco','surf','pelicano'],
+  muelle:['bote','trampolin','pelicano','bote','cono','trampolin','pelicano'],mar:['bote','pelicano','bote','surf','pelicano']};
 function nuevoObj(tp,x,R){var o={tp:tp,x:x},s;
   if(tp==='trampolin'){s=sw('trampolin',56);}else if(tp==='abanico'){s=swh('abanico',66);}else if(tp==='carro'){s=sw('carro',92);}
   else if(tp==='guagua'){s=sw('guagua',190);}else if(tp==='surf'){s=sw('surf',80);}else if(tp==='cono'){s=swh('cono',26);}
