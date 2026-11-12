@@ -1237,7 +1237,8 @@ var RETOS=[
   {id:'winN',es:'Gana en Normal o Difícil',en:'Win on Normal or Hard',f:function(s,w){return w&&PREF.diff!=='easy';}},
   {id:'pf10',es:'Haz 10 toques perfectos',en:'Make 10 perfect taps',f:function(s,w){return s.perf>=10;}},
   {id:'esp',es:'Usa un remate especial',en:'Use a special spike',f:function(s,w){return s.spc>=1;}}];
-function retosHoy(){var d=new Date(),k=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();if(!PREF.day||PREF.day.k!==k)PREF.day={k:k,done:{}};
+function prHoy(){try{var p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Puerto_Rico'}).format(new Date()).split('-');return new Date(+p[0],+p[1]-1,+p[2]);}catch(e){return new Date();}}
+function retosHoy(){var d=prHoy(),k=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();if(!PREF.day||PREF.day.k!==k)PREF.day={k:k,done:{}};
   var r=k%2147483647,ix=[],i,j,t;for(i=0;i<RETOS.length;i++)ix.push(i);for(i=ix.length-1;i>0;i--){r=(r*16807)%2147483647;j=r%(i+1);t=ix[i];ix[i]=ix[j];ix[j]=t;}
   return [RETOS[ix[0]],RETOS[ix[1]],RETOS[ix[2]]];}
 function topHTML(d){if(!d||!d.top||!d.top.length)return '<div class="sub">'+L('Todavía nadie tiene marca. Sé el primero.','No scores yet. Be the first.')+'</div>';

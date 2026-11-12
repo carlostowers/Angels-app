@@ -2477,7 +2477,7 @@ html.modo-staff .logo img{width:64px;height:auto;max-width:100%;}
 <script>
 // Version visible en pantalla. Cuando alguien reporte algo raro, lo primero
 // es saber que version esta corriendo su telefono.
-const APP_VERSION = 'v4.1.0';
+const APP_VERSION = 'v4.1.1';
 
 // ============ SUPABASE ============
 // Backend de Angels: esquema "angels" dentro del proyecto de Supabase de
@@ -6202,10 +6202,12 @@ function playerEquipoView(p){
 /* =========================================================================
    TORNEOS: HELPERS DE FECHA Y CUENTA REGRESIVA
    ========================================================================= */
+// Dias que faltan contados desde hoy en Puerto Rico, no desde la medianoche
+// del telefono.
 function daysUntil(iso){
   try {
-    var t = new Date(); t.setHours(0,0,0,0);
-    var target = new Date(iso+'T00:00:00');
+    var t = dateFromISO(today());
+    var target = dateFromISO(String(iso).slice(0,10));
     return Math.round((target-t)/86400000);
   } catch(e){ return null; }
 }
@@ -8915,7 +8917,7 @@ function renderStaffJuegos(filtro){
       html += '<div class="table-wrap"><table class="data"><thead><tr><th class="tnum">#</th><th>'+T('Jugador')+'</th>'+(tf==='Club'?'<th>'+T('Equipo')+'</th>':'')+
         '<th class="tnum">'+T('Mejor')+'</th>'+(g.id==='keepup'?'<th class="tnum">'+T('Nivel')+'</th>':'')+'<th class="tnum">'+T('Partidas')+'</th><th>'+T('Última vez')+'</th><th></th></tr></thead><tbody>'+
         filas.map(function(x, i){
-          var u = x.r.last_played_at ? fmtDateInline(String(x.r.last_played_at).slice(0,10)) : '';
+          var u = x.r.last_played_at ? fmtDateInline(ymd(new Date(x.r.last_played_at))) : '';
           var quien = x.p.coach ? htmlEscape(x.p.name) : htmlEscape(dorsal(x.p)+' '+x.p.name)+(isPaused(x.p)?' · '+T('En pausa'):'');
           return '<tr><td class="tnum">'+(i+1)+'</td><td class="notr">'+quien+'</td>'+(tf==='Club'?'<td>'+htmlEscape(teamLabel(x.p.team))+'</td>':'')+
             '<td class="tnum">'+Number(x.r.best_score).toLocaleString('es-PR')+g.u+'</td>'+(g.id==='keepup'?'<td class="tnum">'+(x.r.best_level||'')+'</td>':'')+
