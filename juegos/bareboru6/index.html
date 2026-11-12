@@ -130,23 +130,24 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
 </div>
 <div id="ov"></div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/juegos/bareboru/3d/voleii-three.min.js"></script>
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.1.0';
+var APP_VERSION='0.2.0';
 /* BAREBORU by VOLEII 6x6: voleibol seis contra seis contra la maquina, a 15 con ventaja de 2.
    Sistema 5-1 con libero y las seis rotaciones del Playbook de Vaqueros (formaciones de recepcion, target, defensa Middle/Middle y cobertura).
    Sale del motor del 3x3 (juegos/bareboru): mismos cuerpos, clips y controles. Controlas al jugador que le toca jugar el balon; los demas van solos.
    Colocacion: tu escoges a quien con la direccion (izquierda Z4, arriba 1T, derecha Z2 o D, abajo ataque de atras). El colocador coloca de frente a Z4.
    Mundo: X de -4.5 a 4.5 (derecha de la camara positiva), Z = distancia a la malla (nuestro lado positivo), Y arriba.
-   Fase 1: sin records ni en linea todavia (llegan con la migracion del juego bareboru6). */
+   Records del equipo con el juego 'bareboru6' (migraciones 0016 de STATION y 0021 de Angels). El uno contra uno en linea llega despues. */
 var CFG={team:'Vaqueros',rival:'Rival',acc:'#FFCF27',azul:'#023B9F',
   kitUs:{jersey:'#00389C',shorts:'#F1F3F6',trim:'#FCCC24'},kitRival:{jersey:'#E8559A',shorts:'#F1F3F6',trim:'#FFFFFF'},
   court:{inn:'#2f63b8',out:'#1a2f57'},ball:['#FCCC24','#00389C','#F2EFE8'],ls:'vq_bareboru6_cfg_v1',app:'STATION',schema:'station',brand:'vaqueros'};
 /* marca segun el sitio: el mismo archivo sirve a STATION (Vaqueros) y a la app de Angels */
 var BRAND='vaqueros';try{var bh=(location.hostname||'').toLowerCase(),bq=new URLSearchParams(location.search).get('brand');if(bh.indexOf('angels')>=0||bq==='angels')BRAND='angels';if(bq==='vaqueros')BRAND='vaqueros';}catch(e){}
-if(BRAND==='angels'){CFG.team='Angels';CFG.acc='#51B7E4';CFG.azul='#1B2A6B';CFG.kitUs={jersey:'#51B7E4',shorts:'#1B2A6B',trim:'#EB448F'};CFG.court={inn:'#2f7fb5',out:'#1B2A6B'};CFG.ball=['#51B7E4','#EB448F','#F2EFE8'];CFG.ls='ang_bareboru6_cfg_v1';CFG.app='Angels';CFG.schema='angels';CFG.brand='angels';}
+if(BRAND==='angels'){CFG.team='Angels';CFG.acc='#51B7E4';CFG.azul='#1B2A6B';CFG.kitUs={jersey:'#51B7E4',shorts:'#1B2A6B',trim:'#EB448F'};CFG.court={inn:'#2f7fb5',out:'#1B2A6B'};CFG.ball=['#51B7E4','#1B2A6B','#F2EFE8'];CFG.ls='ang_bareboru6_cfg_v1';CFG.app='Angels';CFG.schema='angels';CFG.brand='angels';}
 try{document.documentElement.style.setProperty('--acc',CFG.acc);}catch(e){}
 var RIVALS=[
   {id:'coqui',name:'Kaminari',kit:{jersey:'#E8559A',shorts:'#F1F3F6',trim:'#FFFFFF'},es:'Defienden casi todo',en:'They dig almost everything',mod:{spd:0.4,react:-0.04}},
@@ -166,7 +167,7 @@ if(BRAND==='angels'){KITS=[{id:'home',lv:1,es:'Celeste',en:'Sky blue',kit:{jerse
 function lvl(xp){return 1+Math.floor(Math.sqrt(Math.max(0,xp)/120));}
 function xpFor(l){return 120*(l-1)*(l-1);}
 /* ---------- STATION: records del equipo (migracion 0014) ---------- */
-var SBC=null,GAME_ID='bareboru';
+var SBC=null,GAME_ID='bareboru6';
 var T3=window.VOLEII&&window.VOLEII.T3,THREE=T3&&T3.THREE;
 var app=document.getElementById('app'),cv=document.getElementById('gl'),ov=document.getElementById('ov');
 var $=function(id){return document.getElementById(id);};
@@ -360,10 +361,20 @@ var aimBeam=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,3.2,20,1,true),new
 
 /* balon */
 var BALL_R=0.135;
-var ballTex=canvasTex(512,256,function(g,w,h){var c=CFG.ball;g.fillStyle=c[0];g.fillRect(0,0,w,h);
-  for(var i=0;i<6;i++){g.fillStyle=c[1+(i%2)];g.beginPath();var y0=i*h/6;g.moveTo(0,y0);for(var x=0;x<=w;x+=8)g.lineTo(x,y0+Math.sin(x/w*Math.PI*4)*10);g.lineTo(w,y0+h/12);for(var x2=w;x2>=0;x2-=8)g.lineTo(x2,y0+h/12+Math.sin(x2/w*Math.PI*4)*10);g.fill();}
-  g.strokeStyle='rgba(0,0,0,0.25)';g.lineWidth=2;for(var j=0;j<=6;j++){g.beginPath();for(var x3=0;x3<=w;x3+=8){var yy=j*h/6+Math.sin(x3/w*Math.PI*4)*10;if(x3)g.lineTo(x3,yy);else g.moveTo(x3,yy);}g.stroke();}});
-var ball=new THREE.Mesh(new THREE.SphereGeometry(BALL_R,28,18),new THREE.MeshStandardMaterial({map:ballTex,roughness:0.5}));
+/* balon de 18 paneles (seis caras de tres franjas), con costuras hundidas y cuero mate. Diseno propio en los colores del equipo, sin marcas. */
+function hexRGB(hx){var n=parseInt(String(hx).replace('#',''),16);return [(n>>16)&255,(n>>8)&255,n&255];}
+var ballTex=canvasTex(1024,512,function(g,w,h){try{var im=g.createImageData(w,h),d=im.data,C=[hexRGB(CFG.ball[0]),hexRGB(CFG.ball[2]),hexRGB(CFG.ball[1])],q=4/Math.PI,i=0;
+  for(var y=0;y<h;y++){var th=(y+0.5)/h*Math.PI,vy=Math.cos(th),sr=Math.sin(th);
+    for(var x=0;x<w;x++){var ph=(x+0.5)/w*2*Math.PI,vx=sr*Math.cos(ph),vz=sr*Math.sin(ph),ax=Math.abs(vx),ay=Math.abs(vy),az=Math.abs(vz),u,v;
+      /* cada cara del cubo lleva sus franjas giradas respecto a las vecinas, como en un balon cosido */
+      if(ax>=ay&&ax>=az){u=vy/ax;v=vz/ax;}else if(ay>=az){u=vz/ay;v=vx/ay;}else{u=vx/az;v=vy/az;}
+      var su=Math.atan(u)*q,sv=Math.atan(v)*q,sb=su+0.11*Math.sin(sv*Math.PI)*(1-su*su),k=sb<-0.333?0:(sb<0.333?1:2),c=C[k];
+      var e=Math.min(Math.abs(sb+0.333),Math.abs(sb-0.333),1-Math.abs(su),1-Math.abs(sv)),sm=e<0.016?0.5:(e<0.05?0.5+0.5*(e-0.016)/0.034:1);
+      /* brillo suave en el centro de cada panel y grano del cuero */
+      var pc=k===1?sb:(k===0?sb+0.666:sb-0.666),lt=1.04-0.5*pc*pc-0.05*sv*sv,gr=0.975+0.05*(((x*7919+y*104729)%97)/97);
+      var m=sm*lt*gr;d[i++]=Math.min(255,c[0]*m);d[i++]=Math.min(255,c[1]*m);d[i++]=Math.min(255,c[2]*m);d[i++]=255;}}
+  g.putImageData(im,0,0);}catch(e){g.fillStyle=CFG.ball[2];g.fillRect(0,0,w,h);}});
+var ball=new THREE.Mesh(new THREE.SphereGeometry(BALL_R,28,18),new THREE.MeshStandardMaterial({map:ballTex,roughness:0.62,metalness:0}));
 ball.castShadow=true;scene.add(ball);
 var TRAIL_N=18,trail=[],trailPts=[];for(var ti=0;ti<TRAIL_N;ti++){var tm=new THREE.Mesh(new THREE.SphereGeometry(BALL_R*0.8,10,8),new THREE.MeshBasicMaterial({color:'#fff2b8',transparent:true,opacity:0,depthWrite:false}));tm.visible=false;scene.add(tm);trail.push(tm);}
 /* aro de tiempo (mira a la camara) */
@@ -1293,7 +1304,7 @@ function endCard(){if(NET.on){nEnd();return;}var s=G.st,won=G.sc[0]>G.sc[1],rec=
   st(pos+'%',L('Recepción positiva (# y +)','Positive pass (# and +)'))+st(s.kill+' / '+s.att,L('Remates ganadores','Kills'))+st(eff+'%',L('Eficiencia de ataque','Attack efficiency'))+st(s.ace,'Aces')+
   st(s.blk,L('Puntos de bloqueo','Block points'))+st(perf+'%',L('Toques perfectos','Perfect timing'))+st(s.maxRally,L('Rally más largo','Longest rally'))+st('# '+s.a+'  + '+s.b+'  ! '+s.c+'  0 '+s.d,L('Tus pases','Your passes'))+
   '</div><p style="margin-top:8px"><b style="color:'+CFG.acc+'">+'+gain+' XP</b> · '+L('Nivel ','Level ')+L1+(L1>L0?' · <b style="color:#C6F432">'+L('Subiste de nivel.','Level up.')+un+'</b>':'')+(nd.length?'<br><span class="sub">'+L('Reto cumplido: ','Challenge done: ')+nd.join(' · ')+'</span>':'')+'</p>'+
-  '<p class="sub" id="recm" style="margin-top:4px">'+(RECORDS_ON?(ASSIST?L('El modo asistido no cuenta para el top.','Assisted mode does not count for the top.'):L('Guardando tu marca…','Saving your score…')):L('El top del 6x6 llega en la próxima fase.','The 6v6 leaderboard comes in the next phase.'))+'</p><div class="topl" id="tope" style="max-width:320px;margin:4px auto 0"></div>'+
+  '<p class="sub" id="recm" style="margin-top:4px">'+(RECORDS_ON?(ASSIST?L('El modo asistido no cuenta para el top.','Assisted mode does not count for the top.'):L('Guardando tu marca…','Saving your score…')):L('Abre el juego desde '+CFG.app+' para guardar tu marca en el top.','Open the game from '+CFG.app+' to save your score.'))+'</p><div class="topl" id="tope" style="max-width:320px;margin:4px auto 0"></div>'+
   '<button class="btn" id="otra" type="button">'+L('Jugar otra vez','Play again')+'</button><button class="btn b2" id="eMenu" type="button">'+L('Menú','Menu')+'</button>'+
   '<div class="foot"><a href="'+backHref()+'">'+L('Volver a ','Back to ')+CFG.app+'</a><span>VOLEII · by Carlos Torres</span></div></div>';ov.style.display='flex';
   tap($('otra'),function(ev){ov.style.display='none';newMatch(false);});
