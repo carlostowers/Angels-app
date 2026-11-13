@@ -135,7 +135,7 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.5.0',ASSET_V='1';
+var APP_VERSION='0.6.0',ASSET_V='1';
 /* BAREBORU by VOLEII 6x6: voleibol seis contra seis contra la maquina, a 15 con ventaja de 2.
    Sistema 5-1 con libero y las seis rotaciones del Playbook de Vaqueros (formaciones de recepcion, target, defensa Middle/Middle y cobertura).
    Sale del motor del 3x3 (juegos/bareboru): mismos cuerpos, clips y controles. Controlas al jugador que le toca jugar el balon; los demas van solos.
@@ -978,7 +978,58 @@ function animate(p){var spd=hyp(p.vx,p.vz);
     if(w>0){clipPose(c,u,poseTmp);blendPose(p.pose,poseTmp,w,p.pose);
       if(A.boost&&c.marks.takeoff!=null){var f=(u-c.marks.takeoff)/(c.marks.landing-c.marks.takeoff);if(f>0&&f<1)p.air=A.boost*4*f*(1-f)*w;}}
     if(tl>A.tail+A.fout)p.act=null;}
-  p.apply(p.pose);if(p.act&&p.act.back)archBack(p);vida(p,spd);}
+  p.apply(p.pose);if(p.act&&p.act.back)archBack(p);pies(p,spd);vida(p,spd);}
+/* ======================= PIES (0.6.0) =======================
+   Pisadas calculadas en vivo: cada pie se queda clavado donde piso hasta que le toca dar el paso; el paso cae por delante del cuerpo,
+   hacia donde va el jugador. La pierna (muslo y pantorrilla) se acomoda con IK de dos huesos para que el tobillo llegue a su pisada y el
+   pie conserva la orientacion del clip. Solo manda al desplazarse y en la espera: dentro de un gesto (remate, bloqueo, saque, recibo,
+   plancha), en el aire, en un deslizamiento o por encima de 6.5 m/s mandan las piernas del clip. En los escalones bajos de calidad el
+   rival sigue con las piernas del clip. Solo se ve: no cambia posiciones, tiempos ni manos. ?pies=0 lo apaga. */
+var PIE=null,PIE_ON=true,_pa=new V3(),_pk=new V3(),_pe=new V3(),_pt=new V3(),_pn=new V3(),_pu=new V3(),_pw=new V3(),_qf=new Q4(),_qg=new Q4();
+var PIE_B=[['LeftUpLeg','LeftLeg','LeftFoot'],['RightUpLeg','RightLeg','RightFoot']];
+try{if(new URLSearchParams(location.search).get('pies')==='0')PIE_ON=false;}catch(e){}
+function pieMide(p){var o={sL:1},P=[poseEsp,poseEspD],N=['S','D'],yw=p.root.rotation.y,cy=Math.cos(yw),sy=Math.sin(yw);
+  for(var i=0;i<2;i++){p.apply(P[i]);p.root.updateMatrixWorld(true);var w=0,f=0,h=0;
+    for(var k=0;k<2;k++){_pe.setFromMatrixPosition(p.bones[PIE_B[k][2]].matrixWorld);var dx=_pe.x-p.root.position.x,dz=_pe.z-p.root.position.z,lx=dx*cy-dz*sy,lz=dx*sy+dz*cy;
+      if(i===0&&k===0)o.sL=lx>=0?1:-1;w+=Math.abs(lx);f+=lz;h+=_pe.y-p.root.position.y;}
+    o['w'+N[i]]=Math.max(0.08,w/2);o['f'+N[i]]=f/2;o['h'+N[i]]=h/2;}
+  p.apply(p.pose);p.root.updateMatrixWorld(true);return o;}
+function pieSuelta(f,dur){f.st=1;f.s=0;f.sx=f.x;f.sz=f.z;f.dur=dur;}
+function pies(p,spd){try{
+  if(!PIE_ON||!poseEsp||!G||G.phase==='menu'||REP.on||(p.team===1&&qStep>=1)){p.ikW=0;return;}
+  var dt=clamp(tG-(p.ikT==null?tG:p.ikT),0,0.05);p.ikT=tG;
+  var on=!p.act&&!p.glide&&p.air<0.01&&spd<6.5,w0=p.ikW||0,w=on?Math.min(1,w0+dt/0.15):Math.max(0,w0-dt/0.1);
+  if(w<=0){p.ikW=0;return;}
+  var B=p.bones;if(!B.LeftUpLeg||!B.LeftLeg||!B.LeftFoot||!B.RightUpLeg||!B.RightLeg||!B.RightFoot){p.ikW=0;return;}
+  if(!PIE)PIE=pieMide(p);else p.root.updateMatrixWorld(true);
+  var yw=p.root.rotation.y,cy=Math.cos(yw),sy=Math.sin(yw),lo=p.low,hw=lo?PIE.wD:PIE.wS,fz=lo?PIE.fD:PIE.fS,h0=lo?PIE.hD:PIE.hS,ry=p.root.position.y,i,f,k;
+  var ft=p.ft;if(!ft)ft=p.ft=[{x:0,z:0,st:0,s:0,sx:0,sz:0,tx:0,tz:0,d:0,dur:0.25},{x:0,z:0,st:0,s:0,sx:0,sz:0,tx:0,tz:0,d:0,dur:0.25}];
+  /* al entrar, cada pie queda plantado donde lo tiene el clip: sin brinco */
+  if(w0<=0){for(i=0;i<2;i++){_pe.setFromMatrixPosition(B[PIE_B[i][2]].matrixWorld);ft[i].x=_pe.x;ft[i].z=_pe.z;ft[i].st=0;ft[i].s=0;}}
+  p.ikW=w;
+  var ux=spd>0.05?p.vx/spd:0,uz=spd>0.05?p.vz/spd:0,lead=Math.min(0.26,0.05+spd*0.09),trig=Math.max(0.1,2*lead),dur=clamp(0.3-spd*0.03,0.16,0.3),hgt=0.05+Math.min(0.07,spd*0.02);
+  for(i=0;i<2;i++){f=ft[i];var sd=(i===0?PIE.sL:-PIE.sL)*hw;f.tx=p.x+sd*cy+fz*sy+ux*lead;f.tz=p.z-sd*sy+fz*cy+uz*lead;f.d=hyp(f.x-f.tx,f.z-f.tz);
+    if(f.st===0&&f.d>1.2){f.x=f.tx;f.z=f.tz;f.d=0;}}
+  /* da el paso el pie que quedo mas atras, y solo si el otro esta apoyado o ya va llegando */
+  var a=ft[0].d>=ft[1].d?0:1;for(k=0;k<2;k++){i=k===0?a:1-a;f=ft[i];var ot=ft[1-i];if(f.st===0&&f.d>trig&&(ot.st===0||ot.s>0.55))pieSuelta(f,dur);}
+  for(i=0;i<2;i++){f=ft[i];var names=PIE_B[i],U=B[names[0]],S=B[names[1]],Fb=B[names[2]],px,pz,py=ry+h0;
+    if(f.st===1){f.s+=dt/f.dur;if(f.s>=1){f.st=0;f.s=0;f.x=f.tx;f.z=f.tz;px=f.x;pz=f.z;}else{var e=f.s*f.s*(3-2*f.s);px=f.sx+(f.tx-f.sx)*e;pz=f.sz+(f.tz-f.sz)*e;py+=hgt*Math.sin(Math.PI*f.s);}}
+    else{px=f.x;pz=f.z;}
+    _pa.setFromMatrixPosition(U.matrixWorld);_pk.setFromMatrixPosition(S.matrixWorld);_pe.setFromMatrixPosition(Fb.matrixWorld);Fb.getWorldQuaternion(_qf);
+    var l1=_pa.distanceTo(_pk),l2=_pk.distanceTo(_pe),lmax=0.985*(l1+l2);if(l1<0.05||l2<0.05)continue;
+    /* si el pie apoyado ya no alcanza, primero levanta el talon; si ni asi, despega (a la carrera hay fase de vuelo) */
+    var dh=hyp(px-_pa.x,pz-_pa.z);if(dh<lmax){var mn=_pa.y-Math.sqrt(lmax*lmax-dh*dh);if(py<mn){if(f.st===0&&mn-py>0.14)pieSuelta(f,dur);py=Math.min(mn,ry+h0+0.14);}}else if(f.st===0)pieSuelta(f,dur);
+    _pt.set(_pe.x+(px-_pe.x)*w,_pe.y+(py-_pe.y)*w,_pe.z+(pz-_pe.z)*w);
+    var d=clamp(_pa.distanceTo(_pt),Math.abs(l1-l2)+0.04,lmax);
+    /* rodilla: abre o cierra la pantorrilla en el plano en que ya dobla el clip */
+    _pu.copy(_pa).sub(_pk);_pw.copy(_pe).sub(_pk);_pn.copy(_pu).cross(_pw);var nl=_pn.length();if(nl<0.12*l1*l2)_pn.set(-cy,0,sy);else _pn.multiplyScalar(1/nl); /* pierna casi recta: la rodilla dobla hacia el frente del jugador */
+    var c0=clamp(_pu.dot(_pw)/(l1*l2),-1,1),c1=clamp((l1*l1+l2*l2-d*d)/(2*l1*l2),-1,1),ph=Math.acos(c1)-Math.acos(c0);
+    if(Math.abs(ph)>1e-4){rotW(S,_pn,ph);var cp=Math.cos(ph),sp=Math.sin(ph);_pu.copy(_pn).cross(_pw);_pw.multiplyScalar(cp).addScaledVector(_pu,sp);}
+    /* muslo: lleva el tobillo a su pisada */
+    _pe.copy(_pk).add(_pw).sub(_pa);_pt.sub(_pa);var la=_pe.length(),lb=_pt.length();if(la>1e-4&&lb>1e-4){_pn.copy(_pe).cross(_pt);var sn=_pn.length(),cs=_pe.dot(_pt);if(sn>1e-6){_pn.multiplyScalar(1/sn);rotW(U,_pn,Math.atan2(sn,cs));}}
+    /* el pie conserva la orientacion del clip */
+    Fb.parent.updateWorldMatrix(true,false);Fb.parent.getWorldQuaternion(_qg);Fb.quaternion.copy(_qg.invert()).multiply(_qf);}
+  }catch(e){}}
 /* 0.5.0 vida: respiracion cuando esta quieto, la cabeza sigue al balon y un saltito (split-step) de los zagueros justo antes del golpe
    rival. Solo se ve: no cambia posiciones, tiempos ni manos del juego (las manos se leen antes de girar la cabeza: es otra cadena). */
 var _lx=new V3(),_ly=new V3(0,1,0);
