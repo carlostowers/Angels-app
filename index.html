@@ -1121,16 +1121,16 @@ html.modo-jugador .v2-bloque--corto{margin-top:20px;}
 /* Tarjetas */
 html.modo-jugador .v2-tarjeta{padding:16px;border-radius:12px;background:var(--fondo-elevado);border:1px solid var(--linea);box-shadow:var(--sombra-sm);}
 /* Juegos: portadas que se tocan para entrar (titulo como logo, acento por app) */
-html.modo-jugador .jg-portada{position:relative;display:block;height:190px;border-radius:12px;overflow:hidden;background-color:#0E1116;background-position:center 40%;background-size:cover;background-repeat:no-repeat;color:#F2EFE8;text-decoration:none;box-shadow:var(--sombra-sm);transition:transform .12s ease;-webkit-tap-highlight-color:transparent;}
-html.modo-jugador .jg-portada::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(14,17,22,0.94) 0%,rgba(14,17,22,0.6) 42%,rgba(14,17,22,0) 78%);}
-html.modo-jugador .jg-portada:active{transform:scale(0.97);}
-html.modo-jugador .jg-portada:focus-visible{outline:3px solid var(--acento-texto);outline-offset:2px;}
-html.modo-jugador .jg-logo{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;font-weight:900;font-style:italic;font-stretch:125%;font-size:clamp(24px,7.6vw,36px);line-height:1;white-space:nowrap;letter-spacing:-0.01em;text-transform:uppercase;color:#F2EFE8;text-shadow:0 2px 14px rgba(0,0,0,0.45);}
-html.modo-jugador .jg-logo b{font-weight:900;color:#51B7E4;text-transform:none;}
-html.modo-jugador .jg-raya{display:block;width:44px;height:4px;margin-top:8px;border-radius:2px;background:#51B7E4;transform:skewX(-14deg);}
-html.modo-jugador .jg-record{position:absolute;top:12px;right:12px;z-index:1;max-width:calc(100% - 24px);padding:5px 10px;border-radius:999px;background:rgba(14,17,22,0.72);color:#F2EFE8;font-size:13px;line-height:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-html.modo-jugador .jg-record:empty{display:none;}
-@media (prefers-reduced-motion:reduce){html.modo-jugador .jg-portada{transition:none;}}
+.jg-portada{position:relative;display:block;container-type:inline-size;font-family:'Archivo',system-ui,sans-serif;height:190px;border-radius:12px;overflow:hidden;background-color:#0E1116;background-position:center 40%;background-size:cover;background-repeat:no-repeat;color:#F2EFE8;text-decoration:none;box-shadow:var(--sombra-sm,none);transition:transform .12s ease;-webkit-tap-highlight-color:transparent;}
+.jg-portada::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(14,17,22,0.94) 0%,rgba(14,17,22,0.6) 42%,rgba(14,17,22,0) 78%);}
+.jg-portada:active{transform:scale(0.97);}
+.jg-portada:focus-visible{outline:3px solid var(--acento-texto,#023B9F);outline-offset:2px;}
+.jg-logo{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;font-weight:900;font-style:italic;font-stretch:125%;font-size:clamp(24px,7.6vw,36px);font-size:clamp(20px,7.8cqw,36px);line-height:1;white-space:nowrap;letter-spacing:-0.01em;text-transform:uppercase;color:#F2EFE8;text-shadow:0 2px 14px rgba(0,0,0,0.45);}
+.jg-logo b{font-weight:900;color:#51B7E4;text-transform:none;}
+.jg-raya{display:block;width:44px;height:4px;margin-top:8px;border-radius:2px;background:#51B7E4;transform:skewX(-14deg);}
+.jg-record{position:absolute;top:12px;right:12px;z-index:1;max-width:calc(100% - 24px);padding:5px 10px;border-radius:999px;background:rgba(14,17,22,0.72);color:#F2EFE8;font-size:13px;line-height:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.jg-record:empty{display:none;}
+@media (prefers-reduced-motion:reduce){.jg-portada{transition:none;}}
 html.modo-jugador .v2-tarjeta--grande{border-radius:20px;}
 html.modo-jugador .v2-tarjeta--azul{background:var(--azul-suave);box-shadow:none;}
 html.modo-jugador .v2-tarjeta--precaucion{background:var(--precaucion-suave);box-shadow:none;}
@@ -2488,7 +2488,7 @@ html.modo-staff .logo img{width:64px;height:auto;max-width:100%;}
 <script>
 // Version visible en pantalla. Cuando alguien reporte algo raro, lo primero
 // es saber que version esta corriendo su telefono.
-const APP_VERSION = 'v4.3.1';
+const APP_VERSION = 'v4.3.2';
 
 // ============ SUPABASE ============
 // Backend de Angels: esquema "angels" dentro del proyecto de Supabase de
@@ -8879,18 +8879,18 @@ async function loadStaffGames(){
 // en el top del club.
 function staffJuegosCards(){
   var juegos = [
-    { id:'keepup', t:'Keep It Up', ruta:'/juegos/keepup?staff=1', img:'/juegos/keepup/assets/portada.webp', u:'' },
-    { id:'longspike', t:'Long Spike', ruta:'/juegos/longspike?staff=1', img:'/juegos/longspike/assets/portada.webp', u:' m' },
-    { id:'bareboru', t:'BAREBORU', ruta:'/juegos/bareboru?staff=1', img:'/juegos/bareboru/assets/portada.webp', u:' pts' },
-    { id:'bareboru6', t:'BAREBORU 6x6', ruta:'/juegos/bareboru6?staff=1', img:'/juegos/bareboru6/assets/portada.webp', u:' pts' }
+    { id:'keepup', t:'Keep It Up', logo:'Keep It Up', acento:'', ruta:'/juegos/keepup?staff=1', img:'/juegos/keepup/assets/portada.webp', u:'' },
+    { id:'longspike', t:'Long Spike', logo:'Long Spike', acento:'', ruta:'/juegos/longspike?staff=1', img:'/juegos/longspike/assets/portada.webp', u:' m' },
+    { id:'bareboru', t:'BAREBORU 3x3', logo:'BAREBORU', acento:'3x3', ruta:'/juegos/bareboru?staff=1', img:'/juegos/bareboru/assets/portada.webp', u:' pts' },
+    { id:'bareboru6', t:'BAREBORU 6x6', logo:'BAREBORU', acento:'6x6', ruta:'/juegos/bareboru6?staff=1', img:'/juegos/bareboru6/assets/portada.webp', u:' pts' }
   ];
   return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:1rem">'+juegos.map(function(g){
     var mio = STAFF_COACH_GAMES.filter(function(r){ return r.game===g.id; })[0];
-    return '<div class="panel" style="padding:0;overflow:hidden;margin:0">'+
-      '<div style="height:96px;background:#0E1116 url(\''+g.img+'\') center/cover no-repeat"></div>'+
-      '<div style="padding:14px 16px 16px"><div class="panel-title" style="margin-bottom:4px">'+g.t+'</div>'+
-      '<div class="mono-note" style="margin-top:0">'+(mio && mio.best_score>0 ? htmlEscape(T('Tu récord')+': '+Number(mio.best_score).toLocaleString('es-PR')+g.u+' · '+T('Partidas')+': '+(mio.plays||0)) : T('Sin jugar todavía'))+'</div>'+
-      '<a class="btn-primary" style="display:block;text-align:center;text-decoration:none;margin-top:10px" href="'+g.ruta+'">'+T('Jugar')+'</a></div></div>';
+    var rec = (mio && mio.best_score>0) ? T('Tu récord')+': '+Number(mio.best_score).toLocaleString('es-PR')+g.u+' · '+T('Partidas')+': '+(mio.plays||0) : T('Sin jugar todavía');
+    var marca = htmlEscape(g.logo||g.t) + (g.acento ? ' <b>'+htmlEscape(g.acento)+'</b>' : '<i class="jg-raya"></i>');
+    return '<a class="jg-portada" href="'+g.ruta+'" style="background-image:url(\''+g.img+'\')" aria-label="'+htmlEscape(T('Jugar')+' '+g.t)+'">'+
+      '<span class="jg-record">'+htmlEscape(rec)+'</span>'+
+      '<span class="jg-logo notr">'+marca+'</span></a>';
   }).join('')+'</div>';
 }
 function renderStaffJuegos(filtro){
@@ -8909,7 +8909,7 @@ function renderStaffJuegos(filtro){
       loadStaffGames().then(function(){ if(currentPage==='juegos') renderStaffJuegos(); });
       return;
     }
-    var juegos = [{ id:'keepup', t:'Keep It Up', u:'' }, { id:'longspike', t:'Long Spike', u:' m' }, { id:'bareboru', t:'BAREBORU', u:' pts' }, { id:'bareboru6', t:'BAREBORU 6x6', u:' pts' }];
+    var juegos = [{ id:'keepup', t:'Keep It Up', u:'' }, { id:'longspike', t:'Long Spike', u:' m' }, { id:'bareboru', t:'BAREBORU 3x3', u:' pts' }, { id:'bareboru6', t:'BAREBORU 6x6', u:' pts' }];
     var html = staffJuegosCards() + tabs;
     juegos.forEach(function(g){
       var filas = STAFF_GAMES.filter(function(r){ return r.game===g.id && r.best_score>0; }).map(function(r){
