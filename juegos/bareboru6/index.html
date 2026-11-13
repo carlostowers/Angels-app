@@ -40,9 +40,9 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
 #tR{position:absolute;right:calc(26px + var(--sr,0px));bottom:26px;width:112px;height:112px;border-radius:50%;border:5px solid #ffffff;box-sizing:border-box;pointer-events:none;opacity:0}
 #btnB{position:absolute;right:calc(150px + var(--sr,0px));bottom:30px;min-width:74px;height:74px;border-radius:50%;border:2px solid rgba(242,239,232,0.4);background:rgba(14,17,22,0.7);font-weight:700;font-size:13px;line-height:1.15;padding:0 8px;display:none}
 #bub{position:absolute;inset:0}
-.bb{position:absolute;transform:translate(-50%,10px);pointer-events:auto;padding:7px 12px 8px;border-radius:14px;background:rgba(14,17,22,0.86);border:2px solid rgba(242,239,232,0.35);text-align:center;font-weight:800;font-size:14px;line-height:1.15;white-space:nowrap;min-width:84px}
+.bb{position:absolute;transform:translate(-50%,10px);pointer-events:none;padding:3px 8px 4px;border-radius:10px;background:rgba(14,17,22,0.72);border:1.5px solid rgba(242,239,232,0.3);text-align:center;font-weight:800;font-size:12px;line-height:1.1;white-space:nowrap}
 .bb.up{transform:translate(-50%,-100%)}
-.bb small{display:block;font-size:11px;font-weight:700;margin-top:2px}
+.bb small{display:block;font-size:10px;font-weight:700;margin-top:1px}
 .tutp{animation:tp 0.7s ease-in-out infinite alternate}
 @keyframes tp{from{transform:scale(1)}to{transform:scale(1.12)}}
 .bb .ok{color:#C6F432}.bb .no{color:#ff8a7a}
@@ -54,7 +54,7 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
 #rotP{position:absolute;left:calc(16px + var(--sl,0px));top:10px;display:none;align-items:center;gap:8px;font-weight:700;font-size:12px;padding:5px 12px;border-radius:999px;background:rgba(14,17,22,0.7);white-space:nowrap;max-width:calc(50% - 170px);overflow:hidden}
 #rotP b{font-weight:800;font-stretch:118%;font-size:16px;color:var(--acc,#FFCF27)}
 .bb .md{color:var(--acc,#FFCF27)}.bb.sel .md{color:#0E1116}
-.bb .ar{font-size:17px}
+.bb .ar{font-size:14px}
 #vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 52%,rgba(4,6,10,0.55) 100%)}
 #sp{position:absolute;left:50%;top:52px;transform:translateX(-50%);width:190px;height:9px;border-radius:6px;background:rgba(14,17,22,0.7);border:1px solid rgba(242,239,232,0.18);overflow:hidden}
 #sp i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--acc,#FFCF27),#ff7a2a);border-radius:6px}
@@ -131,11 +131,11 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
 <div id="ov"></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/juegos/bareboru/3d/voleii-three.min.js"></script>
+<script src="/juegos/bareboru/3d/voleii-three.min.js?v=1"></script>
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.3.0';
+var APP_VERSION='0.5.0',ASSET_V='1';
 /* BAREBORU by VOLEII 6x6: voleibol seis contra seis contra la maquina, a 15 con ventaja de 2.
    Sistema 5-1 con libero y las seis rotaciones del Playbook de Vaqueros (formaciones de recepcion, target, defensa Middle/Middle y cobertura).
    Sale del motor del 3x3 (juegos/bareboru): mismos cuerpos, clips y controles. Controlas al jugador que le toca jugar el balon; los demas van solos.
@@ -250,8 +250,17 @@ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.Neutra
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
 var scene=new THREE.Scene();scene.background=new THREE.Color('#10141c');
 var camera=new THREE.PerspectiveCamera(36,2,0.1,200);
-var hemi=new THREE.HemisphereLight(0xdfe8ff,0x2a2f3a,1.25);scene.add(hemi);
+var hemi=new THREE.HemisphereLight(0xdfe8ff,0x2a2f3a,0.95);scene.add(hemi);
+/* 0.5.0: luz de entorno pintada por codigo (techo con bancos de luces, gradas oscuras y rebote del piso), para que los cuerpos y el
+   balon no se vean planos; luz principal mas vertical y sombra con borde suave. No descarga nada. LUZ=false vuelve a la luz anterior. */
+var LUZ=true;try{if(new URLSearchParams(location.search).get('luz')==='0')LUZ=false;}catch(e){}
+function envMake(){try{var c=document.createElement('canvas');c.width=256;c.height=128;var g=c.getContext('2d'),gr=g.createLinearGradient(0,0,0,128);
+  gr.addColorStop(0,'#aab4cc');gr.addColorStop(0.2,'#59627c');gr.addColorStop(0.42,'#232a3c');gr.addColorStop(0.5,'#161b28');gr.addColorStop(0.6,'#1c2c52');gr.addColorStop(1,'#101a34');
+  g.fillStyle=gr;g.fillRect(0,0,256,128);g.fillStyle='rgba(255,255,255,0.95)';for(var i=0;i<8;i++)g.fillRect(i*32+9,9,14,7);
+  g.fillStyle='rgba(255,244,224,0.5)';for(var j=0;j<4;j++)g.fillRect(j*64+26,30,12,5);
+  var t=new THREE.CanvasTexture(c);t.mapping=303;t.colorSpace=THREE.SRGBColorSpace;scene.environment=t;scene.environmentIntensity=0.6;return true;}catch(e){return false;}}
 var sun=new THREE.DirectionalLight(0xffffff,1.9);sun.position.set(-6,16,9);sun.castShadow=true;
+if(LUZ){if(envMake()){sun.position.set(-3.2,18,5.5);try{sun.shadow.radius=2.6;}catch(e){}}else hemi.intensity=1.25;}else hemi.intensity=1.25;
 sun.shadow.mapSize.set(1024,1024);var shc=sun.shadow.camera;shc.left=-9;shc.right=9;shc.top=14;shc.bottom=-14;shc.near=1;shc.far=50;sun.shadow.bias=-0.0006;sun.shadow.normalBias=0.02;
 sun.target.position.set(0,0,0);scene.add(sun);scene.add(sun.target);
 
@@ -410,8 +419,8 @@ function kitMaterial(old,mask,kit){
   m.onBeforeCompile=function(sh){for(var k in u)sh.uniforms[k]=u[k];
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+KIT_HEAD).replace('#include <map_fragment>','#include <map_fragment>\n'+KIT_FRAG);};
   m.customProgramCacheKey=function(){return 'bb-kit';};m.userData.ku=u;return m;}
-function loadGLB(u){return new Promise(function(res,rej){try{var g=new T3.GLTFLoader();g.setMeshoptDecoder(T3.MeshoptDecoder);g.load(u,res,undefined,rej);}catch(e){rej(e);}});}
-function loadTex(u){return new Promise(function(res,rej){new THREE.TextureLoader().load(u,function(t){t.colorSpace=THREE.NoColorSpace;t.flipY=false;t.generateMipmaps=false;t.minFilter=1006;t.magFilter=1006;res(t);},undefined,rej);});}
+function loadGLB(u){return new Promise(function(res,rej){try{var g=new T3.GLTFLoader();g.setMeshoptDecoder(T3.MeshoptDecoder);g.load(u+'?v='+ASSET_V,res,undefined,rej);}catch(e){rej(e);}});}
+function loadTex(u){return new Promise(function(res,rej){new THREE.TextureLoader().load(u+'?v='+ASSET_V,function(t){t.colorSpace=THREE.NoColorSpace;t.flipY=false;t.generateMipmaps=false;t.minFilter=1006;t.magFilter=1006;res(t);},undefined,rej);});}
 
 var CLIPS={},_qa=new Q4(),_qb=new Q4(),_qc=new Q4(),UPV=new V3(0,1,0),FWDV=new V3(0,0,1),_va=new V3(),_vb=new V3(),_vc=new V3();
 function quatYaw(q){_va.copy(FWDV).applyQuaternion(q);return Math.atan2(_va.x,_va.z);}
@@ -424,20 +433,28 @@ function prepClip(name,gltf,marks){var an=gltf.animations[0],rest={},restPos={};
     if(kind!=='quaternion')return;var n=tr.times.length,d=new Float32Array(n*4);_qc.copy(rest[bone]||new Q4()).invert();
     for(var j=0;j<n;j++){_qa.set(tr.values[j*4],tr.values[j*4+1],tr.values[j*4+2],tr.values[j*4+3]).multiply(_qc);d[j*4]=_qa.x;d[j*4+1]=_qa.y;d[j*4+2]=_qa.z;d[j*4+3]=_qa.w;}
     c.tr[bone]={t:tr.times,q:d};if(n){c.t0=Math.min(c.t0,tr.times[0]);c.t1=Math.max(c.t1,tr.times[n-1]);}});
+  c.bk=Object.keys(c.tr);c.bt=[];for(var bi=0;bi<c.bk.length;bi++)c.bt.push(c.tr[c.bk[bi]]);
   c.dur=Math.max(0.05,c.t1-c.t0);c.restHipY=restPos.Hips?restPos.Hips.y:99;
   var u=c.marks.contact!=null?c.marks.contact:0;c.yawRef=0;
   if(c.tr.Hips){sampleQ(c.tr.Hips,c.t0+u*c.dur,_qa);c.yawRef=quatYaw(_qa);}
   return c;}
-var _seg=[0,0,0];
+var _seg=new Float64Array(3); /* 0.5.0: arreglo de doubles, para no crear un numero suelto por muestra */
 function seg(t,arr){var n=arr.length;if(t<=arr[0]){_seg[0]=0;_seg[1]=0;_seg[2]=0;return _seg;}if(t>=arr[n-1]){_seg[0]=n-1;_seg[1]=n-1;_seg[2]=0;return _seg;}var lo=0,hi=n-1;while(hi-lo>1){var m=(lo+hi)>>1;if(arr[m]<=t)lo=m;else hi=m;}_seg[0]=lo;_seg[1]=hi;_seg[2]=(t-arr[lo])/(arr[hi]-arr[lo]);return _seg;}
-function sampleQ(tr,t,out){var s=seg(t,tr.t),q=tr.q,a=s[0]*4,b=s[1]*4,k=s[2];_qb.set(q[a],q[a+1],q[a+2],q[a+3]);out.set(q[b],q[b+1],q[b+2],q[b+3]);return out.copy(_qb.slerp(out,k));}
+/* 0.5.0: mezcla de giros propia, con el peso en un arreglo de doubles (_f[0]) y escritura directa en el quaternion de la pose: asi
+   Chrome no crea un numero suelto por hueso en cada muestra. Solo para quaternions de pose (sin avisos de cambio). */
+var _f=new Float64Array(2);
+function qMix4(o,ax,ay,az,aw,bx,by,bz,bw){var t=_f[0],c=ax*bx+ay*by+az*bz+aw*bw,s0,s1;if(c<0){c=-c;bx=-bx;by=-by;bz=-bz;bw=-bw;}
+  if(c>0.9995){s0=1-t;s1=t;}else{var th=Math.acos(c),sn=Math.sin(th);s0=Math.sin((1-t)*th)/sn;s1=Math.sin(t*th)/sn;}
+  var x=ax*s0+bx*s1,y=ay*s0+by*s1,z=az*s0+bz*s1,w=aw*s0+bw*s1,l=x*x+y*y+z*z+w*w;if(l>0){l=1/Math.sqrt(l);x*=l;y*=l;z*=l;w*=l;}o._x=x;o._y=y;o._z=z;o._w=w;return o;}
+function sampleQ(tr,t,out){var s=seg(t,tr.t),q=tr.q,a=s[0]*4,b=s[1]*4;_f[0]=s[2];return qMix4(out,q[a],q[a+1],q[a+2],q[a+3],q[b],q[b+1],q[b+2],q[b+3]);}
 function sampleHipY(c,t){if(!c.hip)return c.restHipY;var s=seg(t,c.hip.t),v=c.hip.v;return lerp(v[s[0]*3+1],v[s[1]*3+1],s[2]);}
-function clipPose(c,u,out){var t=c.t0+clamp(u,0,1)*c.dur;for(var b in c.tr){var q=out.q[b]||(out.q[b]=new Q4());sampleQ(c.tr[b],t,q);}
+function pq(o,k){var q=o.q[k];if(!q){q=o.q[k]=new Q4();o.k.push(k);}return q;}
+function clipPose(c,u,out){var t=c.t0+clamp(u,0,1)*c.dur,bk=c.bk,bt=c.bt;for(var i=0;i<bk.length;i++)sampleQ(bt[i],t,pq(out,bk[i]));
   if(out.q.Hips){_qa.setFromAxisAngle(UPV,-c.yawRef);out.q.Hips.premultiply(_qa);}
   out.hy=sampleHipY(c,t)/c.restHipY;return out;}
-function blendPose(a,b,w,out){out=out||a;if(w<=0){if(out!==a)copyPose(a,out);return out;}for(var k in b.q){var qa=a.q[k];if(!qa){continue;}var o=out.q[k]||(out.q[k]=new Q4());o.copy(qa).slerp(b.q[k],w);}out.hy=lerp(a.hy,b.hy,w);return out;}
-function copyPose(a,out){for(var k in a.q){(out.q[k]||(out.q[k]=new Q4())).copy(a.q[k]);}out.hy=a.hy;return out;}
-function newPose(){return {q:{},hy:1};}
+function blendPose(a,b,w,out){out=out||a;if(w<=0){if(out!==a)copyPose(a,out);return out;}var ks=b.k;for(var i=0;i<ks.length;i++){var k=ks[i],qa=a.q[k];if(!qa){continue;}var qb=b.q[k];_f[0]=w;qMix4(pq(out,k),qa._x,qa._y,qa._z,qa._w,qb._x,qb._y,qb._z,qb._w);}out.hy=lerp(a.hy,b.hy,w);return out;}
+function copyPose(a,out){var ks=a.k;for(var i=0;i<ks.length;i++){var k=ks[i];pq(out,k).copy(a.q[k]);}out.hy=a.hy;return out;}
+function newPose(){return {q:{},k:[],hy:1.0001};}
 
 /* un jugador: dos cuerpos (completo y liviano), pose y estado de juego */
 function Avatar(team,idx){this.root=new THREE.Group();this.v={};this.kind=null;this.bones=null;this.rest=null;this.hipRest=null;this.bl=[];this.pose=newPose();
@@ -451,7 +468,7 @@ Avatar.prototype.addBody=function(kind,body,mask,kit,maps){var o={body:body,bone
 Avatar.prototype.use=function(kind){var o=this.v[kind];if(!o||this.kind===kind)return;if(this.kind)this.root.remove(this.v[this.kind].body);
   this.root.add(o.body);this.kind=kind;this.bones=o.bones;this.rest=o.rest;this.hipRest=o.hipRest;this.bl=o.bl;};
 Avatar.prototype.shadow=function(on){for(var k in this.v){var ms=this.v[k].meshes;for(var i=0;i<ms.length;i++)ms[i].castShadow=!!on;}this.blob.visible=!on;};
-Avatar.prototype.apply=function(p){for(var k in p.q){var b=this.bones[k];if(!b)continue;b.quaternion.copy(p.q[k]).multiply(this.rest[k]);}
+Avatar.prototype.apply=function(p){var ks=p.k;for(var i=0;i<ks.length;i++){var k=ks[i],b=this.bones[k];if(!b)continue;b.quaternion.copy(p.q[k]).multiply(this.rest[k]);}
   this.bones.Hips.position.set(this.hipRest.x,this.hipRest.y*p.hy,this.hipRest.z);};
 Avatar.prototype.setKit=function(kit){for(var k in this.v){var ms=this.v[k].mats;for(var i=0;i<ms.length;i++){var u=ms[i].userData.ku;u.kJersey.value.set(kit.jersey);u.kShorts.value.set(kit.shorts);u.kTrim.value.set(kit.trim);}}};
 Avatar.prototype.handsMid=function(out){this.root.updateMatrixWorld(true);this.bones.LeftForeArm.getWorldPosition(_va);this.bones.RightForeArm.getWorldPosition(_vb);
@@ -468,8 +485,8 @@ function archBack(p){try{var tb=tG-p.act.tC,a=clamp((tb+0.22)/0.22,0,1)*clamp(1-
 /* ======================= REGLAS Y ESTADO ======================= */
 var DIFFS={
   easy:{choTS:0.4,winP:0.11,winG:0.26,magR:1.9,digR:1.4,attR:2.3,spikeTS:0.55,setTS:0.75,airTS:0.6,ai:{commit:0.6,dig:0.55,spd:4.2,react:0.34,skill:-0.10,srvT:1.75,spread:1.0,atDef:0.50,v0:12.5,v1:15.5,err:0.12,blkV:3.0,blkP:0.50,smart:0.30,jump:0,read:0}},
-  normal:{choTS:0.55,winP:0.085,winG:0.20,magR:1.5,digR:1.05,attR:1.8,spikeTS:0.75,setTS:0.9,airTS:1,ai:{commit:0.45,dig:0.43,spd:4.8,react:0.26,skill:0,srvT:1.5,spread:1.8,atDef:0.28,v0:16,v1:19,err:0.07,blkV:4.2,blkP:0.72,smart:0.55,jump:0.25,read:0.9}},
-  hard:{choTS:0.7,winP:0.065,winG:0.15,magR:1.2,digR:0.8,attR:1.4,spikeTS:1,setTS:1,airTS:1,ai:{commit:0.3,dig:0.66,spd:4.9,react:0.24,skill:0.04,srvT:1.3,spread:2.6,atDef:0.18,v0:18,v1:21,err:0.05,blkV:5.2,blkP:0.86,smart:0.65,jump:0.5,read:1.1}}};
+  normal:{choTS:1,winP:0.085,winG:0.20,magR:1.5,digR:1.05,attR:1.8,spikeTS:0.75,setTS:0.9,airTS:1,ai:{commit:0.45,dig:0.43,spd:4.8,react:0.26,skill:0,srvT:1.5,spread:1.8,atDef:0.28,v0:16,v1:19,err:0.07,blkV:4.2,blkP:0.72,smart:0.55,jump:0.25,read:0.9}},
+  hard:{choTS:1,winP:0.065,winG:0.15,magR:1.2,digR:0.8,attR:1.4,spikeTS:1,setTS:1,airTS:1,ai:{commit:0.3,dig:0.66,spd:4.9,react:0.24,skill:0.04,srvT:1.3,spread:2.6,atDef:0.18,v0:18,v1:21,err:0.05,blkV:5.2,blkP:0.86,smart:0.65,jump:0.5,read:1.1}}};
 var D=DIFFS.easy,ASSIST=false;
 var HC=0.75,H_SET=2.0,H_SPIKE=3.05,TAKE=0.33,BLK_LEAD=0.28,USER_V=5.8,MATE_V=5.6,MAG_T=0.45,BW=0.62,WIN_PTS=15,REC_LEAD=0.12,HIT_LEAD=0.05;
 /* ---------- 6x6: sistema 5-1 con libero, tomado del Playbook de Vaqueros (playvaqueros) ----------
@@ -903,6 +920,7 @@ function setGoals(){if(!R)return;var lus=[LU(0),LU(1)];
     if(p.task){p.gx=p.task.x;p.gz=p.task.z;continue;}
     var calm=G.phase==='pre'||G.phase==='dead'||G.phase==='menu';p.maxV=calm?6.5:(t===0?MATE_V:D.ai.spd);
     try{var g=goalOf(p,t,R.mode[t],lus[t]);if(g){p.gx=g.x;p.gz=g.z;}}catch(e){if(window.console)console.error(e);}}}
+var YAW_MAX=7.85; /* 0.5.0: el cuerpo gira a 450 grados por segundo como maximo */
 function stepPlayer(p,dt){var dvx=0,dvz=0,snap=false;
   if(p.glide){var tl=p.glide.t-tG;if(tl<=0.004){p.glide=null;}else{dvx=(p.glide.x-p.x)/tl;dvz=(p.glide.z-p.z)/tl;var gs=hyp(dvx,dvz),gm=p.glide.v||8.5;if(gs>gm){dvx*=gm/gs;dvz*=gm/gs;}snap=true;}}
   else if(tG<p.lock){}
@@ -913,18 +931,42 @@ function stepPlayer(p,dt){var dvx=0,dvz=0,snap=false;
   /* el central que controlas no se mete dentro de su punta: queda hombro con hombro, del lado de la diagonal */
   if(R&&R.blkU&&R.blkU.pl===p&&R.blkU.wing&&p.z<1.5){var wq=R.blkU.wing,cq=-sgn(wq.x||1);if((p.x-wq.pl.x)*cq<0.8&&Math.abs(wq.pl.x-wq.x)<0.5)p.x=wq.pl.x+cq*0.8;}
   p.dist+=hyp(p.vx,p.vz)*dt;
-  if(G.phase!=='dead'){var yt=(p.fy!=null&&tG<p.fyT)?p.fy:((p.fn>tG||G.phase==='pre'||G.phase==='menu')?(p.s>0?Math.PI:0):Math.atan2(ball.position.x-p.x,ball.position.z-p.z));
+  if(G.phase!=='dead'){var srvS=(G.phase==='windup'||(G.phase==='live'&&R&&R.F&&R.F.kind==='serve'&&ball.position.z*p.s>0))&&p.team===G.serving;
+    var yt=(p.fy!=null&&tG<p.fyT)?p.fy:((p.fn>tG||srvS||G.phase==='pre'||G.phase==='menu')?(p.s>0?Math.PI:0):Math.atan2(ball.position.x-p.x,ball.position.z-p.z));
+    /* entre puntos, el que va lejos (a la zona de saque, a su puesto) va de frente a donde camina y se vira a la malla al llegar */
+    if(G.phase==='pre'&&!(p.fn>tG)&&hyp(p.gx-p.x,p.gz-p.z)>1.2&&hyp(p.vx,p.vz)>0.8)yt=Math.atan2(p.vx,p.vz);
     /* en linea el equipo de enfrente mira hacia donde mira en el telefono del rival */
-    if(NET.on&&p.team===1&&p.ny!=null)yt=p.ny;p.yaw+=wrapPi(yt-p.yaw)*Math.min(1,dt*9);}
+    if(NET.on&&p.team===1&&p.ny!=null)yt=p.ny;var dyw=wrapPi(yt-p.yaw)*Math.min(1,dt*9),cyw=YAW_MAX*dt;p.yaw+=clamp(dyw,-cyw,cyw);}
   p.root.position.set(p.x,p.air,p.z);p.root.rotation.y=p.yaw;}
 
 /* ======================= ANIMACION ======================= */
-var poseIdle=newPose(),poseMove=newPose(),poseMoveF=newPose(),poseG=newPose(),poseTmp=newPose(),tAll=0;
+var poseIdle=newPose(),poseMove=newPose(),poseMoveF=newPose(),poseG=newPose(),poseTmp=newPose(),poseRun=newPose(),tAll=0;
+/* 0.4.2: fuera de la malla el jugador se desplaza con los clips de campo (brazos abajo) y corre de frente con el clip de carrera. Los
+   clips de desplazamiento del bloqueador (manos arriba) quedan solo para los delanteros en la malla cuando el rival ataca. Cada clip se
+   corta en tramos de una sola direccion (segundos, los de VOLEII Action) y la direccion y la zancada de cada tramo se miden al cargar. */
+var poseEsp=null,poseEspD=null;
+var MV=null,MV_SEG={desplaza_def_lateral:[[0.55,1.90],[2.30,4.00]],desplaza_def_frente_atras:[[0.05,1.70],[1.95,4.30]],carrera_salto_corto:[[1.36,1.78]]};
+function hipAt(c,t,out){var s=seg(t,c.hip.t),v=c.hip.v,a=s[0]*3,b=s[1]*3,k=s[2];out.set(lerp(v[a],v[b],k),0,lerp(v[a+2],v[b+2],k));return out;}
+function moveSegs(c,list){var out=[];for(var i=0;i<list.length;i++){var s0=list[i][0],s1=list[i][1];hipAt(c,s0,_va);hipAt(c,s1,_vb);_vb.sub(_va);
+    var cy=Math.cos(-c.yawRef),sy=Math.sin(-c.yawRef),dx=_vb.x*cy+_vb.z*sy,dz=-_vb.x*sy+_vb.z*cy,k=0.99/c.restHipY;
+    out.push({a0:(s0-c.t0)/c.dur,a1:(s1-c.t0)/c.dur,dx:dx*k,dz:dz*k,len:Math.max(0.3,hyp(dx,dz)*k)});}return out;}
+function mvBuild(){try{var a=CLIPS.desplaza_def_lateral,b=CLIPS.desplaza_def_frente_atras,r=CLIPS.carrera_salto_corto;if(!a||!b||!a.hip||!b.hip)return;
+  var m={cS:a,cF:b,cR:(r&&r.hip)?r:null,side:moveSegs(a,MV_SEG.desplaza_def_lateral),fb:moveSegs(b,MV_SEG.desplaza_def_frente_atras),run:null};
+  if(m.cR)m.run=moveSegs(r,MV_SEG.carrera_salto_corto)[0];
+  if(m.side[0].dx*m.side[1].dx>=0||m.fb[0].dz*m.fb[1].dz>=0)return;MV=m;}catch(e){MV=null;}}
+function mvPick(list,v,ax){var s=list[0];return ((ax?s.dz:s.dx)>=0)===(v>=0)?s:list[1];}
+function mvPh(d,len){return ((d/len)%1+1)%1;}
 function animate(p){var spd=hyp(p.vx,p.vz);
-  if(p.low){clipPose(CLIPS.espera_defensa,0.25,poseIdle);poseIdle.hy=Math.min(poseIdle.hy,1);}
-  else clipPose(CLIPS.espera,0.06+0.44*(0.5-0.5*Math.cos(tAll*0.45+p.seed)),poseIdle);
+  /* 0.5.0: las dos esperas son un cuadro fijo; se calculan una vez y se copian */
+  if(!poseEsp){poseEsp=clipPose(CLIPS.espera,0.55,newPose());poseEspD=clipPose(CLIPS.espera_defensa,0.25,newPose());poseEspD.hy=Math.min(poseEspD.hy,1);}
+  copyPose(p.low?poseEspD:poseEsp,poseIdle);
   poseIdle.hy+=Math.sin(tAll*1.65+p.seed)*0.002;
-  if(spd>0.05){var fy=p.yaw,lf=p.vx*Math.cos(fy)-p.vz*Math.sin(fy),lfw=p.vx*Math.sin(fy)+p.vz*Math.cos(fy);
+  if(spd>0.05&&MV&&!p.netc){var fy0=p.yaw,l0=p.vx*Math.cos(fy0)-p.vz*Math.sin(fy0),f0=p.vx*Math.sin(fy0)+p.vz*Math.cos(fy0);
+    var sS=mvPick(MV.side,l0,0),sF=mvPick(MV.fb,f0,1);clipPose(MV.cS,sS.a0+(sS.a1-sS.a0)*mvPh(p.dist,sS.len),poseMove);clipPose(MV.cF,sF.a0+(sF.a1-sF.a0)*mvPh(p.dist,sF.len),poseMoveF);
+    blendPose(poseMoveF,poseMove,Math.abs(l0)/(Math.abs(l0)+Math.abs(f0)+1e-6),poseG);
+    if(MV.run&&f0>0){var rw=clamp((spd-1.6)/0.6,0,1)*clamp((f0/spd-0.6)/0.25,0,1);if(rw>0){clipPose(MV.cR,MV.run.a0+(MV.run.a1-MV.run.a0)*mvPh(p.dist,MV.run.len),poseRun);blendPose(poseG,poseRun,rw,poseG);}}
+    blendPose(poseIdle,poseG,clamp(spd/1.1,0,1)*0.9,p.pose);}
+  else if(spd>0.05){var fy=p.yaw,lf=p.vx*Math.cos(fy)-p.vz*Math.sin(fy),lfw=p.vx*Math.sin(fy)+p.vz*Math.cos(fy);
     var cl=CLIPS.desplaza_lateral,a0=lf>=0?0.03:0.36,a1=lf>=0?0.30:0.76,segLen=(lf>=0?1.30:1.95);
     var ph=((p.dist/segLen)%1+1)%1;clipPose(cl,a0+(a1-a0)*ph,poseMove);
     var cf=CLIPS.desplaza_frente_atras,b0=lfw>=0?0.12:0.55,b1=lfw>=0?0.45:0.90;clipPose(cf,b0+(b1-b0)*ph,poseMoveF);
@@ -936,7 +978,22 @@ function animate(p){var spd=hyp(p.vx,p.vz);
     if(w>0){clipPose(c,u,poseTmp);blendPose(p.pose,poseTmp,w,p.pose);
       if(A.boost&&c.marks.takeoff!=null){var f=(u-c.marks.takeoff)/(c.marks.landing-c.marks.takeoff);if(f>0&&f<1)p.air=A.boost*4*f*(1-f)*w;}}
     if(tl>A.tail+A.fout)p.act=null;}
-  p.apply(p.pose);if(p.act&&p.act.back)archBack(p);}
+  p.apply(p.pose);if(p.act&&p.act.back)archBack(p);vida(p,spd);}
+/* 0.5.0 vida: respiracion cuando esta quieto, la cabeza sigue al balon y un saltito (split-step) de los zagueros justo antes del golpe
+   rival. Solo se ve: no cambia posiciones, tiempos ni manos del juego (las manos se leen antes de girar la cabeza: es otra cadena). */
+var _lx=new V3(),_ly=new V3(0,1,0);
+function rotW(b,ax,ang){if(!b||!b.parent)return;b.parent.updateWorldMatrix(true,false);b.parent.getWorldQuaternion(_qw);_qi.copy(_qw).invert();_qr.setFromAxisAngle(ax,ang);b.quaternion.premultiply(_qw).premultiply(_qr).premultiply(_qi);}
+function vida(p,spd){try{if(!G||G.phase==='menu'||REP.on)return;var B=p.bones,busy=p.act?1:0;
+  _lx.set(Math.cos(p.yaw),0,-Math.sin(p.yaw));
+  /* respiracion */
+  var wq=(1-busy)*clamp(1-spd/0.5,0,1);if(wq>0.02){var x=Math.sin(tAll*1.65+p.seed),a=0.012*x*wq;rotW(B.Spine01,_lx,-a);rotW(B.Spine02,_lx,-a);}
+  /* la cabeza sigue al balon (no en celebraciones ni dentro de un gesto) */
+  var ty=0,tp=0;if(G.phase!=='dead'&&G.phase!=='end'&&!busy){var dx=ball.position.x-p.x,dz=ball.position.z-p.z,dh=hyp(dx,dz);ty=clamp(wrapPi(Math.atan2(dx,dz)-p.yaw),-1.15,1.15);tp=clamp(Math.atan2(ball.position.y-1.65,Math.max(0.6,dh)),-0.3,0.6);}
+  if(p.lky==null){p.lky=0;p.lkp=0;}var k=Math.min(1,0.14);p.lky+=(ty-p.lky)*k;p.lkp+=(tp-p.lkp)*k;
+  if(Math.abs(p.lky)>0.02||Math.abs(p.lkp)>0.02){rotW(B.neck,_ly,p.lky*0.45);rotW(B.Head,_ly,p.lky*0.55);rotW(B.neck,_lx,-p.lkp*0.4);rotW(B.Head,_lx,-p.lkp*0.6);}
+  /* split-step: zagueros en espera baja, de 0.26 a 0.02 s antes del golpe rival */
+  var n=R&&R.next,F=R&&R.F;if(G.phase==='live'&&n&&F&&n.type==='hit'&&n.pl&&n.pl.team!==p.team&&p.low&&!busy&&p.air<0.01){var lf=n.t-F.t;if(lf<0.26&&lf>0.02)p.root.position.y+=0.055*Math.sin(Math.PI*(0.26-lf)/0.24);}
+  }catch(e){}}
 
 /* ======================= BUCLE DE JUEGO ======================= */
 var tmpV=new V3(),tmpV2=new V3();
@@ -1018,9 +1075,15 @@ function ballUpdate(dt){var F=R&&R.F;
   if(!F)return;fPos(F,Math.min(F.t,F.tF),ball.position);
   var n=R.next;if(n&&n.pl&&G.phase==='live'){var left=n.t-F.t;if(left<0.09&&left>=0){var pl=n.pl;
     if(n.type==='hit')pl.handR(tmpV);else if(n.type==='set')pl.handsTop(tmpV);else pl.handsMid(tmpV);
+    if(DBG){if(DBG.cur!==n){if(DBG.cur)DBG.ev[DBG.n++]={type:DBG.ct,d:DBG.cd};DBG.cur=n;}DBG.ct=n.type;DBG.cd=tmpV.distanceTo(ball.position);}
     if(tmpV.distanceTo(ball.position)<0.95&&(n.team===1?n.ok!==false:true))ball.position.lerp(tmpV,1-left/0.09);}}
   if(ball.position.y<BALL_R)ball.position.y=BALL_R;
-  var sp=F.kind==='spike'?16:(F.kind==='dead'?3:7);ball.rotation.x+=dt*sp;ball.rotation.z+=dt*sp*0.4;}
+  /* 0.5.0: giro segun el golpe, alrededor del eje que cruza la trayectoria (positivo = hacia adelante): remate y saque en salto giran
+     hacia adelante, el flotante casi no gira, la colocacion y el pase giran despacio hacia atras */
+  try{var sp=F.kind==='spike'?24:(F.kind==='serve'?((R.srv&&R.srv.type==='jump')?20:0.7):(F.kind==='tip'?6:(F.kind==='set'?-4:(F.kind==='dead'?3:(F.kind==='stuff'||F.kind==='blockback'?10:-5)))));
+    var bdx=ball.position.x-_bpx,bdz=ball.position.z-_bpz,bl=hyp(bdx,bdz);_bpx=ball.position.x;_bpz=ball.position.z;
+    if(bl>1e-4&&bl<2){_va.set(bdz/bl,0,-bdx/bl);ball.rotateOnWorldAxis(_va,dt*sp);}}catch(e){}}
+var _bpx=0,_bpz=0;
 
 function timingTarget(){if(!G||!R)return null;
   if(G.phase==='windup'&&G.serving===0&&R.srv.press==null)return R.srv.tC-REC_LEAD;
@@ -1093,7 +1156,7 @@ function step(dt,rdt){if(REP.on){tAll+=rdt;repStep(rdt);return;}
   if(G.phase==='end'||REP.on)return;
   setGoals();
   var live=G.phase==='live'||G.phase==='windup';
-  for(var i=0;i<ALL.length;i++){var p=ALL[i];p.low=live&&R.mode[p.team]!=='att'&&R.mode[p.team]!=='serve'&&Math.abs(p.z)>1.3;stepPlayer(p,dt);animate(p);if(p.blob.visible)p.blob.position.set(p.x,0.02,p.z);}
+  for(var i=0;i<ALL.length;i++){var p=ALL[i];p.low=live&&R.mode[p.team]!=='att'&&R.mode[p.team]!=='serve'&&Math.abs(p.z)>1.3;p.netc=live&&R.mode[p.team]==='def'&&Math.abs(p.z)<=1.6;stepPlayer(p,dt);animate(p);if(p.blob.visible)p.blob.position.set(p.x,0.02,p.z);}
   ballUpdate(dt);marks(dt);
   if(!BOT.sim&&!NET.on&&(G.phase==='live'||(G.phase==='dead'&&G.tPh<0.3)))recFrame();
   if(NET.on)nTick(rdt);}
@@ -1362,8 +1425,8 @@ function ctxNow(){if(!G||!R||!G.sc)return 'wait';if(G.phase==='pre')return G.ser
 var CTXT={
   srv0:{b:['Sacar','Serve'],h:['Mueve la mira con el control izquierdo y toca Sacar','Move the target with the left stick and tap Serve']},
   srv1:{b:['Golpear','Hit'],h:['Toca otra vez cuando los aros se junten','Tap again when the rings meet']},
-  cho:{b:['Segunda','Dump'],h:['Escoge a quién colocar: empuja el control hacia la flecha de su burbuja o tócala. Sin escoger, sale bola alta a Z4','Choose who to set: push the stick toward the arrow on a bubble, or tap it. With no call it is a high ball to Z4']},
-  cho2:{b:['',''],h:['Escoge a quién colocar: empuja el control hacia la flecha de su burbuja o tócala. Sin escoger, sale bola alta a Z4','Choose who to set: push the stick toward the arrow on a bubble, or tap it. With no call it is a high ball to Z4'],off:true},
+  cho:{b:['Segunda','Dump'],h:['Escoge a quién colocar: empuja el control hacia la flecha de su atacante. Sin escoger, sale bola alta a Z4','Choose who to set: push the stick toward the arrow on your hitter. With no call it is a high ball to Z4']},
+  cho2:{b:['',''],h:['Escoge a quién colocar: empuja el control hacia la flecha de su atacante. Sin escoger, sale bola alta a Z4','Choose who to set: push the stick toward the arrow on your hitter. With no call it is a high ball to Z4'],off:true},
   cho3:{b:['Atacar','Attack'],h:['Tu colocador tomó el primer toque. Punta zaguero: empuja el control para acomodar o toca Atacar para rematar de segunda','Your setter took the first ball. Back-row outside: push the stick to set, or tap Attack to hit on two']},
   att:{b:['Saltar','Jump'],h:['Tu atacante corre solo: apunta con el control y toca Saltar cuando el aro se cierre','Your hitter runs by himself: aim with the stick and tap Jump when the ring closes']},
   aim:{b:['Rematar','Spike'],h:['Toca Rematar en lo más alto del salto','Tap Spike at the top of the jump']},
@@ -1423,12 +1486,10 @@ function hideBubbles(){try{$('bub').innerHTML='';}catch(e){}bubEls=[];}
 function nbText(o){return o.nb===0?L('libre','open'):(o.nb===1?L('1 bloqueo','1 blocker'):L('bloqueo doble','double block'));}
 function showBubbles(opts){try{hideBubbles();if(BOT.sim||opts.length<2)return;var box=$('bub');
   opts.forEach(function(o,i){var d=document.createElement('div'),a=ATK[o.kind];d.className='bb up';
-    d.innerHTML='<span class="ar">'+DARR[o.key]+'</span> '+L(a.es,a.en)+'<small class="'+(o.nb===0?'ok':(o.nb===1?'md':'no'))+'">'+codeOf(o.pl)+(NET.on?'':' · '+nbText(o))+'</small>';
-    d.addEventListener('pointerdown',function(ev){try{ev.stopPropagation();if(ev.cancelable)ev.preventDefault();confirmChoice(i);}catch(e){}});
+    d.innerHTML='<span class="ar">'+DARR[o.key]+'</span> '+L(a.es,a.en)+(NET.on?'':'<small class="'+(o.nb===0?'ok':(o.nb===1?'md':'no'))+'">'+nbText(o)+'</small>');
     box.appendChild(d);bubEls.push({el:d,o:o});});
   var sg=R.choose&&R.choose.seg;if(sg&&sg.k==='at2'){var d2=document.createElement('div');d2.className='bb up';
     d2.innerHTML=L('Atacar de segunda','Attack on two')+'<small class="ok">'+codeOf(sg.pl)+' · '+L('botón Atacar','Attack button')+'</small>';
-    d2.addEventListener('pointerdown',function(ev){try{ev.stopPropagation();if(ev.cancelable)ev.preventDefault();actionPress();}catch(e){}});
     box.appendChild(d2);bubEls.push({el:d2,o:sg});}}catch(e){}}
 function markBubble(i){try{for(var k=0;k<bubEls.length;k++)bubEls[k].el.className='bb up'+(k===i?' sel':'');}catch(e){}}
 function bubblesFrame(){try{if(!bubEls.length)return;for(var i=0;i<bubEls.length;i++){var b=bubEls[i],o=b.o;
@@ -1486,7 +1547,7 @@ function menu(){if(NET.on||NET.tx)nLeave(false);REP.on=false;REP.arm=false;TUT.o
   if(RECORDS_ON)vqTop(function(d){try{var e=$('topm');if(e)e.innerHTML=topHTML(d);}catch(e2){}});}
 function pauseCard(){if(!G||G.phase==='menu'||G.phase==='end')return;if(NET.on){nPauseCard();return;}paused=true;joy=null;JX=0;JZ=0;joyRest();
   ov.innerHTML='<div class="card" style="max-width:380px;text-align:center"><h2>'+L('Pausa','Paused')+'</h2><p class="sub">'+CFG.team+' '+G.sc[0]+' : '+G.sc[1]+' '+L('Rival','Rival')+'</p>'+
-  '<p class="sub">'+(fpsV?fpsV+L(' cuadros por segundo · calidad ',' frames per second · quality ')+(QMAX-qStep)+'/'+QMAX:'')+'</p><button class="btn" id="pSeg" type="button">'+L('Seguir','Resume')+'</button><button class="btn b2" id="pMenu" type="button">'+L('Salir al menú','Quit to menu')+'</button></div>';ov.style.display='flex';
+  '<p class="sub">'+(fpsV?fpsV+L(' cuadros por segundo · calidad ',' frames per second · quality ')+(QMAX-qI)+'/'+QMAX:'')+'</p><button class="btn" id="pSeg" type="button">'+L('Seguir','Resume')+'</button><button class="btn b2" id="pMenu" type="button">'+L('Salir al menú','Quit to menu')+'</button></div>';ov.style.display='flex';
   tap($('pSeg'),function(ev){ov.style.display='none';paused=false;last=performance.now();musStart();});
   tap($('pMenu'),function(ev){paused=false;menu();});}
 function matchScore(){var lv={easy:1,normal:2,hard:3}[PREF.diff]||1,u=G.sc[0],t=G.sc[1];return lv*(u*10+Math.max(u-t,0)*5+(u>t?100:0));}
@@ -1561,17 +1622,46 @@ cv.addEventListener('webglcontextlost',function(ev){try{ev.preventDefault();paus
   ov.innerHTML='<div class="card" style="max-width:380px;text-align:center"><h2>'+L('Se pausó el juego','Game paused')+'</h2><p>'+L('El celular cerró los gráficos. Toca para volver a cargar.','Your phone closed the graphics. Tap to reload.')+'</p><button class="btn" id="rel" type="button">'+L('Volver a cargar','Reload')+'</button></div>';ov.style.display='flex';
   tap($('rel'),function(){try{location.reload();}catch(e){}});}catch(e){}},false);
 /* ======================= CUADRO ======================= */
-var last=performance.now(),fAcc=0,fN=0,qStep=0,HOLD=false,NOREND=false,FPS_ON=false,fpsV=0;
+var last=performance.now(),fAcc=0,fN=0,qStep=0,HOLD=false,NOREND=false,FPS_ON=false,fpsV=0,DBG=null;
 try{FPS_ON=new URLSearchParams(location.search).get('fps')==='1';}catch(e){}
-/* calidad automatica: primero el rival pasa a cuerpos livianos con sombra simple, despues baja la resolucion y al final se apagan las sombras */
-var QMAX=4;
+/* ?robot=1: el juego arranca detenido para que el guion fijo del robot (pruebas/bb6/robot.py) parta siempre del mismo estado */
+try{if(new URLSearchParams(location.search).get('robot')==='1')HOLD=true;}catch(e){}
+/* calidad automatica en escalones (0.4.0, sube y baja): primero el rival pasa a cuerpos livianos con sombra simple, despues baja la
+   resolucion por pasos y al final todos livianos sin sombras. Si el telefono vuelve a tener margen, sube un escalon y prueba; si no
+   aguanta, vuelve a bajar y espera el doble antes de probar otra vez. */
+var QMAX=6,QL=[[0,1],[1,1],[1,0.85],[1,0.72],[1,0.6],[1,0.5],[4,0.5]],QLV=null,qI=0,qGood=0,qWait=8,qProbe=0,fMin=99,QLOCK=false;
 function applyQ(){try{for(var i=0;i<ALL.length;i++){var p=ALL[i],far=p.team===1,lt=qStep>=4||(far&&qStep>=1),sh=qStep<4&&!(far&&qStep>=1);p.use(lt?'light':'full');p.shadow(sh);}
   var on=qStep<4;if(sun.castShadow!==on){sun.castShadow=on;renderer.shadowMap.enabled=on;ball.castShadow=on;scene.traverse(function(o){if(o.isMesh&&o.material&&o.receiveShadow)o.material.needsUpdate=true;});}}catch(e){}}
-function quality(ms){fAcc+=ms;fN++;if(fN<90)return;var avg=fAcc/fN;fAcc=0;fN=0;fpsV=Math.round(1000/avg);if(FPS_ON){var fe=$('fps');fe.style.display='block';fe.textContent=fpsV+' fps · '+L('calidad ','quality ')+(QMAX-qStep)+'/'+QMAX+' · '+renderer.info.render.triangles+' tri';}
-  if(avg>27&&qStep<QMAX){qStep++;if(qStep===2)PR=Math.min(PR,1.5);else if(qStep===3)PR=1;applyQ();renderer.setPixelRatio(PR);renderer.setSize(appW,appH,true);}}
-function frame(now){var rdt=Math.min(0.05,(now-last)/1000);last=now;
-  try{if(ready&&!paused&&!HOLD){if(freezeT>0){freezeT-=rdt;camUpdate(rdt,false);}else{keysToJoy();if(TUT.hold){if(TUT.hold==='cho'&&(Math.abs(JX)>0.35||Math.abs(JZ)>0.35))tutRelease();}else tutCheck();
-      if(TUT.hold){tAll+=rdt;hudFrame(rdt);}else{TS+=(tsGoal-TS)*Math.min(1,rdt*14);step(rdt*TS,rdt);camUpdate(rdt,false);hudFrame(rdt);}}crowdFrame(rdt);if(rdt<0.05)quality(rdt*1000);}
+function qBuild(){try{QLV=[];var lo=Math.min(1,PRMAX);for(var i=0;i<QL.length;i++){var pr=Math.max(lo,Math.round(PRMAX*QL[i][1]*100)/100),l=QLV[QLV.length-1];if(l&&l.b===QL[i][0]&&l.pr===pr)continue;QLV.push({b:QL[i][0],pr:pr});}QMAX=QLV.length-1;}catch(e){QLV=[{b:0,pr:PR}];QMAX=0;}}
+function qSet(i){try{if(!QLV)qBuild();i=clamp(i,0,QMAX);if(i===qI)return;qI=i;var l=QLV[i];if(l.b!==qStep){qStep=l.b;applyQ();}
+  if(l.pr!==PR){PR=l.pr;renderer.setPixelRatio(PR);renderer.setSize(appW,appH,true);}try{localStorage.setItem('bb6_q',String(qI));}catch(e2){}}catch(e){}}
+function quality(ms){fAcc+=ms;fN++;if(ms<fMin)fMin=ms;if(fN<60)return;var avg=fAcc/fN,mn=fMin;fAcc=0;fN=0;fMin=99;fpsV=Math.round(1000/avg);if(!QLV)qBuild();
+  if(FPS_ON){var fe=$('fps');fe.style.display='block';fe.textContent=fpsV+' fps · '+L('calidad ','quality ')+(QMAX-qI)+'/'+QMAX+' · '+renderer.info.render.triangles+' tri';}
+  if(QLOCK)return;
+  /* tope de 30 cuadros del sistema (modo de bajo consumo): ningun cuadro sale rapido y bajar la calidad no ayuda */
+  if(avg>31.5&&avg<35.5&&mn>29){qGood=0;return;}
+  if(avg>19){qSet(qI+(avg>27?2:1));qGood=0;if(qProbe>0){qWait=Math.min(120,qWait*2);qProbe=0;}return;}
+  if(qProbe>0)qProbe--;
+  if(avg<17.4){qGood+=avg*0.06;if(qGood>=qWait&&qI>0){qSet(qI-1);qGood=0;qProbe=3;}}else qGood=0;}
+/* paso fijo (0.4.0): el juego avanza siempre en pasos de 1/60 s, igual en cualquier telefono. Si el cuadro cae justo en 1, 2 o 3 pasos
+   se dibuja el estado al dia; si no, se acumula el tiempo y se dibuja mezclando el paso anterior con el actual. */
+var H60=1/60,ACC=0,IPL=[],ipOn=false,hudDt=0,TKN=0;
+/* modo: 'pq' posicion y giro completo (camara), 'py' posicion y solo el giro en Y (jugadores: el juego escribe rotation.y y los otros
+   dos ejes tienen que quedar en 0), 'p' solo posicion (balon y marcas del piso) */
+function ipAdd(o,lim,modo){IPL.push({o:o,m:modo||'p',pp:new V3(),pq:new Q4(),cp:new V3(),cq:new Q4(),py:0,cy:0,lim:lim*lim});}
+function ipSave(){for(var i=0;i<IPL.length;i++){var e=IPL[i];e.pp.copy(e.o.position);if(e.m==='pq')e.pq.copy(e.o.quaternion);else if(e.m==='py')e.py=e.o.rotation.y;}}
+function ipRestore(){if(!ipOn)return;for(var i=0;i<IPL.length;i++){var e=IPL[i];e.o.position.copy(e.cp);if(e.m==='pq')e.o.quaternion.copy(e.cq);else if(e.m==='py')e.o.rotation.y=e.cy;}ipOn=false;}
+function ipBlend(a){for(var i=0;i<IPL.length;i++){var e=IPL[i];e.cp.copy(e.o.position);if(e.m==='pq')e.cq.copy(e.o.quaternion);else if(e.m==='py')e.cy=e.o.rotation.y;
+    if(e.cp.distanceToSquared(e.pp)>e.lim)continue;e.o.position.lerpVectors(e.pp,e.cp,a);
+    if(e.m==='pq')e.o.quaternion.copy(e.pq).slerp(e.cq,a);else if(e.m==='py')e.o.rotation.y=e.py+wrapPi(e.cy-e.py)*a;}ipOn=true;}
+function tick(rdt){TKN++;if(freezeT>0){freezeT-=rdt;camUpdate(rdt,false);return;}
+  keysToJoy();if(TUT.hold){if(TUT.hold==='cho'&&(Math.abs(JX)>0.35||Math.abs(JZ)>0.35))tutRelease();}else tutCheck();
+  if(TUT.hold){tAll+=rdt;hudDt+=rdt;}else{TS+=(tsGoal-TS)*Math.min(1,rdt*14);step(rdt*TS,rdt);camUpdate(rdt,false);hudDt+=rdt;}}
+function frame(now){var rdt=Math.min(0.1,Math.max(0,(now-last)/1000));last=now;
+  try{if(ready&&!paused&&!HOLD){ipRestore();var n=Math.round(rdt/H60),al=1;
+      if(!(n>=1&&n<=3&&Math.abs(rdt-n*H60)<0.0025)){ACC+=rdt;n=Math.floor(ACC/H60+1e-6);ACC-=n*H60;if(n>4){n=4;ACC=0;}if(ACC<0)ACC=0;al=ACC/H60;}
+      for(var i=0;i<n;i++){ipSave();tick(H60);}
+      if(hudDt>0){hudFrame(hudDt);hudDt=0;}crowdFrame(rdt);if(al<0.999)ipBlend(al);if(rdt<0.05)quality(rdt*1000);}
     if(!NOREND)renderer.render(scene,camera);}catch(e){if(window.console)console.error(e);}
   requestAnimationFrame(frame);}
 
@@ -1580,6 +1670,7 @@ var B3='/juegos/bareboru/3d/',B6='/juegos/bareboru6/3d/';
 var CLIP_LIST={espera:{},espera_defensa:{},desplaza_lateral:{},desplaza_frente_atras:{},recibo_frente:{contact:0.4589},recibo_izq:{contact:0.5706},recibo_der:{contact:0.4654},
   plancha_frente:{contact:0.3964},defensa_rodilla:{contact:0.4776},voleo_frente:{contact:0.7179},devolucion:{contact:0.4507},
   ataque:{takeoff:0.5874,landing:0.7273,contact:0.6573},bloqueo_frente:{takeoff:0.5812,landing:0.7749,contact:0.6702},
+  desplaza_def_lateral:{b6:1},desplaza_def_frente_atras:{b6:1},carrera_salto_corto:{b6:1},
   saque_flotante:{contact:0.4983},saque_salto:{takeoff:0.6176,landing:0.739,contact:0.6875},celebra_1:{},celebra_2:{},lamenta_1:{},
   bloqueo_izq:{takeoff:0.7169,landing:0.8382,contact:0.75},bloqueo_der:{takeoff:0.5363,landing:0.7039,contact:0.6201},voleo_izq:{contact:0.5812},voleo_der:{contact:0.3},
   plancha_izq:{contact:0.3348},plancha_der:{contact:0.3012},celebra_3:{},lamenta_2:{},ataque_corto:{takeoff:0.4555,landing:0.6545,contact:0.5602,b6:1}};
@@ -1591,16 +1682,20 @@ function cargar(){var jobs=[],done=0,total=0,SRC={};
   return Promise.all(jobs).then(function(){var BODY=['j3','j5','j7','j7','j5','j3'];
     for(var t=0;t<2;t++)for(var i=0;i<6;i++){var s=SRC[BODY[i]],kit=t===0?CFG.kitUs:CFG.kitRival,a=new Avatar(t,i);
       a.addBody('full',T3.cloneSkinned(s.full),s.mask,kit,s.mat);a.addBody('light',T3.cloneSkinned(s.light),s.mask,kit,s.mat);a.use('full');TEAM[t].pl[i]=a;}});}
-var PRMAX=Math.min(window.devicePixelRatio||1,2);PR=PRMAX;
+var PRMAX=Math.min(window.devicePixelRatio||1,2);PR=PRMAX;qBuild();
 hudStatic();size();requestAnimationFrame(frame);
-cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ();$('load').style.display='none';
+cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ();mvBuild();
+  try{ipAdd(camera,6,'pq');ipAdd(ball,2.5,'p');ipAdd(ballShadow,2.5,'p');ipAdd(ctrlRing,1.2,'p');for(var qi=0;qi<ALL.length;qi++){ipAdd(ALL[qi].root,1.2,'py');ipAdd(ALL[qi].blob,1.2,'p');}
+    var q0=parseInt(localStorage.getItem('bb6_q'),10);if(q0>0&&q0<=QMAX)qSet(q0);}catch(e){}$('load').style.display='none';
   G={phase:'menu',tPh:0,serving:0};R={mode:['def','def'],F:null,next:null};setGoals();
   for(var i=0;i<ALL.length;i++){var p=ALL[i];p.x=p.gx;p.z=p.gz;p.fn=0;}
   ball.position.set(0.6,BALL_R,3.2);ready=true;menu();window.BB_READY=true;
 },function(e){if(window.console)console.error(e);$('load').textContent=L('No se pudo cargar el juego. Revisa tu conexión y ábrelo otra vez.','Could not load the game. Check your connection and open it again.');});
 
 /* ganchos de prueba (robot que juega solo, para medir rallies y balance) */
-window.BB={version:APP_VERSION,render:function(v){NOREND=!v;},net:NET,nLobby:function(){nLobby();},nCreate:function(c){nCreate(c);},nJoin:function(c){nJoin(c);},cam:function(a){CAMDBG=a||null;},hold:function(v){HOLD=!!v;last=performance.now();},adv:function(sec){var n=Math.max(1,Math.round(sec*60));for(var i=0;i<n;i++){var rdt=1/60;freezeT=0;if(TUT.hold){if(TUT.hold==='cho'&&(Math.abs(JX)>0.35||Math.abs(JZ)>0.35))tutRelease();}else tutCheck();if(TUT.hold){hudFrame(rdt);continue;}TS+=(tsGoal-TS)*Math.min(1,rdt*14);step(rdt*TS,rdt);camUpdate(rdt,false);hudFrame(rdt);crowdFrame(rdt);}return ctxNow();},joy:function(x,z){JX=x;JZ=z;},state:function(){return {G:G,R:R,CTRL:CTRL,tG:tG,TS:TS,REP:REP};},bot:BOT,press:function(){actionPress();},
+window.BB={version:APP_VERSION,all:function(){return ALL;},mv:function(){return MV;},dbg:function(v){if(v===true)DBG={ev:[],n:0,cur:null,ct:'',cd:0};else if(v===false)DBG=null;return DBG;},
+  q:function(v){if(v==='lock')QLOCK=true;else if(v==='auto')QLOCK=false;else if(typeof v==='number')qSet(v);return {i:qI,max:QMAX,pr:PR,body:qStep,wait:qWait,lv:QLV};},qfeed:function(ms,n){for(var i=0;i<n;i++)quality(ms);return qI;},
+  loop:function(ms){var t=last;for(var i=0;i<ms.length;i++){t+=ms[i];NOREND=true;var raf=window.requestAnimationFrame;window.requestAnimationFrame=function(){};try{frame(t);}finally{window.requestAnimationFrame=raf;}}return {acc:ACC,ip:ipOn,ticks:TKN};},render:function(v){NOREND=!v;},net:NET,nLobby:function(){nLobby();},nCreate:function(c){nCreate(c);},nJoin:function(c){nJoin(c);},cam:function(a){CAMDBG=a||null;},hold:function(v){HOLD=!!v;last=performance.now();},adv:function(sec){var n=Math.max(1,Math.round(sec*60));for(var i=0;i<n;i++){var rdt=1/60;freezeT=0;if(TUT.hold){if(TUT.hold==='cho'&&(Math.abs(JX)>0.35||Math.abs(JZ)>0.35))tutRelease();}else tutCheck();if(TUT.hold){hudFrame(rdt);continue;}TS+=(tsGoal-TS)*Math.min(1,rdt*14);step(rdt*TS,rdt);camUpdate(rdt,false);hudFrame(rdt);crowdFrame(rdt);}return ctxNow();},joy:function(x,z){JX=x;JZ=z;},state:function(){return {G:G,R:R,CTRL:CTRL,tG:tG,TS:TS,REP:REP,tAll:tAll};},bot:BOT,press:function(){actionPress();},
   start:function(diff,assist,tut){if(diff)PREF.diff=diff;PREF.assist=!!assist;ov.style.display='none';newMatch(!!tut);},tut:function(){return TUT;},
   sim:function(matches,diff,sd,skip,aim,assist,react){var out={wins:0,losses:0,rallies:0,contacts:0,pts:[0,0],secs:0,st:{a:0,b:0,c:0,d:0,att:0,kill:0,attErr:0,blocked:0,ace:0,blk:0,srvErr:0,aiAtt:0,aiKill:0,aiErr:0,dive:0,aiDive:0},hist:{}};BOT.react=react||0;
     PREF.diff=diff||'easy';PREF.assist=!!assist;BOT.on=true;BOT.sim=true;BOT.sd=sd==null?0.05:sd;BOT.skip=skip||0;BOT.aim=aim||'open';BOT.log=[];var snd=PREF.snd;PREF.snd=false;
