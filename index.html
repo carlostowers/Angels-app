@@ -1848,6 +1848,7 @@ html.modo-staff .logo img{width:64px;height:auto;max-width:100%;}
       <div class="nav-link active" onclick="showPage('dashboard')">Panel</div>
       <div class="nav-link" onclick="showPage('roster')">Roster</div>
       <div class="nav-link" onclick="showPage('juegos')">Juegos</div>
+      <div class="nav-link" onclick="openScouting()">Scouting</div>
       <div class="nav-link" onclick="showPage('mensajes')">Mensajes</div>
       <div class="nav-link" id="nav-gameday" style="display:none" onclick="showPage('gameday')">Game Day</div>
       <div class="nav-link" id="nav-taper" style="display:none" onclick="showPage('taper')">Taper</div>
@@ -1870,6 +1871,7 @@ html.modo-staff .logo img{width:64px;height:auto;max-width:100%;}
   <div class="nav-link active" id="mob-dashboard" onclick="showPage('dashboard');closeMobileMenu()">Panel</div>
   <div class="nav-link" id="mob-roster" onclick="showPage('roster');closeMobileMenu()">Roster</div>
   <div class="nav-link" id="mob-juegos" onclick="showPage('juegos');closeMobileMenu()">Juegos</div>
+  <div class="nav-link" id="mob-scouting" onclick="openScouting();closeMobileMenu()">Scouting</div>
   <div class="nav-link" id="mob-mensajes" onclick="showPage('mensajes');closeMobileMenu()">Mensajes</div>
   <div class="nav-link" id="mob-gameday" style="display:none" onclick="showPage('gameday');closeMobileMenu()">Game Day</div>
   <div class="nav-link" id="mob-taper" style="display:none" onclick="showPage('taper');closeMobileMenu()">Taper</div>
@@ -2098,6 +2100,7 @@ html.modo-staff .logo img{width:64px;height:auto;max-width:100%;}
   <button id="pb-torneos" onclick="setPlayerView('torneos')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Torneos</button>
   <button id="pb-equipo" onclick="setPlayerView('equipo')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5M15 19c0-2 2-4 5-4"/></svg>Equipo</button>
   <button id="pb-juegos" onclick="setPlayerView('juegos')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5c-2.5 3-2.5 14 0 17M4 9.5c5 1.5 11 1.5 16 0M4.5 15c4.5-1.5 10.5-1.5 15 0"/></svg>Juegos</button>
+  <button id="pb-scouting" onclick="openScouting()"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5M8.5 11h5M11 8.5v5"/></svg>Scouting</button>
 </div>
 
 <footer>
@@ -2488,7 +2491,7 @@ html.modo-staff .logo img{width:64px;height:auto;max-width:100%;}
 <script>
 // Version visible en pantalla. Cuando alguien reporte algo raro, lo primero
 // es saber que version esta corriendo su telefono.
-const APP_VERSION = 'v4.5.0';
+const APP_VERSION = 'v4.6.0';
 
 // ============ SUPABASE ============
 // Backend de Angels: esquema "angels" dentro del proyecto de Supabase de
@@ -3046,6 +3049,9 @@ function attrEscape(s){ return htmlEscape(s).replace(/\n/g,'&#10;'); }
 function csvEscape(s){ s=(s==null?'':s).toString().replace(/"/g,'""'); return /[",\n]/.test(s)?'"'+s+'"':s; }
 function initials(n){ return String(n||'').split(' ').slice(0,2).map(function(w){ return w[0]||''; }).join('').toUpperCase(); }
 function urlParam(k){ return new URLSearchParams(window.location.search).get(k); }
+// Scouting de rivales: vive en el Playbook de Angels (angelsplay). Abre el rival del próximo juego.
+var SCOUT_URL = 'https://angelsplay.voleii.com/#/pentecostal';
+function openScouting(){ try { window.open(SCOUT_URL, '_blank', 'noopener'); } catch(e){ console.error(e); } }
 // El enlace personal viaja como ?t=<token>. El formato viejo (?player=<id>)
 // ya no da acceso: los ids eran adivinables y la lectura era publica.
 function playerTokenFromURL(){
