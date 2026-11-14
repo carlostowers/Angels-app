@@ -857,6 +857,26 @@ table.data tr:hover td{background:rgba(81,183,228,.04);}
 .modal-title{font-family:var(--disp);font-size:21px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;}
 .modal-subtitle{font-size:12.5px;color:var(--dim);margin-top:7px;margin-bottom:1.2rem;line-height:1.55;}
 .modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:1.2rem;}
+/* Scouting: lista de rivales y tablero del staff */
+.scout-list{display:flex;flex-direction:column;gap:8px;}
+.scout-opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;padding:12px 14px;border-radius:12px;
+  border:1px solid var(--line-strong);background:transparent;color:inherit;cursor:pointer;font:inherit;}
+.scout-opt.next{border-color:#51B7E4;background:rgba(81,183,228,.10);}
+.scout-opt .so-round{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#EB448F;}
+.scout-opt .so-name{font-size:17px;font-weight:800;}
+.scout-opt .so-when{font-size:12.5px;color:var(--dim);}
+.scout-board{margin-top:1rem;}
+.scout-board .panel-title{display:flex;align-items:center;gap:8px;}
+.scout-board .sb-refresh{margin-left:auto;padding:5px 10px;font-size:12px;}
+.sb-wrap{overflow-x:auto;}
+.sb-table{width:100%;border-collapse:collapse;font-size:13px;}
+.sb-table th{text-align:left;padding:6px 10px 8px 0;font-size:11px;letter-spacing:.06em;color:var(--dim);vertical-align:bottom;white-space:nowrap;}
+.sb-table th span{display:block;font-weight:500;letter-spacing:0;color:var(--faint);}
+.sb-table td{padding:7px 10px 7px 0;border-top:1px solid var(--line);white-space:nowrap;}
+.sb-table td.no{color:var(--faint);}
+.sb-table td.ok{font-weight:600;}
+.sb-table .sb-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#51B7E4;margin-right:6px;vertical-align:1px;}
+.sb-table tfoot td{font-weight:700;border-top:2px solid var(--line-strong);}
 /* QR por jugador y hoja imprimible */
 #qr-sheet{position:fixed;inset:0;z-index:130;background:var(--bg0);overflow:auto;padding:16px;}
 .qr-toolbar{max-width:210mm;margin:0 auto 14px;}
@@ -1936,6 +1956,7 @@ html.modo-staff .logo img{width:64px;height:auto;max-width:100%;}
   <div id="dash-actions"></div>
   <div id="dash-reminder"></div>
   <div id="dash-semaforo"></div>
+  <div id="dash-scout"></div>
 
   <div class="chart-row">
     <div class="panel">
@@ -2491,7 +2512,7 @@ html.modo-staff .logo img{width:64px;height:auto;max-width:100%;}
 <script>
 // Version visible en pantalla. Cuando alguien reporte algo raro, lo primero
 // es saber que version esta corriendo su telefono.
-const APP_VERSION = 'v4.6.2';
+const APP_VERSION = 'v4.7.0';
 
 // ============ SUPABASE ============
 // Backend de Angels: esquema "angels" dentro del proyecto de Supabase de
@@ -3049,9 +3070,110 @@ function attrEscape(s){ return htmlEscape(s).replace(/\n/g,'&#10;'); }
 function csvEscape(s){ s=(s==null?'':s).toString().replace(/"/g,'""'); return /[",\n]/.test(s)?'"'+s+'"':s; }
 function initials(n){ return String(n||'').split(' ').slice(0,2).map(function(w){ return w[0]||''; }).join('').toUpperCase(); }
 function urlParam(k){ return new URLSearchParams(window.location.search).get(k); }
-// Scouting de rivales: vive en el Playbook de Angels (angelsplay). Abre el rival del próximo juego.
-var SCOUT_URL = 'https://angelsplay.voleii.com/#/pentecostal';
-function openScouting(){ try { window.open(SCOUT_URL, '_blank', 'noopener'); } catch(e){ console.error(e); } }
+// Scouting de rivales: vive en el Playbook de Angels (angelsplay). El botón
+// abre la lista de rivales; el toque del jugador queda registrado
+// (player_scout_open) y solo el staff lo ve en el panel.
+var SCOUT_BASE = 'https://angelsplay.voleii.com/#/';
+var SCOUT_RIVALS = [
+  { id: 'pentecostal', name: 'Pentecostal Arecibo', round: 'Round of 16', when: 'Mar 17 nov · 9:30 AM' },
+  { id: 'perpetuo',    name: 'Perpetuo Socorro',    round: 'Cuartos de final', when: 'Vie 20 nov · 7:40 PM' },
+  { id: 'sanjose',     name: 'San José, Río Piedras', round: 'Semifinal', when: 'Sáb 21 nov · 8:00 PM' },
+  { id: 'sanignacio',  name: 'San Ignacio de Loyola', round: 'Final', when: 'Dom 22 nov · 5:00 PM' }
+];
+function openScouting(){
+  try {
+    var ov = document.getElementById('scout-modal');
+    if(!ov){
+      ov = document.createElement('div');
+      ov.className = 'modal-overlay'; ov.id = 'scout-modal'; ov.style.display = 'none';
+      ov.addEventListener('click', function(ev){ if(ev.target === ov) closeScouting(); });
+      document.body.appendChild(ov);
+    }
+    var h = '<div class="modal-box" style="max-width:420px">'+
+      '<div class="modal-title">'+T('Scouting')+'</div>'+
+      '<div class="modal-subtitle">'+T('Escoge el rival. Se abre en el Playbook de Angels (código ADC).')+'</div>'+
+      '<div class="scout-list">';
+    SCOUT_RIVALS.forEach(function(r, i){
+      h += '<button type="button" class="scout-opt'+(i===0?' next':'')+'" onclick="openScoutRival(\''+r.id+'\')">'+
+        '<span class="so-round">'+htmlEscape(r.round)+(i===0?' · '+T('próximo'):'')+'</span>'+
+        '<span class="so-name">'+htmlEscape(r.name)+'</span>'+
+        '<span class="so-when">'+htmlEscape(r.when)+'</span></button>';
+    });
+    h += '</div><div class="modal-actions"><button class="btn-ghost" onclick="closeScouting()" style="width:100%">'+T('Cerrar')+'</button></div></div>';
+    ov.innerHTML = h;
+    ov.style.display = 'flex';
+  } catch(e){ console.error('openScouting', e); try { window.open(SCOUT_BASE + SCOUT_RIVALS[0].id, '_blank', 'noopener'); } catch(e2){} }
+}
+function closeScouting(){ try { var ov = document.getElementById('scout-modal'); if(ov) ov.style.display = 'none'; } catch(e){ console.error(e); } }
+function openScoutRival(id){
+  try {
+    // Primero se abre la pestaña (el navegador lo exige dentro del toque); el registro va después.
+    window.open(SCOUT_BASE + id, '_blank', 'noopener');
+    closeScouting();
+    if(PLAYER_TOKEN && !isStaff()){
+      sb.rpc('player_scout_open', { p_token: PLAYER_TOKEN, p_rival: id }).then(function(r){
+        if(r && r.error) console.warn('scout open', r.error.message);
+      }).catch(function(e){ console.warn('scout open', e); });
+    }
+  } catch(e){ console.error('openScoutRival', e); }
+}
+// Panel del staff: quién abrió el scouting de cada rival.
+var _scoutOpens = null, _scoutOpensAt = 0, _scoutLoading = false;
+async function loadScoutOpens(force){
+  try {
+    if(_scoutLoading) return;
+    if(!force && _scoutOpens && (Date.now() - _scoutOpensAt) < 60000) return;
+    _scoutLoading = true;
+    var res = await sb.from('scout_opens').select('player_id,rival,opened_at').order('opened_at', { ascending: false }).limit(2000);
+    _scoutLoading = false;
+    if(res.error){ console.warn('scout_opens', res.error.message); return; }
+    _scoutOpens = res.data || []; _scoutOpensAt = Date.now();
+    renderScoutBoard();
+  } catch(e){ _scoutLoading = false; console.error('loadScoutOpens', e); }
+}
+function scoutWhen(ts){
+  try { return new Date(ts).toLocaleString('es-PR', { weekday:'short', day:'numeric', month:'short', hour:'numeric', minute:'2-digit', timeZone:'America/Puerto_Rico' }); }
+  catch(e){ return ''; }
+}
+function renderScoutBoard(){
+  try {
+    var slot = document.getElementById('dash-scout');
+    if(!slot) return;
+    if(!isStaff()){ slot.innerHTML = ''; return; }
+    if(!_scoutOpens){ slot.innerHTML = ''; loadScoutOpens(); return; }
+    loadScoutOpens();
+    var players = activeOnly(DB.players).slice().sort(function(a,b){ return (parseInt(a.number,10)||0) - (parseInt(b.number,10)||0); });
+    var last = {}, count = {};
+    _scoutOpens.forEach(function(o){
+      var k = o.player_id + '|' + o.rival;
+      if(!last[k]) last[k] = o.opened_at;
+      count[k] = (count[k] || 0) + 1;
+    });
+    var head = '<tr><th>'+T('Jugador')+'</th>', foot = '<tr><td>'+T('Lo abrieron')+'</td>';
+    SCOUT_RIVALS.forEach(function(r){
+      var n = players.filter(function(p){ return !!last[p.id + '|' + r.id]; }).length;
+      head += '<th>'+htmlEscape(r.name.split(',')[0])+'<span>'+htmlEscape(r.round)+'</span></th>';
+      foot += '<td><b>'+n+'</b> '+T('de')+' '+players.length+'</td>';
+    });
+    head += '</tr>'; foot += '</tr>';
+    var rows = '';
+    players.forEach(function(p){
+      rows += '<tr><td class="notr">#'+htmlEscape(p.number||'')+' '+htmlEscape(callName(p))+'</td>';
+      SCOUT_RIVALS.forEach(function(r){
+        var k = p.id + '|' + r.id;
+        rows += last[k] ? '<td class="ok"><span class="sb-dot"></span>'+htmlEscape(scoutWhen(last[k]))+(count[k] > 1 ? ' · '+count[k]+'x' : '')+'</td>'
+                        : '<td class="no">'+T('No')+'</td>';
+      });
+      rows += '</tr>';
+    });
+    slot.innerHTML = '<div class="panel scout-board">'+
+      '<div class="panel-title"><span class="dot"></span>'+T('Scouting · quién lo abrió')+
+        '<button class="btn-ghost sb-refresh" onclick="loadScoutOpens(true)">'+T('Actualizar')+'</button></div>'+
+      '<div class="sb-wrap"><table class="sb-table"><thead>'+head+'</thead><tbody>'+rows+'</tbody><tfoot>'+foot+'</tfoot></table></div>'+
+      '<div class="mono-note">'+T('Cuenta cada vez que un jugador toca un rival en el botón Scouting de su app. Si se mueve a otro rival dentro del playbook, ese no cuenta. Solo lo ves tú.')+'</div>'+
+    '</div>';
+  } catch(e){ console.error('renderScoutBoard', e); }
+}
 // El enlace personal viaja como ?t=<token>. El formato viejo (?player=<id>)
 // ya no da acceso: los ids eran adivinables y la lectura era publica.
 function playerTokenFromURL(){
@@ -6348,6 +6470,7 @@ function renderDashboard(teamFilter) {
   try { renderStaffPush(); } catch(e){ console.log('staff push:', e); }
   updateAlertBadge();
   renderSemaforo(tf);
+  try { renderScoutBoard(); } catch(e){ console.log('scout board:', e); }
   renderProgresionBoard();
 
   document.getElementById('load-chart-tabs').innerHTML = TEAM_ORDER.length < 2 ? '' : teamTabList().map(function(t){
