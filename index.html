@@ -2491,7 +2491,7 @@ html.modo-staff .logo img{width:64px;height:auto;max-width:100%;}
 <script>
 // Version visible en pantalla. Cuando alguien reporte algo raro, lo primero
 // es saber que version esta corriendo su telefono.
-const APP_VERSION = 'v4.6.0';
+const APP_VERSION = 'v4.6.1';
 
 // ============ SUPABASE ============
 // Backend de Angels: esquema "angels" dentro del proyecto de Supabase de
@@ -10924,7 +10924,8 @@ var ST_ICONOS_RAIL = {
   season: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V11M10 19V5M16 19v-8M22 19H2"/></svg>',
   records: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 9v11"/></svg>',
   import: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg>',
-  mensajes: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-6 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>'
+  mensajes: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-6 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>',
+  scouting: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5M8.5 11h5M11 8.5v5"/></svg>'
 };
 var ST_ICONO_TEMA = {
   auto: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/></svg>',
@@ -10999,8 +11000,10 @@ function stRailIconos(){
   try {
     document.querySelectorAll('.nav-link').forEach(function(l){
       if(l.querySelector('svg')) return;
-      var m = /showPage\('([a-z]+)'/.exec(l.getAttribute('onclick') || '');
-      var ic = m ? ST_ICONOS_RAIL[m[1]] : null;
+      var oc = l.getAttribute('onclick') || '';
+      var m = /showPage\('([a-z]+)'/.exec(oc);
+      var key = m ? m[1] : (/openScouting\(/.test(oc) ? 'scouting' : null);
+      var ic = key ? ST_ICONOS_RAIL[key] : null;
       if(!ic) return;
       var span = document.createElement('span');
       while(l.firstChild) span.appendChild(l.firstChild);
