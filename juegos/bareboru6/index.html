@@ -135,7 +135,7 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.6.0',ASSET_V='1';
+var APP_VERSION='0.7.0',ASSET_V='1';
 /* BAREBORU by VOLEII 6x6: voleibol seis contra seis contra la maquina, a 15 con ventaja de 2.
    Sistema 5-1 con libero y las seis rotaciones del Playbook de Vaqueros (formaciones de recepcion, target, defensa Middle/Middle y cobertura).
    Sale del motor del 3x3 (juegos/bareboru): mismos cuerpos, clips y controles. Controlas al jugador que le toca jugar el balon; los demas van solos.
@@ -973,12 +973,63 @@ function animate(p){var spd=hyp(p.vx,p.vz);
     var wl=Math.abs(lf)/(Math.abs(lf)+Math.abs(lfw)+1e-6);blendPose(poseMoveF,poseMove,wl,poseG);
     blendPose(poseIdle,poseG,clamp(spd/1.4,0,1)*0.85,p.pose);}
   else copyPose(poseIdle,p.pose);
-  p.air=0;
+  p.air=0;p.airN=0;
   if(p.act){var A=p.act,c=A.clip,tl=tG-A.tC,u=A.mark+tl*A.rate/c.dur,w=clamp((tl+A.lead)/A.fin,0,1)*clamp(1-(tl-A.tail)/A.fout,0,1);w=w*w*(3-2*w);
     if(w>0){clipPose(c,u,poseTmp);blendPose(p.pose,poseTmp,w,p.pose);
-      if(A.boost&&c.marks.takeoff!=null){var f=(u-c.marks.takeoff)/(c.marks.landing-c.marks.takeoff);if(f>0&&f<1)p.air=A.boost*4*f*(1-f)*w;}}
+      if(A.boost&&c.marks.takeoff!=null){if(A.bc==null)A.bc=A.boost;if(A.vo)A.bc+=(A.vo.b-A.bc)*0.2;var f=(u-c.marks.takeoff)/(c.marks.landing-c.marks.takeoff);if(f>0&&f<1){p.air=A.bc*4*f*(1-f)*w;p.airN=A.boost*4*f*(1-f)*w;}}}
     if(tl>A.tail+A.fout)p.act=null;}
-  p.apply(p.pose);if(p.act&&p.act.back)archBack(p);pies(p,spd);vida(p,spd);}
+  p.apply(p.pose);if(p.act&&p.act.back)archBack(p);contacto(p);p.airO=p.airN;pies(p,spd);vida(p,spd);}
+/* ======================= CONTACTO (0.7.0) =======================
+   Antes el balon saltaba hacia la muneca en los ultimos 90 ms. Ahora es el cuerpo el que llega al balon:
+   1) se mide una vez, por clip, donde queda la mano en el cuadro del contacto (en el marco del jugador);
+   2) el cuerpo se dibuja corrido lo que haga falta (hasta 50 cm) para que esa mano quede en el punto de contacto, y en los gestos con
+      salto la altura del salto sale de lo que le falta a la mano para llegar al balon (hasta 75 cm), no de un numero fijo;
+   3) lo que quede lo cierra el brazo con IK de dos huesos (hasta 12 cm con una mano, 20 con dos);
+   4) el balon solo se acerca a la mano por lo que aun sobre, y nunca se mete en la muneca: queda a la distancia natural (CT_G).
+   Solo se ve: las posiciones y los tiempos del juego no cambian. ?contacto=0 vuelve a lo anterior. */
+var CT_ON=true,CT_G={R:0.17,T:0.12,M:0.15},poseCt=newPose(),_ch=new V3(),_cb=new V3(),_cd=new V3(),_cf1=new V3(),_cf2=new V3(),_cq1=new Q4(),_cq2=new Q4();
+try{if(new URLSearchParams(location.search).get('contacto')==='0')CT_ON=false;}catch(e){}
+function ctTipo(n){return n.type==='hit'?'R':(n.type==='set'?'T':'M');}
+function ctMano(p,ty,out){return ty==='R'?p.handR(out):(ty==='T'?p.handsTop(out):p.handsMid(out));}
+function ctMide(p,A,ty){var c=A.clip;if(!c.ho)c.ho={};var k=ty+(A.back?'b':'');if(c.ho[k])return c.ho[k];
+  var py=p.root.position.y;p.root.position.y=0;clipPose(c,A.mark,poseCt);p.apply(poseCt);if(A.back)archBack(p);ctMano(p,ty,_ch);
+  var dx=_ch.x-p.root.position.x,dz=_ch.z-p.root.position.z,yw=p.root.rotation.y,cy=Math.cos(yw),sy=Math.sin(yw),o={x:dx*cy-dz*sy,y:_ch.y,z:dx*sy+dz*cy};
+  p.root.position.y=py;p.apply(p.pose);if(A.back)archBack(p);c.ho[k]=o;return o;}
+/* IK de dos huesos generico: lleva el extremo E (mano) a T moviendo U (brazo) y S (antebrazo) */
+function ik2(U,S,E,T){_pa.setFromMatrixPosition(U.matrixWorld);_pk.setFromMatrixPosition(S.matrixWorld);_pe.setFromMatrixPosition(E.matrixWorld);
+  var l1=_pa.distanceTo(_pk),l2=_pk.distanceTo(_pe);if(l1<0.03||l2<0.03)return;var d=clamp(_pa.distanceTo(T),Math.abs(l1-l2)+0.03,0.99*(l1+l2));
+  _pu.copy(_pa).sub(_pk);_pw.copy(_pe).sub(_pk);_pn.copy(_pu).cross(_pw);var nl=_pn.length();
+  if(nl<0.05*l1*l2){_pn.set(0,1,0).cross(_pw);nl=_pn.length();if(nl<1e-5)_pn.set(1,0,0);else _pn.multiplyScalar(1/nl);}else _pn.multiplyScalar(1/nl);
+  var c0=clamp(_pu.dot(_pw)/(l1*l2),-1,1),c1=clamp((l1*l1+l2*l2-d*d)/(2*l1*l2),-1,1),ph=Math.acos(c1)-Math.acos(c0);
+  if(Math.abs(ph)>1e-4){rotW(S,_pn,ph);var cp=Math.cos(ph),sp=Math.sin(ph);_pu.copy(_pn).cross(_pw);_pw.multiplyScalar(cp).addScaledVector(_pu,sp);}
+  _pe.copy(_pk).add(_pw).sub(_pa);_pt.copy(T).sub(_pa);var la=_pe.length(),lb=_pt.length();if(la<1e-4||lb<1e-4)return;
+  _pn.copy(_pe).cross(_pt);var sn=_pn.length();if(sn>1e-6){_pn.multiplyScalar(1/sn);rotW(U,_pn,Math.atan2(sn,_pe.dot(_pt)));}}
+function contacto(p){try{var A=p.act;if(!CT_ON||!A||REP.on||!G||G.phase==='menu')return;var n=R&&R.next,F=R&&R.F,B=p.bones;
+  /* el juego sigue usando la mano tal como la leia antes (pose del clip, sin correr el cuerpo y con el salto de antes): de ahi sale el
+     vuelo siguiente, asi que el balance no cambia. Lo corregido solo se dibuja. */
+  if(n&&F&&n.pl===p&&G.phase==='live'&&n.t-F.t<0.1&&n.t-F.t>=0){var y0=p.root.position.y;p.root.position.y=p.airO||0;if(!p.hv)p.hv=new V3();ctMano(p,ctTipo(n),p.hv);p.root.position.y=y0;p.hsT=tG;}
+  /* se recalcula en cada paso hasta el contacto: el jugador todavia se esta moviendo y girando */
+  if(n&&F&&n.pl===p&&G.phase==='live'&&!(n.team===1&&n.ok===false)&&tG<=A.tC&&Math.abs(F.t0+n.t-A.tC)<0.06){
+    var ty=ctTipo(n),ho=ctMide(p,A,ty),g=CT_G[ty],yw=p.root.rotation.y,cy=Math.cos(yw),sy=Math.sin(yw);fPos(F,n.t,_cb);
+    var rx=_cb.x-(p.x+ho.x*cy+ho.z*sy),ry=_cb.y-ho.y,rz=_cb.z-(p.z-ho.x*sy+ho.z*cy),rl=Math.sqrt(rx*rx+ry*ry+rz*rz),q=rl>g?1-g/rl:0,sx=rx*q,syy=ry*q,sz=rz*q,b=A.boost,c=A.clip;
+    if(A.boost>0&&c.marks.takeoff!=null){var fc=(A.mark-c.marks.takeoff)/(c.marks.landing-c.marks.takeoff),sh=4*fc*(1-fc);if(sh>0.3)b=clamp(syy,0,0.75)/sh;}
+    var hl=hyp(sx,sz);if(hl>0.5){sx*=0.5/hl;sz*=0.5/hl;}
+    var V0=A.vo||(A.vo={x:0,y:0,z:0,j:false,b:b,ty:ty,g:g,cx:0,cy:0,cz:0});V0.j=!!(A.boost>0&&c.marks.takeoff!=null);V0.y=V0.j?0:syy;V0.x=sx;V0.z=sz;V0.b=b;V0.ty=ty;V0.g=g;V0.cx=_cb.x;V0.cy=_cb.y;V0.cz=_cb.z;}
+  var V=A.vo;if(!V)return;var tl=tG-A.tC,e1=clamp((tl+0.3)/0.3,0,1),e2=clamp(1-(tl-0.06)/0.3,0,1),e=e1*e1*(3-2*e1)*e2*e2*(3-2*e2);
+  /* sin salto, el cuerpo tambien baja o sube un poco (se agacha al balon) y las piernas mantienen los pies donde los puso el clip */
+  var ox=V.x*e,oz=V.z*e,oy=V.j?0:clamp(V.y,-0.28,0.06)*e;
+  if(Math.abs(ox)+Math.abs(oz)+Math.abs(oy)>0.004){var nm=A.clip.name,legs=!V.j&&!p.glide&&p.air<0.01&&nm.indexOf('plancha')!==0&&nm!=='defensa_rodilla'&&B.LeftUpLeg&&B.LeftLeg&&B.LeftFoot&&B.RightUpLeg&&B.RightLeg&&B.RightFoot;
+    if(legs){p.root.updateMatrixWorld(true);_cf1.setFromMatrixPosition(B.LeftFoot.matrixWorld);_cf2.setFromMatrixPosition(B.RightFoot.matrixWorld);B.LeftFoot.getWorldQuaternion(_cq1);B.RightFoot.getWorldQuaternion(_cq2);}else oy=0;
+    p.root.position.x+=ox;p.root.position.y+=oy;p.root.position.z+=oz;
+    if(legs){p.root.updateMatrixWorld(true);ik2(B.LeftUpLeg,B.LeftLeg,B.LeftFoot,_cf1);B.LeftFoot.parent.updateWorldMatrix(true,false);B.LeftFoot.parent.getWorldQuaternion(_qg);B.LeftFoot.quaternion.copy(_qg.invert()).multiply(_cq1);
+      ik2(B.RightUpLeg,B.RightLeg,B.RightFoot,_cf2);B.RightFoot.parent.updateWorldMatrix(true,false);B.RightFoot.parent.getWorldQuaternion(_qg);B.RightFoot.quaternion.copy(_qg.invert()).multiply(_cq2);}}
+  /* el brazo cierra lo que falte, alrededor del contacto */
+  var k=tl<=0?clamp(1+tl/0.12,0,1):clamp(1-tl/0.08,0,1);if(k<=0)return;k=k*k*(3-2*k);
+  ctMano(p,V.ty,_ch);_cd.set(V.cx-_ch.x,V.cy-_ch.y,V.cz-_ch.z);var dl=_cd.length();if(dl<=V.g)return;
+  var lim=V.ty==='R'?0.12:0.2,m=Math.min(lim,dl-V.g)*k/dl;_cd.multiplyScalar(m);
+  if(V.ty!=='R'&&B.LeftArm&&B.LeftForeArm&&B.LeftHand){_ch.setFromMatrixPosition(B.LeftHand.matrixWorld).add(_cd);ik2(B.LeftArm,B.LeftForeArm,B.LeftHand,_ch);}
+  if(B.RightArm&&B.RightForeArm&&B.RightHand){_ch.setFromMatrixPosition(B.RightHand.matrixWorld).add(_cd);ik2(B.RightArm,B.RightForeArm,B.RightHand,_ch);}
+  }catch(e){}}
 /* ======================= PIES (0.6.0) =======================
    Pisadas calculadas en vivo: cada pie se queda clavado donde piso hasta que le toca dar el paso; el paso cae por delante del cuerpo,
    hacia donde va el jugador. La pierna (muslo y pantorrilla) se acomoda con IK de dos huesos para que el tobillo llegue a su pisada y el
@@ -1107,8 +1158,8 @@ function stepDead(dt){var F=R.F;if(F){F.t+=dt;if(F.t>=F.tF){if(F.b===1){var p=fP
   if(G.tPh>(G.repd?1.15:1.9)){G.repd=false;if(G.over){G.phase='end';if(!BOT.sim)endCard();}else{G.first=false;startPoint(false);}}}
 /* ---------- repeticion: se graban los ultimos cuadros y se vuelven a pasar despacio desde abajo ---------- */
 function recFrame(){try{var i=REP.n%REP.cap,f=REP.buf[i],sz=0,j,k=0,q;if(!f){for(j=0;j<ALL.length;j++)sz+=5+ALL[j].bl.length*4;f=REP.buf[i]={t:0,b:new Float32Array(3),d:new Float32Array(sz)};}
-  f.t=tG;f.b[0]=ball.position.x;f.b[1]=ball.position.y;f.b[2]=ball.position.z;var d=f.d;
-  for(j=0;j<ALL.length;j++){var p=ALL[j],bl=p.bl;d[k++]=p.x;d[k++]=p.air;d[k++]=p.z;d[k++]=p.yaw;d[k++]=p.bones.Hips.position.y;for(var m=0;m<bl.length;m++){q=bl[m].quaternion;d[k++]=q.x;d[k++]=q.y;d[k++]=q.z;d[k++]=q.w;}}
+  var bq=(BVtg===tG)?BVIS:ball.position;f.t=tG;f.b[0]=bq.x;f.b[1]=bq.y;f.b[2]=bq.z;var d=f.d; /* 0.7.0: la repeticion guarda lo que se dibujo (balon y cuerpo corregidos) */
+  for(j=0;j<ALL.length;j++){var p=ALL[j],bl=p.bl,rp=p.root.position;d[k++]=rp.x;d[k++]=rp.y;d[k++]=rp.z;d[k++]=p.yaw;d[k++]=p.bones.Hips.position.y;for(var m=0;m<bl.length;m++){q=bl[m].quaternion;d[k++]=q.x;d[k++]=q.y;d[k++]=q.z;d[k++]=q.w;}}
   REP.n++;}catch(e){}}
 function repStart(){try{if(REP.n<30)return false;var w=REP.who||TEAM[0].pl[0];REP.t1=REP.tEnd+0.12;REP.t0=REP.t1-1.05;REP.t=REP.t0;REP.on=true;REP.i=-1;
   REP.camP=new V3(w.x+(w.x>0?-2.5:2.5),1.25,w.z+3.1*w.s);REP.look=new V3(w.x,2.2,w.z);var e=$('rep');e.textContent=L('Repetición','Replay');e.style.display='block';return true;}catch(e){REP.on=false;return false;}}
@@ -1118,16 +1169,24 @@ function repStep(rdt){REP.t+=rdt*0.5;var best=null,n=Math.min(REP.n,REP.cap),j,f
   ball.position.set(best.b[0],best.b[1],best.b[2]);var d=best.d,k=0;
   for(j=0;j<ALL.length;j++){var p=ALL[j],bl=p.bl;p.root.position.set(d[k],d[k+1],d[k+2]);if(p.blob.visible)p.blob.position.set(d[k],0.02,d[k+2]);p.root.rotation.y=d[k+3];var hy=d[k+4];k+=5;for(var m=0;m<bl.length;m++){bl[m].quaternion.set(d[k],d[k+1],d[k+2],d[k+3]);k+=4;}p.bones.Hips.position.y=hy;}
   ballShadow.position.set(ball.position.x,0.012,ball.position.z);ring.visible=false;ringT.visible=false;}
+var BVIS=new V3(),BVoff=new V3(),_bfl=new V3(),_bsim=new V3(),BVF=null,BVtg=-1,BVoffT=-9,bvSw=false;
+function bvOut(){if(bvSw){ball.position.copy(_bsim);bvSw=false;}}
 function ballUpdate(dt){var F=R&&R.F;
   if(G.phase==='pre'||G.phase==='windup'){var s=R.srv,sv=s.pl;sv.handR(tmpV);
     if(G.phase==='windup'&&tG>=s.tToss){if(!s.p0)s.p0=tmpV.clone();var k=clamp((tG-s.tToss)/(s.tC-s.tToss),0,1);ball.position.lerpVectors(s.p0,tmpV,k*k);ball.position.y+=Math.sin(k*Math.PI)*(s.type==='jump'?1.5:0.75);}
     else{ball.position.copy(tmpV);ball.position.y+=0.1;}
     if(G.phase==='windup'&&tG>=s.tC&&!(NET.on&&G.serving===1))launchServe();return;}
   if(!F)return;fPos(F,Math.min(F.t,F.tF),ball.position);
-  var n=R.next;if(n&&n.pl&&G.phase==='live'){var left=n.t-F.t;if(left<0.09&&left>=0){var pl=n.pl;
-    if(n.type==='hit')pl.handR(tmpV);else if(n.type==='set')pl.handsTop(tmpV);else pl.handsMid(tmpV);
-    if(DBG){if(DBG.cur!==n){if(DBG.cur)DBG.ev[DBG.n++]={type:DBG.ct,d:DBG.cd};DBG.cur=n;}DBG.ct=n.type;DBG.cd=tmpV.distanceTo(ball.position);}
-    if(tmpV.distanceTo(ball.position)<0.95&&(n.team===1?n.ok!==false:true))ball.position.lerp(tmpV,1-left/0.09);}}
+  /* 0.7.0: el balon que se dibuja (BVIS) va aparte del balon del juego (ball.position), que se queda exactamente como antes */
+  var bvSet=false;if(BVF!==F){if(BVF&&BVtg>=tG-0.04&&CT_ON){BVoff.copy(BVIS).sub(ball.position);BVoffT=BVoff.length()<0.7?tG:-9;}BVF=F;}
+  var n=R.next;if(n&&n.pl&&G.phase==='live'){var left=n.t-F.t;if(left<0.09&&left>=0){var pl=n.pl,hok=(n.team===1?n.ok!==false:true),useH=CT_ON&&pl.hsT===tG&&pl.hv;
+    if(useH)tmpV.copy(pl.hv);else if(n.type==='hit')pl.handR(tmpV);else if(n.type==='set')pl.handsTop(tmpV);else pl.handsMid(tmpV);
+    _bfl.copy(ball.position);var hd=tmpV.distanceTo(ball.position),hg=0;
+    if(hd<0.95&&hok)ball.position.lerp(tmpV,1-left/0.09);
+    if(useH){hg=CT_G[ctTipo(n)];ctMano(pl,ctTipo(n),tmpV2);hd=tmpV2.distanceTo(_bfl);BVIS.copy(_bfl);if(hd<0.95&&hok&&hd>hg+0.02)BVIS.lerp(tmpV2,(1-left/0.09)*(1-hg/hd));BVtg=tG;bvSet=true;}
+    if(DBG){if(DBG.cur!==n){if(DBG.cur)DBG.ev[DBG.n++]={type:DBG.ct,d:DBG.cd,g:DBG.cg,ok:DBG.ck};DBG.cur=n;}DBG.ct=n.type;DBG.cd=hd;DBG.cg=hg;DBG.ck=hok;}}}
+  /* despues del contacto el balon dibujado vuelve en 0.12 s a la trayectoria del juego */
+  if(!bvSet&&tG-BVoffT<0.12&&tG>=BVoffT){var bk=1-(tG-BVoffT)/0.12;BVIS.copy(ball.position).addScaledVector(BVoff,bk*bk);BVtg=tG;}
   if(ball.position.y<BALL_R)ball.position.y=BALL_R;
   /* 0.5.0: giro segun el golpe, alrededor del eje que cruza la trayectoria (positivo = hacia adelante): remate y saque en salto giran
      hacia adelante, el flotante casi no gira, la colocacion y el pase giran despacio hacia atras */
@@ -1709,9 +1768,10 @@ function tick(rdt){TKN++;if(freezeT>0){freezeT-=rdt;camUpdate(rdt,false);return;
   keysToJoy();if(TUT.hold){if(TUT.hold==='cho'&&(Math.abs(JX)>0.35||Math.abs(JZ)>0.35))tutRelease();}else tutCheck();
   if(TUT.hold){tAll+=rdt;hudDt+=rdt;}else{TS+=(tsGoal-TS)*Math.min(1,rdt*14);step(rdt*TS,rdt);camUpdate(rdt,false);hudDt+=rdt;}}
 function frame(now){var rdt=Math.min(0.1,Math.max(0,(now-last)/1000));last=now;
-  try{if(ready&&!paused&&!HOLD){ipRestore();var n=Math.round(rdt/H60),al=1;
+  try{if(ready&&!paused&&!HOLD){ipRestore();bvOut();var n=Math.round(rdt/H60),al=1;
       if(!(n>=1&&n<=3&&Math.abs(rdt-n*H60)<0.0025)){ACC+=rdt;n=Math.floor(ACC/H60+1e-6);ACC-=n*H60;if(n>4){n=4;ACC=0;}if(ACC<0)ACC=0;al=ACC/H60;}
       for(var i=0;i<n;i++){ipSave();tick(H60);}
+      if(BVtg===tG&&!REP.on){_bsim.copy(ball.position);ball.position.copy(BVIS);bvSw=true;}
       if(hudDt>0){hudFrame(hudDt);hudDt=0;}crowdFrame(rdt);if(al<0.999)ipBlend(al);if(rdt<0.05)quality(rdt*1000);}
     if(!NOREND)renderer.render(scene,camera);}catch(e){if(window.console)console.error(e);}
   requestAnimationFrame(frame);}
@@ -1746,7 +1806,7 @@ cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ()
 /* ganchos de prueba (robot que juega solo, para medir rallies y balance) */
 window.BB={version:APP_VERSION,all:function(){return ALL;},mv:function(){return MV;},dbg:function(v){if(v===true)DBG={ev:[],n:0,cur:null,ct:'',cd:0};else if(v===false)DBG=null;return DBG;},
   q:function(v){if(v==='lock')QLOCK=true;else if(v==='auto')QLOCK=false;else if(typeof v==='number')qSet(v);return {i:qI,max:QMAX,pr:PR,body:qStep,wait:qWait,lv:QLV};},qfeed:function(ms,n){for(var i=0;i<n;i++)quality(ms);return qI;},
-  loop:function(ms){var t=last;for(var i=0;i<ms.length;i++){t+=ms[i];NOREND=true;var raf=window.requestAnimationFrame;window.requestAnimationFrame=function(){};try{frame(t);}finally{window.requestAnimationFrame=raf;}}return {acc:ACC,ip:ipOn,ticks:TKN};},render:function(v){NOREND=!v;},net:NET,nLobby:function(){nLobby();},nCreate:function(c){nCreate(c);},nJoin:function(c){nJoin(c);},cam:function(a){CAMDBG=a||null;},hold:function(v){HOLD=!!v;last=performance.now();},adv:function(sec){var n=Math.max(1,Math.round(sec*60));for(var i=0;i<n;i++){var rdt=1/60;freezeT=0;if(TUT.hold){if(TUT.hold==='cho'&&(Math.abs(JX)>0.35||Math.abs(JZ)>0.35))tutRelease();}else tutCheck();if(TUT.hold){hudFrame(rdt);continue;}TS+=(tsGoal-TS)*Math.min(1,rdt*14);step(rdt*TS,rdt);camUpdate(rdt,false);hudFrame(rdt);crowdFrame(rdt);}return ctxNow();},joy:function(x,z){JX=x;JZ=z;},state:function(){return {G:G,R:R,CTRL:CTRL,tG:tG,TS:TS,REP:REP,tAll:tAll};},bot:BOT,press:function(){actionPress();},
+  loop:function(ms){var t=last;for(var i=0;i<ms.length;i++){t+=ms[i];NOREND=true;var raf=window.requestAnimationFrame;window.requestAnimationFrame=function(){};try{frame(t);}finally{window.requestAnimationFrame=raf;}}return {acc:ACC,ip:ipOn,ticks:TKN};},render:function(v){NOREND=!v;},net:NET,nLobby:function(){nLobby();},nCreate:function(c){nCreate(c);},nJoin:function(c){nJoin(c);},cam:function(a){CAMDBG=a||null;},hold:function(v){HOLD=!!v;last=performance.now();},adv:function(sec){ipRestore();bvOut();var n=Math.max(1,Math.round(sec*60));for(var i=0;i<n;i++){var rdt=1/60;freezeT=0;if(TUT.hold){if(TUT.hold==='cho'&&(Math.abs(JX)>0.35||Math.abs(JZ)>0.35))tutRelease();}else tutCheck();if(TUT.hold){hudFrame(rdt);continue;}TS+=(tsGoal-TS)*Math.min(1,rdt*14);step(rdt*TS,rdt);camUpdate(rdt,false);hudFrame(rdt);crowdFrame(rdt);}return ctxNow();},joy:function(x,z){JX=x;JZ=z;},state:function(){return {G:G,R:R,CTRL:CTRL,tG:tG,TS:TS,REP:REP,tAll:tAll};},bot:BOT,press:function(){actionPress();},
   start:function(diff,assist,tut){if(diff)PREF.diff=diff;PREF.assist=!!assist;ov.style.display='none';newMatch(!!tut);},tut:function(){return TUT;},
   sim:function(matches,diff,sd,skip,aim,assist,react){var out={wins:0,losses:0,rallies:0,contacts:0,pts:[0,0],secs:0,st:{a:0,b:0,c:0,d:0,att:0,kill:0,attErr:0,blocked:0,ace:0,blk:0,srvErr:0,aiAtt:0,aiKill:0,aiErr:0,dive:0,aiDive:0},hist:{}};BOT.react=react||0;
     PREF.diff=diff||'easy';PREF.assist=!!assist;BOT.on=true;BOT.sim=true;BOT.sd=sd==null?0.05:sd;BOT.skip=skip||0;BOT.aim=aim||'open';BOT.log=[];var snd=PREF.snd;PREF.snd=false;
