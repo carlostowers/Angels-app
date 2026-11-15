@@ -9182,7 +9182,7 @@ async function loadStaffGames(){
 // en el top del club.
 function staffJuegosCards(){
   var juegos = [
-    { id:'keepup', t:'Keep It Up', logo:'Keep It Up', acento:'', ruta:'/juegos/keepup?staff=1', img:'/juegos/keepup/assets/portada.webp', u:'' },
+    { id:'keepup2', t:'Keep It Up', logo:'Keep It Up', acento:'', ruta:'/juegos/keepup?staff=1', img:'/juegos/keepup/assets/portada.webp', u:'' },
     { id:'longspike', t:'Long Spike', logo:'Long Spike', acento:'', ruta:'/juegos/longspike?staff=1', img:'/juegos/longspike/assets/portada.webp', u:' m' },
     { id:'bareboru', t:'BAREBORU 3x3', logo:'BAREBORU', acento:'3x3', ruta:'/juegos/bareboru?staff=1', img:'/juegos/bareboru/assets/portada.webp', u:' pts' },
     { id:'bareboru6', t:'BAREBORU 6x6', logo:'BAREBORU', acento:'6x6', ruta:'/juegos/bareboru6?staff=1', img:'/juegos/bareboru6/assets/portada.webp', u:' pts' }
@@ -9212,7 +9212,7 @@ function renderStaffJuegos(filtro){
       loadStaffGames().then(function(){ if(currentPage==='juegos') renderStaffJuegos(); });
       return;
     }
-    var juegos = [{ id:'keepup', t:'Keep It Up', u:'' }, { id:'longspike', t:'Long Spike', u:' m' }, { id:'bareboru', t:'BAREBORU 3x3', u:' pts' }, { id:'bareboru6', t:'BAREBORU 6x6', u:' pts' }];
+    var juegos = [{ id:'keepup2', t:'Keep It Up', u:'' }, { id:'keepup', t:'Keep It Up clásico (2D)', u:'' }, { id:'longspike', t:'Long Spike', u:' m' }, { id:'bareboru', t:'BAREBORU 3x3', u:' pts' }, { id:'bareboru6', t:'BAREBORU 6x6', u:' pts' }];
     var html = staffJuegosCards() + tabs;
     juegos.forEach(function(g){
       var filas = STAFF_GAMES.filter(function(r){ return r.game===g.id && r.best_score>0; }).map(function(r){
@@ -9230,12 +9230,12 @@ function renderStaffJuegos(filtro){
         (filas.length ? '<button class="btn-ghost" style="padding:5px 12px;font-size:12px" data-g="'+g.id+'" data-a="'+(tf==='Club'?'club':'equipo')+'" data-v="'+htmlEscape(tf)+'" data-n="'+htmlEscape(etiqTop)+'" onclick="openResetModal(this.dataset.g, this.dataset.a, this.dataset.v, this.dataset.n)">'+T('Reiniciar top')+'</button>' : '')+'</div>';
       if(!filas.length){ html += '<div class="mono-note">'+T('Nadie ha jugado todavía.')+'</div></div>'; return; }
       html += '<div class="table-wrap"><table class="data"><thead><tr><th class="tnum">#</th><th>'+T('Jugador')+'</th>'+(tf==='Club'?'<th>'+T('Equipo')+'</th>':'')+
-        '<th class="tnum">'+T('Mejor')+'</th>'+(g.id==='keepup'?'<th class="tnum">'+T('Nivel')+'</th>':'')+'<th class="tnum">'+T('Partidas')+'</th><th>'+T('Última vez')+'</th><th></th></tr></thead><tbody>'+
+        '<th class="tnum">'+T('Mejor')+'</th>'+(g.id.indexOf('keepup')===0?'<th class="tnum">'+T('Nivel')+'</th>':'')+'<th class="tnum">'+T('Partidas')+'</th><th>'+T('Última vez')+'</th><th></th></tr></thead><tbody>'+
         filas.map(function(x, i){
           var u = x.r.last_played_at ? fmtDateInline(ymd(new Date(x.r.last_played_at))) : '';
           var quien = x.p.coach ? htmlEscape(x.p.name) : htmlEscape(dorsal(x.p)+' '+x.p.name)+(isPaused(x.p)?' · '+T('En pausa'):'');
           return '<tr><td class="tnum">'+(i+1)+'</td><td class="notr">'+quien+'</td>'+(tf==='Club'?'<td>'+htmlEscape(teamLabel(x.p.team))+'</td>':'')+
-            '<td class="tnum">'+Number(x.r.best_score).toLocaleString('es-PR')+g.u+'</td>'+(g.id==='keepup'?'<td class="tnum">'+(x.r.best_level||'')+'</td>':'')+
+            '<td class="tnum">'+Number(x.r.best_score).toLocaleString('es-PR')+g.u+'</td>'+(g.id.indexOf('keepup')===0?'<td class="tnum">'+(x.r.best_level||'')+'</td>':'')+
             '<td class="tnum">'+(x.r.plays||0)+'</td><td>'+htmlEscape(u)+'</td>'+
             '<td style="text-align:right"><button class="btn-ghost" style="padding:4px 10px;font-size:12px" data-g="'+g.id+'" data-a="'+(x.p.coach?'coach':'jugador')+'" data-v="'+htmlEscape(x.p.coach?'':x.r.player_id)+'" data-n="'+htmlEscape(x.p.coach?T('Coach'):(dorsal(x.p)+' '+x.p.name))+'" onclick="openResetModal(this.dataset.g, this.dataset.a, this.dataset.v || null, this.dataset.n)">'+T('Quitar')+'</button></td></tr>';
         }).join('')+'</tbody></table></div></div>';
@@ -9482,7 +9482,7 @@ var _resetSaving = false;
 function openResetModal(game, alcance, valor, etiqueta){
   try {
     _reset = { game: game, alcance: alcance, valor: valor };
-    document.getElementById('reset-title').textContent = T('Borrar del top de {g}', {g: game==='keepup' ? 'Keep It Up' : (game==='bareboru' ? 'BAREBORU' : (game==='bareboru6' ? 'BAREBORU 6x6' : 'Long Spike'))});
+    document.getElementById('reset-title').textContent = T('Borrar del top de {g}', {g: game==='keepup2' ? 'Keep It Up' : game==='keepup' ? 'Keep It Up clásico' : (game==='bareboru' ? 'BAREBORU' : (game==='bareboru6' ? 'BAREBORU 6x6' : 'Long Spike'))});
     document.getElementById('reset-sub').textContent = etiqueta;
     var r = document.querySelectorAll('input[name="reset-modo"]');
     for(var i=0;i<r.length;i++) r[i].checked = r[i].value==='marca';
@@ -10825,8 +10825,8 @@ function v2EquipoView(p){
    tarjetas para abrirlos con el mismo enlace y el top del equipo o del club.
    Los récords salen de player_game_board (número y primer nombre). */
 var V2_JUEGOS = [
-  { id:'keepup', titulo:'Keep It Up', logo:'Keep It Up', acento:'', ruta:'/juegos/keepup', img:'/juegos/keepup/assets/portada.webp', unidad:'',
-    texto:'Pases de antebrazo, monedas, cajas y niveles. Apunta con el borde de la plataforma.' },
+  { id:'keepup2', titulo:'Keep It Up', logo:'Keep It Up', acento:'', ruta:'/juegos/keepup', img:'/juegos/keepup/assets/portada.webp', unidad:'',
+    texto:'Pases de antebrazo en 3D: llega, párate y pasa. Monedas, cajas, niveles y planchas.' },
   { id:'longspike', titulo:'Long Spike', logo:'Long Spike', acento:'', ruta:'/juegos/longspike', img:'/juegos/longspike/assets/portada.webp', unidad:' m',
     texto:'Carrera, salto y remate. Hasta dónde llega tu balón: de la cancha al mar.' },
   { id:'bareboru', titulo:'BAREBORU 3x3', logo:'BAREBORU', acento:'3x3', ruta:'/juegos/bareboru', img:'/juegos/bareboru/assets/portada.webp', unidad:' pts',
