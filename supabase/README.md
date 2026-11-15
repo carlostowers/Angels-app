@@ -23,3 +23,5 @@ El uno contra uno en linea del 6x6 (juego 0.3.0, app v4.3.0) usa las funciones `
 Decision de Carlos (delegada): la copia de datos de salud en `public` se borra el 2026-12-10, 30 dias despues de publicar la v4, con una migracion aparte, verificacion previa y su permiso ese dia.
 
 0024 (examen del sistema y del scouting) aplicada el 2026-11-14: crea `exam_keys` (clave de cada examen, sin acceso para anon ni authenticated) y `exam_results` (todos los intentos; RLS, lectura solo staff) y la RPC `player_exam_submit(p_token, p_exam, p_answers)`, que valida el enlace del jugador, calcula la nota con la clave del servidor, no repite una entrega igual en el mismo minuto y limita a 20 por dia. El examen vive en angelsplay (`#/examen`); la app le pasa el token en el hash. Clave cargada: `buzzer-2026` (30 preguntas). Sin DROP de tablas, DELETE ni TRUNCATE.
+
+0025 (examen con nombre real) aplicada el 2026-11-14: `player_exam_submit` devuelve tambien `nombre` (apodo o primer nombre y numero del dueno del enlace). Misma firma y permisos; no toca tablas. El examen lo usa en la pantalla final en lugar del nombre escogido en el telefono.

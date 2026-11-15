@@ -1394,6 +1394,8 @@ html.modo-jugador .loading-spinner{border-color:var(--fondo-hundido);border-top-
 html.modo-jugador .loading-text{font-family:inherit;font-size:14px;line-height:20px;color:var(--tinta-media);letter-spacing:0;text-transform:none;}
 html.modo-jugador .modal-overlay{background:var(--velo);backdrop-filter:none;padding:16px;}
 html.modo-jugador .modal-box{background:var(--fondo-elevado);border:1px solid var(--linea);border-radius:20px;padding:24px;box-shadow:var(--sombra-md);color:var(--tinta);}
+/* Ventanas del jugador: nunca más altas que la pantalla visible; si no caben, scroll por dentro (v4.12.1). */
+html.modo-jugador .modal-box{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
 html.modo-jugador .modal-title{font-family:inherit;font-size:20px;line-height:26px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--tinta);}
 html.modo-jugador .modal-subtitle{font-size:14px;line-height:20px;color:var(--tinta-media);margin:8px 0 24px;}
 html.modo-jugador .modal-actions{display:flex;flex-direction:column;gap:8px;margin-top:0;}
@@ -2517,7 +2519,7 @@ html.modo-staff .logo img{width:64px;height:auto;max-width:100%;}
 <script>
 // Version visible en pantalla. Cuando alguien reporte algo raro, lo primero
 // es saber que version esta corriendo su telefono.
-const APP_VERSION = 'v4.12.0';
+const APP_VERSION = 'v4.12.1';
 
 // ============ SUPABASE ============
 // Backend de Angels: esquema "angels" dentro del proyecto de Supabase de
@@ -3134,7 +3136,12 @@ var EXAM_ID = 'buzzer-2026';
 function openExam(){
   try {
     var url = SCOUT_BASE + 'examen';
-    if(PLAYER_TOKEN && !isStaff()) url += '&t=' + encodeURIComponent(PLAYER_TOKEN);
+    if(PLAYER_TOKEN && !isStaff()){
+      url += '&t=' + encodeURIComponent(PLAYER_TOKEN);
+      // nombre con que lo nombra su app: el examen lo muestra en lugar de la lista de nombres
+      var yo = DB.players.find(function(x){ return x.id === PLAYER_ID; });
+      if(yo){ var nm = callName(yo) + (yo.number ? ' #' + yo.number : ''); if(nm) url += '&n=' + encodeURIComponent(nm); }
+    }
     window.open(url, '_blank', 'noopener');
     closeScouting();
   } catch(e){ console.error('openExam', e); }
