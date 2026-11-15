@@ -115,6 +115,38 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
 .foot a{color:var(--acc,#FFCF27);font-weight:700;text-decoration:none}
 #narr{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);max-width:70%;padding:6px 14px;border-radius:10px;background:rgba(14,17,22,.74);color:#F2EFE8;font:600 15px/1.25 Archivo,system-ui,sans-serif;text-align:center;pointer-events:none;display:none;z-index:6}
 #narr.on{display:block}#narr.d{color:#C6F432}
+/* 0.14.0: tiempos y cambios */
+#tcb{position:absolute;left:calc(16px + var(--sl,0px));top:44px;display:none;gap:6px;align-items:center;flex-wrap:wrap;max-width:46%}
+#hud.bcn #tcb{top:96px}
+#tcb button{font-size:12px;font-weight:800;padding:7px 12px;border-radius:999px;border:1.5px solid var(--acc,#FFCF27);background:rgba(14,17,22,0.78);color:#F2EFE8}
+#tcb button.on{background:var(--acc,#FFCF27);color:#0E1116}
+#tcb button.no{opacity:.4;border-color:rgba(242,239,232,0.3)}
+#tcA{font-size:11px;font-weight:800;padding:6px 10px;border-radius:999px;background:rgba(14,17,22,0.78);color:#C6F432;display:none}
+.tcgr{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}
+#tcv{position:absolute;right:calc(14px + var(--sr,0px));top:64px;bottom:14px;width:min(48%,400px);display:none;flex-direction:column;gap:6px;padding:12px 14px;box-sizing:border-box;border-radius:14px;background:rgba(14,17,22,0.9);border:1px solid rgba(242,239,232,0.14);pointer-events:auto;overflow-y:auto;z-index:4}
+#tcv .tch{font-size:20px;font-weight:800;font-stretch:115%;color:var(--acc,#FFCF27);line-height:1.1}
+#tcv .tch span{color:#F2EFE8;font-weight:700}
+#tcv .tcs{font-size:12px;color:rgba(242,239,232,0.72)}
+#tcv .tcm{font-size:14px;font-weight:700}
+#tcv .tcm b{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
+#tcv .tcg{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+#tcv .tcg div{background:rgba(242,239,232,0.07);border-radius:9px;padding:5px 8px;font-size:11px;color:rgba(242,239,232,0.72)}
+#tcv .tcg b{display:block;font-size:16px;color:#F2EFE8;font-weight:800}
+#tcv .tcq{font-size:12.5px;line-height:1.35}
+#tcv .tcq b{display:block;font-size:11px;color:var(--acc,#FFCF27);margin-bottom:1px}
+#tcv .tce{font-size:11.5px;color:#C6F432}
+#tcv .tcb2{display:flex;gap:8px;margin-top:auto}
+#tcv .tcb2 button{flex:1;font-weight:800;font-size:15px;padding:10px 0;border-radius:999px;border:0;background:var(--acc,#FFCF27);color:#0E1116}
+#tcv .tcb2 button.b2{background:transparent;color:#F2EFE8;border:1px solid rgba(242,239,232,0.3)}
+#tcv .tcr{display:block;height:4px;border-radius:2px;background:rgba(242,239,232,0.5);width:100%;transform-origin:0 50%}
+.sb.bc .bcT{display:none;gap:2px;align-items:center}.sb.bc .bcT.on{display:flex}
+.sb.bc .bcT i{display:block;width:3px;height:11px;border-radius:1px;background:#C6F432}.sb.bc .bcT i.u{background:rgba(242,239,232,0.22)}
+.row.vol input[type=range]{width:100%;accent-color:var(--acc,#FFCF27);height:28px;margin:2px 0 0}
+#ocho{position:absolute;left:50%;bottom:58px;transform:translateX(-50%);display:none;font-size:15px;font-weight:800;color:#F2EFE8;background:rgba(14,17,22,0.82);border:1.5px solid #ff8a7a;border-radius:999px;padding:6px 14px;pointer-events:none;z-index:3}
+.sb.bc .bcK{display:none;width:7px;height:10px;border-radius:1.5px;margin:0 2px}.sb.bc .bcK.y{display:inline-block;background:#FFCF27}.sb.bc .bcK.r{display:inline-block;background:#ff4a3a}
+#tcv .tcb2 button.no,#tcb button.no{opacity:0.45}
+.card .tcsum{font-size:13px;font-weight:700;margin:10px 0 0;color:#F2EFE8}
+.card .btn[disabled]{opacity:0.45}
 </style>
 </head>
 <body>
@@ -127,6 +159,7 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
   <div id="narr"></div>
   <div class="sb" id="sb"><span class="tm us"><i class="dot" id="dUs"></i><span id="nUs">Vaqueros</span></span><span class="pt us" id="sUs">0</span><span class="sep">:</span><span class="pt" id="sRv">0</span><span class="tm"><span id="nRv">Rival</span><i class="dot" id="dRv"></i></span><span class="to" id="sTo"></span></div>
   <div id="lbl"></div><div id="rotP"></div><div id="rly"></div><div id="sp"><i id="spI"></i></div><div id="spT"></div>
+  <div id="tcb"><button id="bTo" type="button"></button><button id="bCb" type="button"></button><span id="tcA"></span></div><div id="tcv"></div><div id="ocho"></div>
   <div class="tr"><button id="bMus" type="button"></button><button id="bSnd" type="button"></button><button id="bPau" type="button"></button></div>
   <div id="msg"></div>
   <div id="bub"></div><div id="tag"></div><div id="setT"></div><div id="arr"></div><div id="call"></div><div id="rep"></div>
@@ -149,7 +182,7 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.13.2',ASSET_V='2';
+var APP_VERSION='0.14.1',ASSET_V='2';
 /* BAREBORU by VOLEII 6x6: voleibol seis contra seis contra la maquina, a 15 con ventaja de 2.
    Sistema 5-1 con libero y las seis rotaciones del Playbook de Vaqueros (formaciones de recepcion, target, defensa Middle/Middle y cobertura).
    Sale del motor del 3x3 (juegos/bareboru): mismos cuerpos, clips y controles. Controlas al jugador que le toca jugar el balon; los demas van solos.
@@ -187,7 +220,11 @@ var APP_VERSION='0.13.2',ASSET_V='2';
    saque, y solo va al empezar el partido. Jeriel se dice "Yeriel" con tilde en la ultima e, y Yandier es "Yandi" ("Yandi" con
    tilde en la a) en la voz y en pantalla. NR_V sube a 2 para que el telefono baje las voces nuevas.
    0.13.2 (Carlos, 15 nov.): Jeriel con la fuerza en la segunda silaba ("yeriEl"). Se escribe "Yerieel" con tilde en la primera e
-   de "eel" y se escogieron, midiendo tono e intensidad, las tomas con la silaba final mas fuerte. NR_V sube a 3. */
+   de "eel" y se escogieron, midiendo tono e intensidad, las tomas con la silaba final mas fuerte. NR_V sube a 3.
+   0.14.0 (Carlos, 15 nov.): tiempos y cambios. Cambios con la regla de USA Volleyball (15 por set; cada jugador entra las veces que
+   quiera dentro de esos 15, siempre al mismo puesto de la rotacion). Dos tiempos por set, con efecto: el que pide tiempo juega mejor
+   los 3 puntos siguientes. El rival tambien pide tiempo y hace cambios. Tambien en linea. ?tiempos=0 apaga todo; ?efecto=0 deja el
+   tiempo como pausa sola. Frases nuevas en las dos voces (archivos nuevos con ?v=4; los de la 0.13 siguen con ?v=3). */
 var CFG={team:'Vaqueros',rival:'Rival',acc:'#FFCF27',azul:'#023B9F',
   kitUs:{jersey:'#00389C',shorts:'#F1F3F6',trim:'#FCCC24'},kitRival:{jersey:'#E8559A',shorts:'#F1F3F6',trim:'#FFFFFF'},
   court:{inn:'#2f63b8',out:'#1a2f57'},ball:['#FCCC24','#00389C','#F2EFE8'],ls:'vq_bareboru6_cfg_v1',app:'STATION',schema:'station',brand:'vaqueros'};
@@ -220,9 +257,9 @@ var $=function(id){return document.getElementById(id);};
 var TINTA='#0E1116',HUESO='#F2EFE8',VOL='#C6F432',ROJO='#d93a2b';
 
 /* ---------- preferencias guardadas ---------- */
-var PREF={real:false,cuadro:null,copa:null,temp:null,trofeos:null,diff:'easy',assist:false,snd:true,mus:true,loc:true,hints:{},xp:0,style:'eq',kit:'home',rival:'coqui',tut:false,day:null};
+var PREF={real:false,cuadro:null,copa:null,temp:null,trofeos:null,diff:'easy',assist:false,snd:true,mus:true,loc:true,hints:{},xp:0,style:'eq',kit:'home',rival:'coqui',tut:false,day:null,vm:0.5,ve:1,vv:1};
 try{var pj=JSON.parse(localStorage.getItem(CFG.ls)||'null');if(pj&&typeof pj==='object'){if(pj.diff==='easy'||pj.diff==='normal'||pj.diff==='hard')PREF.diff=pj.diff;PREF.assist=!!pj.assist;PREF.snd=pj.snd!==false;PREF.mus=pj.mus!==false;PREF.xp=Math.max(0,parseInt(pj.xp,10)||0);if(typeof pj.style==='string')PREF.style=pj.style;if(typeof pj.kit==='string')PREF.kit=pj.kit;if(typeof pj.rival==='string')PREF.rival=pj.rival;PREF.tut=!!pj.tut;if(pj.day&&typeof pj.day==='object')PREF.day=pj.day;if(pj.hints&&typeof pj.hints==='object')PREF.hints=pj.hints;
-  if(typeof pj.loc==='boolean')PREF.loc=pj.loc;if(typeof pj.real==='boolean')PREF.real=pj.real;['cuadro','copa','temp','trofeos'].forEach(function(k){if(pj[k]&&typeof pj[k]==='object')PREF[k]=pj[k];});}}catch(e){}
+  if(typeof pj.loc==='boolean')PREF.loc=pj.loc;if(typeof pj.real==='boolean')PREF.real=pj.real;['vm','ve','vv'].forEach(function(k){if(typeof pj[k]==='number'&&isFinite(pj[k]))PREF[k]=Math.max(0,Math.min(1,pj[k]));});['cuadro','copa','temp','trofeos'].forEach(function(k){if(pj[k]&&typeof pj[k]==='object')PREF[k]=pj[k];});}}catch(e){}
 function savePref(){try{localStorage.setItem(CFG.ls,JSON.stringify(PREF));}catch(e){}}
 var LANG='es';try{var lv=localStorage.getItem('plat_lang');if(lv==='en'||lv==='es')LANG=lv;}catch(e){}
 try{var lq=new URLSearchParams(location.search).get('lang');if(lq==='en'||lq==='es')LANG=lq;}catch(e){}
@@ -259,14 +296,28 @@ try{var _q8=new URLSearchParams(location.search);if(_q8.get('golpe')==='0')GOLPE
 var ARENA_ON=true,SONIDO_ON=true,LOC_ON=true,ENTRADA_ON=true;
 try{var _q9=new URLSearchParams(location.search);if(_q9.get('arena')==='0')ARENA_ON=false;if(_q9.get('sonido')==='0')SONIDO_ON=false;
   if(_q9.get('locutor')==='0')LOC_ON=false;if(_q9.get('entrada')==='0')ENTRADA_ON=false;}catch(e){}
+/* 0.14.0: tiempos y cambios. ?tiempos=0 los apaga (sin botones, sin tiempos ni cambios del rival); ?efecto=0 deja el tiempo como
+   pausa sola, sin el ajuste de los 3 puntos siguientes. ?tcbot=1 (solo robot): el equipo del jugador tambien pide tiempo con la
+   misma regla del rival, para medir lo que da el ajuste.
+   0.14.1: ?reglas=0 quita el retraso de juego, la peticion improcedente y los 8 segundos del saque; ?primer=0 deja los roces del
+   bloqueo y los balones sueltos como en la 0.14.0 (le caian mucho al colocador). */
+var TC_ON=true,TC_EF=true,TC_BOT=false,REGLAS_ON=true,PRIMER_ON=true;
+try{var _q14=new URLSearchParams(location.search);if(_q14.get('tiempos')==='0')TC_ON=false;if(_q14.get('efecto')==='0')TC_EF=false;if(_q14.get('tcbot')==='1')TC_BOT=true;
+  if(_q14.get('reglas')==='0')REGLAS_ON=false;if(_q14.get('primer')==='0')PRIMER_ON=false;}catch(e){}
 /* azar propio de lo que solo se dibuja (polvo, ondas): no usa Math.random, asi el robot sembrado da los mismos partidos */
 var VR_S=7919;function vrnd(){VR_S=(VR_S*16807)%2147483647;return (VR_S-1)/2147483646;}
 var ac=null,noiseBuf=null;
 function actx(){try{if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();var n=ac.sampleRate*1.5,b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);for(var i=0;i<n;i++)d[i]=Math.random()*2-1;noiseBuf=b;}if(ac.state==='suspended')ac.resume();if(!SB.a&&SONIDO_ON)snInit();return ac;}catch(e){return null;}}
 function audio(){return PREF.snd?actx():null;}
+/* 0.14.1: volumen del jugador (Carlos: "la musica esta muy alta"). Tres salidas: musica, efectos (golpes, silbatos, publico y botones)
+   y voces del locutor. La musica arranca a la mitad; se guarda en el telefono */
+var VG={};
+function volDe(k){return k==='mus'?PREF.vm:(k==='voz'?PREF.vv:PREF.ve);}
+function vg(k){try{var a=ac;if(!a)return null;if(!VG[k]){VG[k]=a.createGain();VG[k].gain.value=volDe(k);VG[k].connect(a.destination);}return VG[k];}catch(e){return null;}}
+function volAplica(){try{var t=ac?ac.currentTime:0;for(var k in VG){if(VG[k])VG[k].gain.setTargetAtTime(volDe(k),t,0.05);}}catch(e){}}
 /* ambiente del publico: ruido filtrado que sube con el rally */
 var amb=null;
-function ambStart(){var a=audio();if(!a||amb||!noiseBuf)return;try{var s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=noiseBuf;s.loop=true;f.type='bandpass';f.frequency.value=850;f.Q.value=0.45;g.gain.value=0.0001;s.connect(f);f.connect(g);g.connect(a.destination);s.start();amb={g:g,f:f};}catch(e){}}
+function ambStart(){var a=audio();if(!a||amb||!noiseBuf)return;try{var s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=noiseBuf;s.loop=true;f.type='bandpass';f.frequency.value=850;f.Q.value=0.45;g.gain.value=0.0001;s.connect(f);f.connect(g);g.connect(vg('fx')||a.destination);s.start();amb={g:g,f:f};}catch(e){}}
 function ambSet(v){if(!amb||!ac)return;try{amb.g.gain.setTargetAtTime(PREF.snd?v:0.0001,ac.currentTime,0.3);amb.f.frequency.setTargetAtTime(750+v*6000,ac.currentTime,0.4);}catch(e){}}
 /* musica: base ritmica sintetizada (se apaga con su boton) */
 var mus={on:false,next:0,step:0,timer:null,g:null},BASS=[55,55,0,55,65.4,0,55,82.4,49,49,0,49,58.3,0,73.4,0];
@@ -280,17 +331,17 @@ function musTick(){if(!ac||!mus.on)return;var spb=60/116/2;if(mus.next<ac.curren
     if(BASS[i])mOsc(t,'sawtooth',BASS[i],0,spb*0.9,0.09,420);
     if(hot&&(i===0||i===6||i===10))mOsc(t,'square',[220,261.6,196][i%3],0,spb*0.8,0.022,1800);
     mus.next+=spb;mus.step++;}}
-function musStart(){SB.musOn=true;if(SB.a&&PREF.mus&&!SB.f.mus_menu&&!SB.f.mus_rally)snQueue();if(mus.on||!PREF.mus)return;var a=actx();if(!a)return;if(SB.a&&(!G||G.phase==='menu'||SB.mus||snMusReady('mus_rally')))return;try{mus.g=a.createGain();mus.g.gain.value=0.55;mus.g.connect(a.destination);mus.on=true;mus.next=a.currentTime+0.1;mus.step=0;mus.timer=setInterval(musTick,80);}catch(e){}}
+function musStart(){SB.musOn=true;if(SB.a&&PREF.mus&&!SB.f.mus_menu&&!SB.f.mus_rally)snQueue();if(mus.on||!PREF.mus)return;var a=actx();if(!a)return;if(SB.a&&(!G||G.phase==='menu'||SB.mus||snMusReady('mus_rally')))return;try{mus.g=a.createGain();mus.g.gain.value=0.55;mus.g.connect(vg('mus')||a.destination);mus.on=true;mus.next=a.currentTime+0.1;mus.step=0;mus.timer=setInterval(musTick,80);}catch(e){}}
 function musStop(){SB.musOn=false;musSynthStop();}
 function musSynthStop(){try{if(mus.timer)clearInterval(mus.timer);mus.timer=null;mus.on=false;if(mus.g){mus.g.gain.setTargetAtTime(0.0001,ac.currentTime,0.05);var g=mus.g;setTimeout(function(){try{g.disconnect();}catch(e){}},400);mus.g=null;}}catch(e){}}
-function tone(f,d,type,v,f2){var a=audio();if(!a)return;try{var o=a.createOscillator(),g=a.createGain(),t=a.currentTime;o.type=type||'sine';o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(Math.max(30,f2||f*0.6),t+d);g.gain.setValueAtTime(v||0.1,t);g.gain.exponentialRampToValueAtTime(0.001,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d);}catch(e){}}
-function noise(d,freq,q,v,type){var a=audio();if(!a||!noiseBuf)return;try{var s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain(),t=a.currentTime;s.buffer=noiseBuf;f.type=type||'bandpass';f.frequency.setValueAtTime(freq,t);f.Q.value=q||1;g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(v,t+Math.min(0.02,d*0.2));g.gain.exponentialRampToValueAtTime(0.001,t+d);s.connect(f);f.connect(g);g.connect(a.destination);s.start(t);s.stop(t+d+0.05);}catch(e){}}
+function tone(f,d,type,v,f2){var a=audio();if(!a)return;try{var o=a.createOscillator(),g=a.createGain(),t=a.currentTime;o.type=type||'sine';o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(Math.max(30,f2||f*0.6),t+d);g.gain.setValueAtTime(v||0.1,t);g.gain.exponentialRampToValueAtTime(0.001,t+d);o.connect(g);g.connect(vg('fx')||a.destination);o.start(t);o.stop(t+d);}catch(e){}}
+function noise(d,freq,q,v,type){var a=audio();if(!a||!noiseBuf)return;try{var s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain(),t=a.currentTime;s.buffer=noiseBuf;f.type=type||'bandpass';f.frequency.setValueAtTime(freq,t);f.Q.value=q||1;g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(v,t+Math.min(0.02,d*0.2));g.gain.exponentialRampToValueAtTime(0.001,t+d);s.connect(f);f.connect(g);g.connect(vg('fx')||a.destination);s.start(t);s.stop(t+d+0.05);}catch(e){}}
 /* 0.8.0 peso del golpe: capa grave en cada golpe. Un seno que cae de tono pasa por una saturacion suave para que la bocina del
    telefono, que casi no da graves, oiga sus armonicos; en el remate fuerte y el bloqueo se suma el chasquido de la mano. */
 var thSh=null;
 function sThump(p,f0,f1,d,v,crack){if(!GOLPE_ON)return;var a=audio();if(!a)return;try{p=clamp(p,0,1);var t=a.currentTime,o=a.createOscillator(),g=a.createGain();
   if(!thSh){thSh=a.createWaveShaper();var n=512,c=new Float32Array(n);for(var i=0;i<n;i++){var x=i/(n-1)*2-1;c[i]=Math.tanh(x*2.4)/Math.tanh(2.4);}thSh.curve=c;thSh.oversample='2x';
-    var og=a.createGain();og.gain.value=0.72;thSh.connect(og);og.connect(a.destination);}
+    var og=a.createGain();og.gain.value=0.72;thSh.connect(og);og.connect(vg('fx')||a.destination);}
   o.type='sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+d*0.7);
   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(v*(0.45+0.55*p),t+0.006);g.gain.exponentialRampToValueAtTime(0.001,t+d);
   o.connect(g);g.connect(thSh);o.start(t);o.stop(t+d+0.03);
@@ -301,8 +352,8 @@ function sBlock(){if(snGolpe('bloqueo')){vib(45);return;}noise(0.06,1100,0.9,0.2
 function sHit(p,k){p=clamp(p,0,1);vib(18+28*p);if(snGolpe(k||'remate',p))return;noise(0.09+0.05*p,900+900*p,0.8,0.12+0.22*p,'lowpass');tone(150-40*p,0.1+0.06*p,'sine',(0.12+0.2*p)*(GOLPE_ON?0.55:1),60);sThump(p,125,46,0.14+0.14*p,0.3,p>0.55);}
 function sBump(){vib(12);if(snGolpe('recepcion'))return;noise(0.07,500,0.9,0.12,'lowpass');tone(190,0.09,'sine',0.1,110);sThump(0.35,160,90,0.1,0.16,false);}
 function sSet(){if(snGolpe('colocacion'))return;noise(0.05,1400,1.2,0.07,'bandpass');tone(420,0.06,'sine',0.05,300);}
-function sWhistle(long){var a=audio();if(!a)return;if(snGolpe(long?'silbato_largo':'silbato_doble'))return;try{var t=a.currentTime,d=long?0.7:0.3,o=a.createOscillator(),o2=a.createOscillator(),l=a.createOscillator(),lg=a.createGain(),g=a.createGain();o.type='square';o2.type='square';o.frequency.value=2700;o2.frequency.value=2930;l.frequency.value=38;lg.gain.value=120;l.connect(lg);lg.connect(o.frequency);lg.connect(o2.frequency);g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.045,t+0.02);g.gain.setValueAtTime(0.045,t+d-0.05);g.gain.linearRampToValueAtTime(0.0001,t+d);o.connect(g);o2.connect(g);g.connect(a.destination);o.start(t);o2.start(t);l.start(t);o.stop(t+d);o2.stop(t+d);l.stop(t+d);}catch(e){}}
-function sCrowd(v){var a=audio();if(!a||!noiseBuf)return;if(snPublico(v))return;try{var s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain(),t=a.currentTime;s.buffer=noiseBuf;s.loop=true;f.type='bandpass';f.frequency.setValueAtTime(700,t);f.frequency.linearRampToValueAtTime(1300,t+0.5);f.Q.value=0.6;g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(v,t+0.25);g.gain.exponentialRampToValueAtTime(0.001,t+1.7);s.connect(f);f.connect(g);g.connect(a.destination);s.start(t);s.stop(t+1.8);}catch(e){}}
+function sWhistle(long){var a=audio();if(!a)return;if(snGolpe(long?'silbato_largo':'silbato_doble'))return;try{var t=a.currentTime,d=long?0.7:0.3,o=a.createOscillator(),o2=a.createOscillator(),l=a.createOscillator(),lg=a.createGain(),g=a.createGain();o.type='square';o2.type='square';o.frequency.value=2700;o2.frequency.value=2930;l.frequency.value=38;lg.gain.value=120;l.connect(lg);lg.connect(o.frequency);lg.connect(o2.frequency);g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.045,t+0.02);g.gain.setValueAtTime(0.045,t+d-0.05);g.gain.linearRampToValueAtTime(0.0001,t+d);o.connect(g);o2.connect(g);g.connect(vg('fx')||a.destination);o.start(t);o2.start(t);l.start(t);o.stop(t+d);o2.stop(t+d);l.stop(t+d);}catch(e){}}
+function sCrowd(v){var a=audio();if(!a||!noiseBuf)return;if(snPublico(v))return;try{var s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain(),t=a.currentTime;s.buffer=noiseBuf;s.loop=true;f.type='bandpass';f.frequency.setValueAtTime(700,t);f.frequency.linearRampToValueAtTime(1300,t+0.5);f.Q.value=0.6;g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(v,t+0.25);g.gain.exponentialRampToValueAtTime(0.001,t+1.7);s.connect(f);f.connect(g);g.connect(vg('fx')||a.destination);s.start(t);s.stop(t+1.8);}catch(e){}}
 function sOk(){if(snUI('aceptar',0.8))return;tone(880,0.12,'triangle',0.08,1320);}
 function sUi(){if((!G||G.phase==='menu'||G.phase==='end'||ovOpen())&&snUI('click',0.8))return;tone(520,0.06,'triangle',0.05,620);}
 /* ======================= ENTRADA (0.9.0, entrega B) =======================
@@ -363,8 +414,8 @@ function snEco(a){try{var sr=a.sampleRate,len=Math.round(sr*1.4),b=a.createBuffe
     var tp=[0.021,0.037,0.059,0.083];for(var k=0;k<tp.length;k++){var j=Math.round(tp[k]*sr)+c*37;if(j<len)d[j]+=0.5/(k+1);}}
   var cv=a.createConvolver();cv.normalize=true;cv.buffer=b;return cv;}catch(e){return null;}}
 function snInit(){if(SB.a||!SONIDO_ON||!ac)return;try{var a=ac,m=a.createGain(),k,i,j;m.gain.value=1;m.connect(a.destination);
-  SB.bus={mus:a.createGain(),bed:a.createGain(),sfx:a.createGain(),ui:a.createGain(),loc:a.createGain()};for(k in SB.bus)SB.bus[k].connect(m);SB.bus.ui.gain.value=0.45;SB.bus.loc.gain.value=0.8;
-  var cv=snEco(a);if(cv){var wg=a.createGain();wg.gain.value=0.24;SB.bus.loc.connect(cv);cv.connect(wg);wg.connect(m);}
+  SB.bus={mus:a.createGain(),bed:a.createGain(),sfx:a.createGain(),ui:a.createGain(),loc:a.createGain()};for(k in SB.bus)SB.bus[k].connect(vg(k==='mus'?'mus':(k==='loc'?'voz':'fx'))||m);SB.bus.ui.gain.value=0.45;SB.bus.loc.gain.value=0.8;
+  var cv=snEco(a);if(cv){var wg=a.createGain();wg.gain.value=0.24;SB.bus.loc.connect(cv);cv.connect(wg);wg.connect(vg('voz')||m);}
   for(k in SN_SPR){var o={},keys=[];if(SN_SPR[k].k)keys=SN_SPR[k].k.split(' ');
     else{var fr=k.indexOf('_frases')>0,L=fr?SN_FR:(SN_NOM[k.split('_')[2]]||[]);for(i=0;i<L.length;i++)for(j=1;j<=3;j++)keys.push(L[i]+'_'+j);}
     for(i=0;i<keys.length;i++)o[keys[i]]=i;SB.ix[k]=o;}
@@ -386,7 +437,7 @@ function snLead(b,spr){try{var d=b.getChannelData(0),sr=b.sampleRate,i,mx=0,im=0
 function snNext(){if(SB.busy||!SB.a)return;var n=null;while(SB.q.length){var c=SB.q.shift();if(!SB.f[c]){n=c;break;}}if(!n)return;
   var F={b:null,m:0,raw:null};SB.f[n]=F;SB.busy=true;
   function fin(){SB.busy=false;snNext();}
-  try{fetch((n.indexOf('narr_')===0?NR_DIR+n+'.m4a?v='+NR_V:SN_DIR+n+'.m4a?v='+SN_V)).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.arrayBuffer();}).then(function(raw){
+  try{fetch((n.indexOf('narr_')===0?NR_DIR+n+'.m4a?v='+((SN_SPR[n]&&SN_SPR[n].v)||NR_V):SN_DIR+n+'.m4a?v='+SN_V)).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.arrayBuffer();}).then(function(raw){
     if(n.indexOf('mus_')===0){F.raw=raw;fin();return;}
     snDecode(raw,snRate(n),function(b){F.b=b;F.m=snLead(b,!!SN_SPR[n]);fin();},function(){F.fail=true;fin();});
   }).then(null,function(){F.fail=true;fin();});}catch(e){F.fail=true;fin();}}
@@ -423,7 +474,7 @@ function snLoopStop(o,fade){if(!o)return;try{var a=SB.a,f=fade||0.3;o.g.gain.set
 function sndFrame(rdt){if(!SB.a)return;try{var a=SB.a,now=a.currentTime,ph=G?G.phase:'menu',bw='',mw='',cur,F;
   if(PREF.snd)bw='murmullo';
   if(bw!==(SB.bed?SB.bed.n:'')){F=SB.f[bw];if(!bw||(F&&F.b)){snLoopStop(SB.bed,0.5);SB.bed=bw?snLoopStart(bw,'bed',ph==='menu'?0.3:0.14,0.8):null;}}
-  if(SB.bed){var tv=ph==='menu'?0.3:0.14;if(Math.abs(tv-SB.bed.v)>0.01){SB.bed.v=tv;SB.bed.g.gain.setTargetAtTime(tv,now,0.6);}}
+  if(SB.bed){var tv=(ph==='menu'||ph==='tiempo')?0.3:0.14;if(Math.abs(tv-SB.bed.v)>0.01){SB.bed.v=tv;SB.bed.g.gain.setTargetAtTime(tv,now,0.6);}}
   if(PREF.mus&&SB.musOn){if(ph==='menu')mw='mus_menu';else if(ph==='end')mw=SB.fin||'mus_menu';else mw=SB.setPt?'mus_punto_set':'mus_rally';}
   if(SB.mus&&SB.mus.once&&now>SB.mus.end){SB.mus=null;if(SB.fin)SB.fin='';}
   cur=SB.mus?SB.mus.n:'';
@@ -431,7 +482,7 @@ function sndFrame(rdt){if(!SB.a)return;try{var a=SB.a,now=a.currentTime,ph=G?G.p
     SB.mus=snLoopStart(mw,'mus',SN_MV[mw]||0.2,once?0.05:0.6,once);if(SB.mus&&mus.on)musSynthStop();snMusFree(mw);}}
   var dk=now<SB.duck?0.5:1;if(dk!==SB.dk){SB.dk=dk;SB.bus.bed.gain.setTargetAtTime(dk,now,0.08);SB.bus.mus.gain.setTargetAtTime(dk,now,0.08);}
   if(!PREF.snd||!G||ph==='menu'||ph==='end'||BOT.sim)return;
-  if(ph==='pre'&&G.tPh>=0.35&&SB.svR!==R){SB.svR=R;snSilbato('silbato_corto');}
+  if(ph==='pre'&&G.tPh>=0.35+(G.preX||0)&&SB.svR!==R){SB.svR=R;snSilbato('silbato_corto');}
   }catch(e){}}
 /* cuadro del partido: los de la misma posicion rotan; con Mi cuadro (0.10.0) manda el del jugador */
 function snLineup(fc){var R0=SN_ROS[CFG.brand];if(!R0)return null;var cats=Object.keys(R0),cat=(fc&&R0[fc])?fc:cats[Math.floor(snRnd()*cats.length)%cats.length],P=R0[cat],used={},o={cat:cat};
@@ -462,21 +513,31 @@ var NTX={recibe_bien:'Buena recepción',recibe_mal:'Recepción complicada',al_ce
   recibir_mejor:'Hay que recibir mejor',asi_se_defiende:'Así se defiende',que_colocacion:'Qué colocación',ajustar_bloqueo:'Tienen que ajustar el bloqueo',
   apretado:'Partido apretado',presion:'Mucha presión en este punto',momento:'Momento importante',repeticion:'Mírenlo otra vez',que_partido:'¡Qué partido!',
   cuartos:'Cuartos de final',semifinal:'Semifinal',final:'¡La gran final!',temporada:'Arranca la temporada',jornada:'Nueva jornada',playoffs:'Llegamos a los playoffs',
-  ace:'¡Ace!',bloqueo:'¡Bloqueo!',remate:'¡Remate!',partido:'¡Partido!',punto:'¡Punto!',punto_de_set:'¡Punto de set!',que_defensa:'¡Qué defensa!'};
+  ace:'¡Ace!',bloqueo:'¡Bloqueo!',remate:'¡Remate!',partido:'¡Partido!',punto:'¡Punto!',punto_de_set:'¡Punto de set!',que_defensa:'¡Qué defensa!',
+  corta_racha:'¡Cortan la racha!',funciono_tiempo:'Funcionó el tiempo',ultimo_tiempo:'Es su último tiempo',reanuda:'Se reanuda el partido',amarilla:'Tarjeta amarilla por retraso',roja:'Tarjeta roja por retraso',improcedente:'Petición improcedente',ocho_segundos:'Se pasó de los ocho segundos'};
 function narrNow(){return typeof NR.clock==='number'?NR.clock:performance.now()/1000;}
 /* 0.13.0: las voces. Las dos voces (C y D) dicen todo el guion; el catalogo (sonido/narr/_narr.json) dice que clave va en que
    archivo. Se cargan la base, los numeros y el equipo propio al abrir el sonido, y al empezar cada partido el rival y los
    jugadores del cuadro; lo de otros partidos se suelta para no gastar memoria. */
-var NR_DIR='/juegos/bareboru6/sonido/narr/',NR_V='3';
+/* 0.14.0: el catalogo se pide con NR_CV; cada archivo con su propia version si la trae (los nuevos de tiempos y cambios, "v":"4"),
+   asi los de la 0.13 siguen con ?v=3 y el telefono no los baja otra vez */
+var NR_DIR='/juegos/bareboru6/sonido/narr/',NR_V='3',NR_CV='5';
 function narrCat(){try{if(NR.cat||NR.catPend||!SONIDO_ON||!LOC_ON)return;NR.catPend=true;
-  fetch(NR_DIR+'_narr.json?v='+NR_V).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();}).then(function(j){
-    var f,i,keys,o,v,b;for(f in j.f){SN_SPR[f]={t:j.f[f].t,k:j.f[f].k};keys=j.f[f].k.split(' ');o={};v=f.charAt(5);
+  fetch(NR_DIR+'_narr.json?v='+NR_CV).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();}).then(function(j){
+    var f,i,keys,o,v,b;for(f in j.f){SN_SPR[f]={t:j.f[f].t,k:j.f[f].k,v:(typeof j.f[f].v==='string'&&/^[0-9]{1,3}$/.test(j.f[f].v))?j.f[f].v:null};keys=j.f[f].k.split(' ');o={};v=f.charAt(5);
       for(i=0;i<keys.length;i++){o[keys[i]]=i;b=keys[i].replace(/_[0-9]$/,'');NR.kf[v][b]=f;}SB.ix[f]=o;}
     NR.cat=true;narrCola();}).then(null,function(){NR.catPend=false;});}catch(e){NR.catPend=false;}}
 /* lo que hace falta: base, numeros y equipo propio siempre; el rival y el cuadro del partido */
 function narrHace(){var n=['narr_c_base','narr_d_base','narr_c_num','narr_d_num','narr_c_eq_'+CFG.brand,'narr_d_eq_'+CFG.brand],k,r;
   try{if(!NET.on){r=narrRival();if(r)n.push('narr_c_eq_'+r,'narr_d_eq_'+r);}
-    if(SB.nom)for(k in SB.nom){if(SB.nom[k])n.push('narr_c_j_'+SB.nom[k],'narr_d_j_'+SB.nom[k]);}}catch(e){}return n;}
+    if(SB.nom)for(k in SB.nom){if(SB.nom[k])n.push('narr_c_j_'+SB.nom[k],'narr_d_j_'+SB.nom[k]);}}catch(e){}
+  /* 0.14.0: tiempos y cambios (comentarios, los dos equipos y, al abrir los cambios, "Entra ..." de la categoria). Los que salieron
+     siguen cargados por si vuelven */
+  try{if((TC_ON||REGLAS_ON)&&!TUT.on)n.push('narr_c_tc','narr_d_tc');
+    if(TC_ON&&!TUT.on){n.push('narr_c_t_'+CFG.brand,'narr_d_t_'+CFG.brand);r=narrRival();if(r)n.push('narr_c_t_'+r,'narr_d_t_'+r);
+    var tc=G&&G.tc;if(tc&&tc.eload&&SB.nom&&SB.nom.cat){var ec=String(SB.nom.cat).toLowerCase();n.push('narr_c_e_'+ec,'narr_d_e_'+ec);}
+    if(tc&&tc.pool)for(k in tc.pool)n.push('narr_c_j_'+k,'narr_d_j_'+k);}}catch(e2){}
+  return n;}
 function narrCola(){try{if(!NR.cat||!SB.a||BOT.sim||!PREF.snd||!LOC_ON)return;var n=narrHace(),ok={},i,f;
   for(i=0;i<n.length;i++)if(SN_SPR[n[i]])ok[n[i]]=1;
   for(f in SB.f){if(f.indexOf('narr_')===0&&!ok[f]&&SB.f[f]&&!SB.f[f].busy)delete SB.f[f];}
@@ -488,7 +549,9 @@ function narrAudio(){return !!(NR.cat&&SB.a&&SB.f.narr_c_base&&SB.f.narr_c_base.
 function narrOn(){return !!G&&!BOT.sim&&(NR.txt||(LOC_ON&&PREF.loc&&PREF.snd&&narrAudio()));}
 function narrRival(){return NET.on?'el_rival':String(CFG.rival||'').toLowerCase();}
 function narrEq(k){return k==='el_rival'?'el rival':snNomV(k);}
-function narrTxt(k){try{if(NTX[k])return NTX[k];var i=k.indexOf('_'),p=k.slice(0,i),r=k.slice(i+1);
+function narrTxt(k){try{if(NTX[k])return NTX[k];if(k.indexOf('pide_tiempo_')===0)return 'Pide tiempo '+narrEq(k.slice(12));
+  if(k.indexOf('tiempo_')===0){var te=narrEq(k.slice(7));return 'Tiempo fuera '+(te==='el rival'?'del rival':'de '+te);}
+  var i=k.indexOf('_'),p=k.slice(0,i),r=k.slice(i+1);if(p==='cambio')return 'Cambio en '+narrEq(r);if(p==='entra')return 'Entra '+narrEq(r);
   if(p==='num'){var m=r.split('_');return m[1]==='a'?m[0]+' a':m[0];}
   var n=narrEq(r),T={nom:n,saca:'Saca '+n,remata:'¡Remata '+n+'!',bloqueo:'¡Bloqueo de '+n+'!',ace:'¡Ace de '+n+'!',defensa:'¡La saca '+n+'!',ataca:'Ataca '+n,
     punto:'¡Punto para '+n+'!',arriba:n+' arriba',racha:'Racha de '+n,juega:'Juega '+n,contra:'contra '+n,gana:'¡'+n+' gana el partido!',campeon:'¡'+n+' campeón!'};
@@ -567,8 +630,8 @@ function narrPunto(w,c,sp){if(!narrOn())return false;try{var nk=c.nom,home=CFG.b
   if(sp&&!narrSay('d','punto_de_partido',2.6,0.3,false,2))narrSay('d','punto_de_set',2.6,0.3,false,2);
   var a=G.sc[0],b=G.sc[1];NR.mk++;
   if(NR.mk>=3||sp||(a===b&&a>=10)||(Math.min(a,b)>=12&&Math.abs(a-b)<=2)){NR.mk=0;narrMarcador();}
-  var cm=null,r=snRnd(),ld=a>b?home:rv;
-  if(NR.racha[w]>=3&&r<0.6&&!(NET.on&&w===1))cm='racha_'+wk;
+  var cm=tcComent(w),r=snRnd(),ld=a>b?home:rv;
+  if(cm){}else if(NR.racha[w]>=3&&r<0.6&&!(NET.on&&w===1))cm='racha_'+wk;
   else if(c.ace&&r<0.5)cm=w===0?'buen_saque':'recibir_mejor';
   else if(c.blk&&w===0&&r<0.5)cm='gran_lectura';
   else if(c.kill&&w===1&&r<0.25)cm='ajustar_bloqueo';
@@ -1110,12 +1173,12 @@ function newMatch(tut){MLV=tut?'easy':(DIFFS[curDiff()]?curDiff():'easy');marcPr
   if(STY==='lib'){D.digR+=0.35;D.magR+=0.3;}
   if(NET.on)nSetup();
   G={sc:[0,0],serving:NET.on?NET.sv:(tut?1:(Math.random()<0.5?0:1)),rot:[0,0],phase:'pre',tPh:0,over:false,first:true,t0:Date.now(),sp:0,win:tut?5:WIN_PTS,tend:{L:0,U:0,R:0,D:0},
-    st:{a:0,b:0,c:0,d:0,att:0,kill:0,attErr:0,blocked:0,ace:0,blk:0,srvErr:0,rallies:0,contacts:0,maxRally:0,perf:0,taps:0,aiAtt:0,aiKill:0,aiErr:0,dug:0,spc:0,dive:0,aiDive:0}};
+    st:{a:0,b:0,c:0,d:0,att:0,kill:0,attErr:0,blocked:0,ace:0,blk:0,srvErr:0,rallies:0,contacts:0,maxRally:0,perf:0,taps:0,aiAtt:0,aiKill:0,aiErr:0,dug:0,spc:0,dive:0,aiDive:0,f1:0,s1:0}};
   for(var i=0;i<ALL.length;i++){var p=ALL[i];p.act=null;p.lock=0;p.lkT=null;p.glide=null;p.task=null;p.vx=0;p.vz=0;}
-  sndMatch();realBalon();startPoint(true);hudScore();hudStatic();}
+  sndMatch();tcNew();realBalon();startPoint(true);hudScore();hudStatic();}
 function addSp(v){if(!G||G.sp==null)return;var was=G.sp;G.sp=clamp(G.sp+v,0,100);if(was<100&&G.sp>=100){callout(L('Especial listo','Special ready'),'#ff9a3a');tone(660,0.3,'sawtooth',0.06,1320);}}
 function serverOf(t){return TEAM[t].pl[G.rot[t]];}
-function startPoint(snap){var st=G.serving;
+function startPoint(snap){var st=G.serving;G.preX=G.preXN||0;G.preXN=0;
   R={F:null,next:null,touches:0,last:null,mode:['def','def'],choose:null,att:null,recv:null,blkU:null,srv:null,note:'',why:'',contacts:0,aiBlk:null,pass:null,aiSet:null,opts:null,setDone:false,lu:null};
   setLiberos();R.lu=[lineup(0),lineup(1)];
   R.mode[st]='serve';R.mode[1-st]='recv';CTRL=null;G.phase='pre';G.tPh=0;tsGoal=1;
@@ -1144,6 +1207,11 @@ function launchServe(){var s=R.srv,st=G.serving,sv=s.pl,jump=s.type==='jump',p0=
 /* ---------- primer contacto de un lado ---------- */
 function nearestUs(p,pool){var best=null,bd=1e9,P=pool||TEAM[0].pl;for(var i=0;i<P.length;i++){var q=P[i],d=hyp(q.x-p.x,q.z-p.z)+(q.lock>tG+0.2?4:0);if(d<bd){bd=d;best=q;}}return best;}
 function setCtrl(p){CTRL=p;if(p){p.task=null;}}
+/* 0.14.1 (Carlos, 15 nov.): muchos roces del bloqueo y balones sueltos le caian al colocador y acomodaba el punta zaguero. Se mantiene,
+   pero menos: si otro llega casi igual, lo toma el otro (en la bola libre el colocador sale a colocar siempre que puede) */
+function primerOtro(pl,p,kind){try{var S=TEAM[0].pl[0],m=kind==='free'?3.0:(kind==='soft'?1.6:(kind==='blockback'?0.7:0));if(!m||pl!==S)return pl;
+  var ds=hyp(S.x-p.x,S.z-p.z),best=null,bd=1e9,P=TEAM[0].pl,i,q,d;for(i=0;i<P.length;i++){q=P[i];if(q===S)continue;d=hyp(q.x-p.x,q.z-p.z)+(q.lock>tG+0.2?4:0);if(d<bd){bd=d;best=q;}}
+  return (best&&bd<=ds+m)?best:pl;}catch(e){return pl;}}
 function setupFirst(F,team){F.to=team;R.touches=0;R.next=null;
   if(NET.on&&team===1){nSendFlight(F,1);nRemoteFirst(F);return;}
   var mine=sideOf(F.land.z)===team;F.inb=mine&&inBounds(F.land,0.12);
@@ -1151,7 +1219,8 @@ function setupFirst(F,team){F.to=team;R.touches=0;R.next=null;
   var tc=tAtHeight(F,HC);if(tc==null||tc<=F.t+0.02)tc=Math.max(F.t+0.03,F.tF-0.04);
   var n={type:'first',team:team,t:tc,p:fPos(F,tc,new V3()),pl:null,r:(F.kind==='spike'||F.kind==='blockback')?D.digR:D.magR};R.next=n;
   for(var ci=0;ci<ALL.length;ci++)ALL[ci].task=null;
-  if(team===0){n.pl=nearestUs(n.p,F.kind==='serve'?LU(0).pass:null);setCtrl(n.pl);R.recv={press:null,d0:null,anim:false,dv:false,save:false};}
+  if(team===0){n.pl=nearestUs(n.p,F.kind==='serve'?LU(0).pass:null);if(PRIMER_ON)n.pl=primerOtro(n.pl,n.p,F.kind);setCtrl(n.pl);R.recv={press:null,d0:null,anim:false,dv:false,save:false};
+    if(F.kind==='soft'||F.kind==='free'||F.kind==='blockback'){G.st.f1++;if(n.pl===TEAM[0].pl[0])G.st.s1++;}}
   else aiFirstPlan(F,n);}
 function aiFirstPlan(F,n){var s=-1,best=null,bm=-1e9,bmax=1,bd=0;
   if(!F.inb&&!inBounds(F.land,0.3)){R.next=null;return;}
@@ -1352,7 +1421,8 @@ function applyBlock(F){var b=F.blk,p=fPos(F,b.t,new V3()),att=1-b.team,sA=att===
   if(b.kind==='stuff'){var Lx=clamp(b.x+(b.x-b.pl.x)*2+rnd(-0.6,0.6),-4,4);nf=flightToFloor('blockback',p,{x:Lx,z:sA*rnd(1.0,2.4)},rnd(0.36,0.46));nf.pace=0.5;
     R.F=nf;R.last={team:b.team,pl:b.pl,type:'block'};if(b.team===0){callout(L('Muro','Stuff'),VOL);addSp(22);sCrowd(0.14);cheerT=1.4;freezeT=0.06;}else pop('',L('Bloqueo','Block'),'#ff8a7a');impact(p.x,0.3*sA,b.team===0?VOL:'#E8559A',2,0.4);
     setupFirst(nf,att);}
-  else{nf=flightToFloor('soft',p,{x:clamp(b.x+rnd(-1.5,1.5),-3.8,3.8),z:sD*rnd(4.8,7.0)},1.35);nf.pace=0.08;R.F=nf;R.last={team:b.team,pl:b.pl,type:'soft'};
+  else{var stx=PRIMER_ON?clamp(b.x*rnd(0.15,0.85)+rnd(-1.6,1.6),-3.8,3.8):clamp(b.x+rnd(-1.5,1.5),-3.8,3.8),stz=sD*(PRIMER_ON?rnd(3.0,7.0):rnd(4.8,7.0));
+    nf=flightToFloor('soft',p,{x:stx,z:stz},1.35);nf.pace=0.08;R.F=nf;R.last={team:b.team,pl:b.pl,type:'soft'};
     pop('',L('Toque de bloqueo','Block touch'),HUESO);if(NET.on&&b.team===0)nSendFlight(nf,0);setupFirst(nf,b.team);}}
 function userBlockJump(){var u=R.blkU,n=R.next,F=R.F,hit=F.t0+n.t,e=tG-(hit-BLK_LEAD);if(e<-0.6)return;
   var pl=u.pl;u.jumped=true;u.press=e;var tC=Math.max(hit,tG+BLK_LEAD);
@@ -1379,8 +1449,9 @@ function ballDown(){var F=R.F,Ld=F.land,inb=inBounds(Ld,0.1),side=sideOf(Ld.z),l
   REP.arm=!BOT.sim&&!NET.on&&inb&&last.team===w&&(ty==='spike'||ty==='block'||ty==='serve'||ty==='tip');REP.who=last.pl||null;REP.tEnd=tG;
   estPunto(w,ty,inb,last);
   SB.pt={w:w,ace:inb&&last.team===w&&ty==='serve',blk:inb&&last.team===w&&(ty==='block'||ty==='soft'),kill:inb&&last.team===w&&(ty==='spike'||ty==='tip'),pl:last.pl||null,nom:snNom(last.pl),long:R.contacts>=9,ty:ty,out:!inb,net:inb&&R.note==='net'};
+  tcErr(w,ty,inb,last);
   point(w,rs,why);}
-function point(w,rs,why){if(NET.on){if(R.ptIn)w=1-R.ptIn.w;else{var rt2=[G.rot[0],G.rot[1]];if(G.serving!==w)rt2[w]=(rt2[w]+1)%6;nSend('pt',{w:w,sc:[G.sc[0]+(w===0?1:0),G.sc[1]+(w===1?1:0)],rt:rt2});}}
+function point(w,rs,why){if(NET.on&&!G.ptL){if(R.ptIn)w=1-R.ptIn.w;else{var rt2=[G.rot[0],G.rot[1]];if(G.serving!==w)rt2[w]=(rt2[w]+1)%6;nSend('pt',{w:w,sc:[G.sc[0]+(w===0?1:0),G.sc[1]+(w===1?1:0)],rt:rt2});}}
   G.sc[w]++;if(NET.on&&R.ptIn&&R.ptIn.sc){G.sc[0]=clamp(R.ptIn.sc[1],0,99);G.sc[1]=clamp(R.ptIn.sc[0],0,99);}G.phase='dead';G.tPh=0;tsGoal=1;hideBubbles();CTRL=null;R.choose=null;
   G.st.rallies++;G.st.contacts+=R.contacts;G.st.maxRally=Math.max(G.st.maxRally,R.contacts);
   if(G.serving!==w){G.serving=w;G.rot[w]=(G.rot[w]+1)%6;}
@@ -1388,7 +1459,251 @@ function point(w,rs,why){if(NET.on){if(R.ptIn)w=1-R.ptIn.w;else{var rt2=[G.rot[0
   var top=Math.max(G.sc[0],G.sc[1]),lead=Math.abs(G.sc[0]-G.sc[1]);G.over=top>=G.win&&lead>=2;
   banner((w===0?L('Punto ','Point ')+CFG.team:L('Punto ','Point ')+CFG.rival),rs+(why?'<br><span style="opacity:.8;font-weight:600">'+why+'</span>':''),w===0?CFG.acc:'#ff8a7a');
   sWhistle(G.over);if(w===0){sCrowd(G.over?0.18:(R.contacts>=6?0.15:0.09));flash(CFG.acc,0.22);cheerT=1.6;}else cheerT=0.4;
-  celebrate(w);hudScore();sndPoint(w);if(BOT.on)BOT.log.push(R.contacts);}
+  celebrate(w);hudScore();sndPoint(w);if(BOT.on)BOT.log.push(R.contacts);tcPoint(w);}
+
+/* ======================= TIEMPOS Y CAMBIOS (0.14.0) =======================
+   Carlos (15 nov.): tiempos y cambios con reglas reales, tambien en linea.
+   - Cambios: regla de USA Volleyball 2025-26. 15 por set; cada jugador entra las veces que quiera dentro de esos 15, pero siempre al
+     mismo puesto de la rotacion (el titular solo vuelve a su puesto). La banca sale de SN_ROS: los de la misma posicion real que no
+     estan en cancha. El libero sigue como siempre y no cuenta; al central que esta afuera por el libero no se le hace cambio.
+     En Mi cuadro, Torneo y Temporada el cambio vale para ese partido (SB.nom); el cuadro guardado no cambia.
+   - Tiempos: 2 por set, solo con el balon muerto. Los dos equipos van a su banca y la camara los sigue; la pantalla trae marcador,
+     racha y lo que hay que mejorar (sale de G.st). Se salta con Seguir; dura 20 s como mucho.
+   - Efecto (?efecto=0 lo quita): el que pide tiempo juega mejor los 3 puntos siguientes. Nosotros: el tiempo justo es mas amplio
+     (winP x1.2, winG x1.15). El rival: falla menos (err x0.6) y recibe mejor (skill +0.04).
+   - El rival pide tiempo despues de perder un punto: con una racha de 3 en contra, en el final cerrado (desde 11, si va abajo o
+     empatado) o con punto de partido en contra; nunca dos tiempos en menos de 3 puntos. Cambia al jugador que comete su tercer
+     error del set y lo devuelve 5 puntos despues. Nada de esto usa azar: el robot sembrado da los mismos partidos.
+   - En linea: el que pide tiempo manda el aviso y los dos telefonos paran; termina cuando los dos dicen listo o a los 20 s. Mientras
+     alguien hace un cambio, el otro telefono espera para sacar (hasta 12 s).
+   - El robot no pide tiempo ni hace cambios; con ?tiempos=0 o ?efecto=0 el balance da identico. */
+var TC_TO=2,TC_SUBS=15,TC_MAX=20,TC_AJ=3,TC_BX=-6.55,TC_BZ=6.4;
+var TC={on:false,team:0,why:'',t:0,ready:[false,false],shown:false,ok:''},tcH={v:'',to:'',cb:'',aj:'',sb:''};
+var TC_RO=['S','OH1','MB1','OPP','OH2','MB2'],TC_POS={S:'S',OH1:'OH',MB1:'MB',OPP:'OPP',OH2:'OH',MB2:'MB'};
+var TC_RNOM={S:['Colocador','Setter'],OH1:['Punta 1','Outside 1'],MB1:['Central 1','Middle 1'],OPP:['Opuesto','Opposite'],OH2:['Punta 2','Outside 2'],MB2:['Central 2','Middle 2']};
+function tcActivo(){return TC_ON&&!!G&&!!G.tc&&!TUT.on;}
+function tcNew(){try{if(!G)return;G.tc=null;TC.on=false;tcVista(false);if(!TC_ON)return;var n=SB.nom||{},i,k,c;
+  c=G.tc={to:[0,0],subs:[0,0],run:{t:-1,n:0},aj:[0,0],req:false,reqN:false,toIn:false,subReq:false,subR:-1,pend:{},dl:[0,0],imp:[0,0],ask:null,hold:null,holdR:0,card:false,eload:false,pos:{},pool:{},toR:[-9,-9],post:null,rv:[],log:[],
+    base:{winP:D.winP,winG:D.winG,err:D.ai.err,skill:D.ai.skill}};
+  for(i=0;i<TC_RO.length;i++){k=n[TC_RO[i]];if(k){c.pos[k]=TC_RO[i];c.pool[k]=1;}}
+  for(i=0;i<6;i++)c.rv.push({err:0,out:false,t:0});}catch(e){if(G)G.tc=null;}}
+/* el ajuste del tiempo: se aplica sobre los valores del partido y se quita al pasar los 3 puntos */
+function tcAplica(){try{var c=G.tc,b=c&&c.base;if(!b)return;var h=TC_EF&&c.aj[0]>0,a=TC_EF&&c.aj[1]>0;
+  D.winP=b.winP*(h?1.2:1);D.winG=b.winG*(h?1.15:1);D.ai.err=b.err*(a?0.6:1);D.ai.skill=b.skill+(a?0.04:0);}catch(e){}}
+function tcPoint(w){try{if(!tcActivo())return;var c=G.tc,r=c.run;if(r.t===w)r.n++;else{r.t=w;r.n=1;}c.post=null;
+  if(c.toIn){c.toIn=false;if(NET.on&&!G.over&&!TC.on)tcInicia(1,'linea');}
+  if(c.aj[0]>0||c.aj[1]>0){if(c.aj[0]>0)c.aj[0]--;if(c.aj[1]>0)c.aj[1]--;tcAplica();}}catch(e){}}
+/* errores del rival por puesto (saque, remate o recepcion que dan el punto): con 3 en el set, el rival lo cambia */
+function tcErr(w,ty,inb,last){try{if(!tcActivo()||NET.on||w!==0||!last||last.team!==1||!last.pl)return;
+  if(!(ty==='serve'||ty==='spike'||ty==='tip'||ty==='shank'))return;var i=TEAM[1].pl.indexOf(last.pl);if(i>=0&&!G.tc.rv[i].out)G.tc.rv[i].err++;}catch(e){}}
+/* el rival decide si pide tiempo: solo despues de perder el punto */
+function tcQuiere(t){var c=G.tc,o=1-t,me=G.sc[t],op=G.sc[o],r=c.run;if(c.to[t]>=TC_TO||r.t!==o||G.st.rallies-c.toR[t]<3)return null;
+  if(r.n>=3)return 'racha';if(Math.max(me,op)>=11&&me<=op)return 'final';if(op>=G.win-1&&op>me)return 'partido';return null;}
+function tcRivalCambio(){try{var c=G.tc,i,s,p,ral=G.st.rallies;if(NET.on||c.subs[1]>=TC_SUBS)return;
+  for(i=0;i<6;i++){s=c.rv[i];p=TEAM[1].pl[i];if(p&&p.lib)continue;
+    if(!s.out&&s.err>=3){s.out=true;s.t=ral;s.err=0;c.subs[1]++;c.log.push({k:'cb',t:1,i:i,sc:[G.sc[0],G.sc[1]]});tcAvisoCambio(1,null);return;}
+    if(s.out&&ral-s.t>=5){s.out=false;s.err=0;c.subs[1]++;c.log.push({k:'cb',t:1,i:i,vuelve:1,sc:[G.sc[0],G.sc[1]]});tcAvisoCambio(1,null);return;}}}catch(e){}}
+/* antes del siguiente punto: cambio abierto (espera), tiempo pedido, tiempo o cambio del rival. true = todavia no arranca el punto */
+function tcLimite(){try{if(!tcActivo())return false;var c=G.tc;if(tcEspera())return true;
+  /* 0.14.1: lo pedido durante el rally arranca aqui, antes del saque (en linea el tiempo se le pide al otro telefono) */
+  if(NET.on){if(c.reqN){c.reqN=false;if(c.to[0]<TC_TO){tcPideRed();return true;}}
+    if(c.subReq){c.subReq=false;if(tcPuedeCambio()){tcCard();return true;}}
+    return false;}
+  if(c.req){c.req=false;if(c.to[0]<TC_TO&&tcInicia(0,'pedido'))return true;}
+  if(BOT.sim&&TC_BOT){var q0=tcQuiere(0);if(q0)tcInicia(0,q0);}
+  var q=tcQuiere(1);if(q&&tcInicia(1,q))return true;
+  if(c.subReq){c.subReq=false;if(tcPuedeCambio()){tcCard();return true;}}
+  tcRivalCambio();return false;}catch(e){return false;}}
+function tcEspera(){try{if(!tcActivo())return false;var c=G.tc;return !!c.hold||(c.holdR>0&&nNow()<c.holdR)||!!c.ask;}catch(e){return false;}}
+/* arranca un tiempo; en el robot es instantaneo (solo cuenta y aplica el ajuste). true si quedo en pantalla */
+function tcInicia(t,why){try{var c=G.tc;if(!c||c.to[t]>=TC_TO)return false;c.to[t]++;c.toR[t]=G.st.rallies;c.req=false;
+  c.post={team:t,racha:(c.run.t===1-t)?c.run.n:0,fresh:true};if(TC_EF){c.aj[t]=TC_AJ;tcAplica();}
+  c.log.push({k:'to',t:t,why:why,sc:[G.sc[0],G.sc[1]]});
+  if(BOT.sim)return false;
+  TC.on=true;TC.team=t;TC.why=why;TC.t=0;TC.ready=[false,!NET.on];TC.shown=false;TC.ok='';
+  G.phase='tiempo';G.tPh=0;CTRL=null;hideBubbles();if(REP.on)repEnd();tcBanca(true);
+  /* si el tiempo se pidio antes del saque, el balon que tenia el sacador cae al piso */
+  if(R&&!R.F){var bp=ball.position.clone();R.F=mkFlight('dead',bp,new V3(bp.x+0.25,BALL_R,bp.z),0.45);R.F.b=2;}
+  var quien=t===0?CFG.team:(CFG.rival||'Rival');sWhistle(false);callout(L('Tiempo','Time-out')+' · '+quien,t===0?CFG.acc:'#ff8a7a');
+  if(narrOn()){var ek=t===0?CFG.brand:narrRival(),ok=narrSay('d',(snRnd()<0.5?'tiempo_':'pide_tiempo_')+ek,2.5,0.35,false,2.5);
+    if(ok&&c.to[t]>=TC_TO&&snRnd()<0.7)narrSay('d','ultimo_tiempo',2.5,0.25,false,2.5);}
+  return true;}catch(e){TC.on=false;if(G&&G.phase==='tiempo')G.phase='dead';return false;}}
+/* los dos equipos van a su banca y hacen ronda; al terminar vuelven a su puesto */
+function tcBanca(on){try{for(var i=0;i<ALL.length;i++){var p=ALL[i];if(!on){p.task=null;p.fy=null;continue;}
+  var s=p.team===0?1:-1,k=TEAM[p.team].pl.indexOf(p),a=k*Math.PI/3+0.5;p.task={x:TC_BX+0.25+0.95*Math.cos(a),z:(TC_BZ+0.95*Math.sin(a))*s};p.glide=null;p.lkT=null;p.maxV=4.4;}}catch(e){}}
+function tcStep(dt,rdt){try{if(!TC.on){G.phase='dead';return;}if(!(G.tc&&G.tc.card&&!NET.on))TC.t+=rdt;var F=R&&R.F;if(F&&F.t<F.tF)F.t=Math.min(F.tF,F.t+dt);
+  for(var i=0;i<ALL.length;i++){var p=ALL[i];if(!p.task)continue;var s=p.team===0?1:-1,dx=p.task.x-p.x,dz=p.task.z-p.z,sp=hyp(p.vx,p.vz);
+    p.fy=(hyp(dx,dz)>0.35&&sp>0.6)?Math.atan2(p.vx,p.vz):Math.atan2(TC_BX+0.25-p.x,TC_BZ*s-p.z);p.fyT=tG+0.25;}
+  if(!TC.shown&&TC.t>=0.7){TC.shown=true;tcVista(true);}
+  if(TC.shown&&G.tc&&G.tc.subReq&&!G.tc.card){G.tc.subReq=false;if(tcPuedeCambio())tcCard();}
+  if(TC.shown)tcVistaPaso();
+  if((TC.ready[0]&&TC.ready[1])||TC.t>=TC_MAX)tcFin(false);}catch(e){tcFin(false);}}
+function tcFin(forzado){try{if(!TC.on)return;TC.on=false;tcVista(false);if(G.tc&&G.tc.card)tcCardCierra(true);tcBanca(false);
+  if(NET.on&&!forzado&&!TC.ready[0])nSend('tol',{});
+  G.preXN=1.2;G.first=false;G.repd=false;startPoint(false);
+  if(narrOn()&&snRnd()<0.45)narrSay('d','reanuda',1.5,0.3,false,1);}catch(e){}}
+function tcListo(){try{if(!TC.on)return;if(!TC.ready[0]){TC.ready[0]=true;if(NET.on)nSend('tol',{});}tcVistaPaso();}catch(e){}}
+/* el jugador pide tiempo: con el balon muerto queda pedido para antes del saque; antes del saque arranca ya. En linea se pide al otro */
+function tcPide(){try{if(!tcActivo()||G.over||TC.on||!G.sc||G.sc[0]+G.sc[1]===0)return;var c=G.tc,ph=G.phase,vivo=ph==='live'||ph==='windup';
+  if(c.to[0]>=TC_TO){tcImpro('to');return;}
+  /* 0.14.1 (Carlos): durante el rally queda pedido para el proximo balon muerto; tocarlo otra vez lo quita */
+  if(NET.on){if(vivo||(ph==='dead'&&c.reqN)){c.reqN=!c.reqN;snUI(c.reqN?'aceptar':'negar',0.6);return;}
+    if((ph!=='dead'&&ph!=='pre')||c.ask)return;tcPideRed();return;}
+  if(vivo||ph==='dead'){c.req=!c.req;snUI(c.req?'aceptar':'negar',0.6);return;}
+  if(ph==='pre'){if(tcInicia(0,'pedido'))snUI('aceptar',0.6);}}catch(e){}}
+function tcPideRed(){try{var c=G.tc;c.reqN=false;c.ask={t:nNow()};nSend('to',{n:c.to[0]+1});snUI('aceptar',0.6);}catch(e){}}
+function tcRx(t,d){try{if(!tcActivo())return;var c=G.tc,ph=G.phase;
+  /* 0.14.1: si este telefono todavia esta terminando el rally que el otro ya cerro (R.ptIn), el tiempo se acepta y arranca con el punto */
+  if(t==='to'){var tarde=ph==='live'&&!!R&&!!R.ptIn;if(TC.on||(ph!=='dead'&&ph!=='pre'&&!tarde)||c.to[1]>=TC_TO){nSend('tono',{});return;}
+    if(c.ask){if(NET.role==='host'){nSend('tono',{});return;}c.ask=null;}
+    nSend('took',{});if(tarde){c.toIn=true;return;}tcInicia(1,'linea');return;}
+  if(t==='took'){if(!c.ask)return;c.ask=null;if(ph==='dead'||ph==='pre')tcInicia(0,'pedido');return;}
+  if(t==='tono'){if(c.ask){c.ask=null;hintNow(L('El tiempo no se dio: ya iban a sacar.','No time-out: the serve was under way.'));}return;}
+  if(t==='tol'){if(TC.on)TC.ready[1]=true;return;}
+  if(t==='hold'){if(ph==='dead'||ph==='pre'||ph==='tiempo'||(ph==='live'&&R&&R.ptIn))c.holdR=nNow()+12000;return;}
+  if(t==='go'){c.holdR=0;return;}
+  if(t==='sub'){var n=(d&&nNum(d.n))?clamp(d.n|0,0,TC_SUBS):c.subs[1]+1;if(n>c.subs[1]){c.subs[1]=n;tcAvisoCambio(1,null);}}}catch(e){}}
+/* aviso del cambio: en pantalla y en la voz ("Entra Kiki" si ya llego su frase; si no, "Cambio en Vakeros") */
+function tcAvisoCambio(t,nom){try{if(BOT.sim)return;callout(L('Cambio','Sub')+' · '+(t===0?CFG.team:(CFG.rival||'Rival')),t===0?CFG.acc:'#ff8a7a');
+  if(!narrOn())return;var ek=t===0?CFG.brand:narrRival();if(!(nom&&narrSay('c','entra_'+nom,3,0.15,false,2.5)))narrSay('c','cambio_'+ek,3,0.15,false,2.5);}catch(e){}}
+function tcComent(w){try{var c=G&&G.tc;if(!c||!c.post||!c.post.fresh||c.post.team!==w||snRnd()>=0.75)return null;return c.post.racha>=3?'corta_racha':'funciono_tiempo';}catch(e){return null;}}
+/* ---------- cambios del jugador ---------- */
+function tcElegibles(r){try{var c=G.tc,N=SB.nom,R0=SN_ROS[CFG.brand],P=R0&&N&&R0[N.cat],out=[],i,k,on={};if(!P||!TC_POS[r])return out;
+  for(i=0;i<TC_RO.length;i++)if(N[TC_RO[i]])on[N[TC_RO[i]]]=1;if(N.L1)on[N.L1]=1;if(N.L2)on[N.L2]=1;
+  var L0=P[TC_POS[r]]||[];for(i=0;i<L0.length;i++){k=L0[i];if(on[k])continue;if(c.pos[k]&&c.pos[k]!==r)continue;if(out.indexOf(k)<0)out.push(k);}return out;}catch(e){return [];}}
+function tcSub(r,nm){try{var c=G.tc,N=SB.nom,ix=TC_RO.indexOf(r);if(!tcActivo()||!N||ix<0||c.subs[0]>=TC_SUBS)return false;
+  var p=TEAM[0].pl[ix];if(p&&p.lib)return false;if(tcElegibles(r).indexOf(nm)<0)return false;
+  var sale=N[r];N[r]=nm;c.pos[nm]=r;c.pool[nm]=1;c.subs[0]++;c.log.push({k:'cb',t:0,r:r,sale:sale,entra:nm,sc:[G.sc[0],G.sc[1]]});
+  labelsText();narrCola();if(NET.on)nSend('sub',{n:c.subs[0]});tcAvisoCambio(0,nm);return true;}catch(e){return false;}}
+function tcCard(){try{if(!tcActivo()||G.over||!SB.nom)return;var ph=G.phase,c=G.tc;if(ph!=='dead'&&ph!=='pre'&&ph!=='tiempo')return;
+  if(!c.card)c.pend={};c.subReq=false;
+  if(ph!=='tiempo'&&!c.hold){c.hold='cambio';if(NET.on)nSend('hold',{});}c.card=true;
+  if(!c.eload){c.eload=true;narrCola();}snUI('abrir',0.6);tcCardHtml();}catch(e){}}
+/* 0.14.1 (Carlos): el cambio se confirma. Tocar "Entra ..." lo deja pendiente (tocar otra vez lo quita); nada se gasta hasta
+   "Hacer los cambios". Varios jugadores en un mismo pedido; un solo pedido por balon muerto (regla 15.2.3: un rally completo entre
+   dos pedidos). Cancelar sin cambios cuando el juego estaba parado por el pedido es retraso */
+function tcElegP(r){var c=G.tc,el=tcElegibles(r),out=[],k,i,ocup={};for(k in c.pend){if(c.pend[k]&&k!==r)ocup[c.pend[k]]=1;}
+  for(i=0;i<el.length;i++)if(!ocup[el[i]])out.push(el[i]);return out;}
+function tcCardHtml(){try{var c=G.tc,N=SB.nom,lim=c.subs[0]>=TC_SUBS,i,j,h,r,p,el,ids=[],np=0,res=[],k,fuera=c.hold==='cambio';
+  for(k in c.pend)if(c.pend[k])np++;
+  h='<div class="card"><h2>'+L('Cambios','Substitutions')+' · '+CFG.team+(N.cat?' '+N.cat:'')+'</h2><p class="sub">'+L('Usados ','Used ')+c.subs[0]+L(' de ',' of ')+TC_SUBS+
+    L(' · regla de USA Volleyball: cada jugador entra las veces que quiera, siempre al mismo puesto de la rotación. Puedes cambiar a varios a la vez. El líbero no cuenta.',' · USA Volleyball rule: a player may enter any number of times, always in the same rotation spot. You can sub several at once. Libero swaps do not count.')+'</p>';
+  h+='<div class="tcgr">';
+  for(i=0;i<TC_RO.length;i++){r=TC_RO[i];p=TEAM[0].pl[i];
+    h+='<div class="row"><span class="lb">'+L(TC_RNOM[r][0],TC_RNOM[r][1])+' · '+L('zona ','zone ')+zoneOf(p)+(isFront(p)?L(' · adelante',' · front'):L(' · atrás',' · back'))+' · <b style="color:#F2EFE8">'+snNomV(N[r])+'</b></span>';
+    if(p&&p.lib)h+='<span class="sub">'+L('Está afuera por el líbero: el cambio se hace cuando vuelva.','Out for the libero: sub him when he is back.')+'</span>';
+    else if(lim)h+='<span class="sub">'+L('Ya se hicieron los 15 cambios.','All 15 subs used.')+'</span>';
+    else{el=tcElegP(r);if(!el.length)h+='<span class="sub">'+L('Sin banca en esta posición.','No bench at this position.')+'</span>';
+      for(j=0;j<el.length;j++){h+=chip('tcj'+i+'_'+j,c.pend[r]===el[j],L('Entra ','In: ')+snNomV(el[j]));ids.push([i,j,r,el[j]]);}}
+    h+='</div>';}
+  h+='</div>';
+  for(i=0;i<TC_RO.length;i++){r=TC_RO[i];if(c.pend[r])res.push(L('Entra ','In: ')+snNomV(c.pend[r])+L(' por ',' for ')+snNomV(N[r]));}
+  h+='<p class="tcsum">'+(np?res.join(' · ')+' · '+L('usas ','uses ')+np+L(', te quedan ',', left: ')+(TC_SUBS-c.subs[0]-np):L('Toca quién entra. Nada se gasta hasta que toques "Hacer los cambios".','Tap who comes in. Nothing is used until you tap "Make the subs".'))+'</p>';
+  h+='<div><button class="btn" id="tcL" type="button"'+(np?'':' disabled')+'>'+L('Hacer los cambios','Make the subs')+'</button><button class="btn b2" id="tcX" type="button">'+L('Cancelar','Cancel')+'</button></div>';
+  h+='<div class="foot"><span>'+(fuera&&REGLAS_ON?L('Cancelar sin hacer cambios es retraso: tarjeta amarilla; la segunda vez, tarjeta roja y punto para el rival.','Cancelling with no subs is a delay: yellow card; the second time, red card and a point for the opponent.'):L('El cambio vale para este partido; tu cuadro guardado no cambia.','The sub counts for this match; your saved lineup does not change.'))+'</span><span>VOLEII · by Carlos Torres</span></div></div>';
+  ov.innerHTML=h;ov.style.display='flex';try{ov.scrollTop=0;}catch(e0){}
+  ids.forEach(function(q){tap($('tcj'+q[0]+'_'+q[1]),function(){tcElige(q[2],q[3]);});});
+  tap($('tcL'),function(){tcHacer();});tap($('tcX'),function(){tcCancelar();});}catch(e){tcCardCierra(true);}}
+function tcElige(r,nm){try{var c=G.tc,np=0,k;if(!c||!c.card)return;for(k in c.pend)if(c.pend[k])np++;
+  if(c.pend[r]===nm){delete c.pend[r];snUI('cerrar',0.5);}
+  else{if(!c.pend[r]&&c.subs[0]+np>=TC_SUBS){snUI('negar',0.6);return;}if(tcElegP(r).indexOf(nm)<0)return;c.pend[r]=nm;snUI('aceptar',0.6);}
+  tcCardHtml();}catch(e){}}
+function tcHacer(){try{var c=G.tc,i,r,n=0,np=0,k;if(!c||!c.card)return;for(k in c.pend)if(c.pend[k])np++;if(!np)return;
+  for(i=0;i<TC_RO.length;i++){r=TC_RO[i];if(c.pend[r]&&tcSub(r,c.pend[r]))n++;}
+  c.pend={};if(n)c.subR=G.st.rallies;tcCardCierra(false);}catch(e){}}
+function tcCancelar(){try{var c=G.tc;if(!c)return;var fuera=c.hold==='cambio'&&G.phase!=='tiempo';c.pend={};tcCardCierra(false);
+  if(fuera&&REGLAS_ON){c.subR=G.st.rallies;tcRetraso(0,'cambio');}}catch(e){}}
+/* el boton Cambio: con el balon muerto, antes del saque o en el tiempo abre el panel; durante el rally queda pedido */
+function tcPuedeCambio(){try{var c=G.tc;return !!c&&c.subs[0]<TC_SUBS&&G.st.rallies>c.subR;}catch(e){return false;}}
+function tcBotonCambio(){try{if(!tcActivo()||G.over||!G.sc)return;var c=G.tc,ph=G.phase;if(c.card)return;
+  if(ph==='live'||ph==='windup'){if(c.subs[0]>=TC_SUBS){tcImpro('cb');return;}c.subReq=!c.subReq;snUI(c.subReq?'aceptar':'negar',0.6);return;}
+  if(ph==='dead'||ph==='pre'||ph==='tiempo'){c.subReq=false;if(!tcPuedeCambio()){tcImpro('cb');return;}tcCard();}}catch(e){}}
+/* ---------- reglas (0.14.1, Carlos): peticion improcedente, retraso de juego y castigo ----------
+   Peticion improcedente (regla 15.11): tiempo o cambio sin quedar, o un segundo cambio en el mismo balon muerto. Se rechaza; la
+   segunda en el set es retraso. Retraso (regla 16): el primero del partido es aviso (tarjeta amarilla); el segundo y los siguientes,
+   castigo (tarjeta roja): punto y saque para el rival. El rival de la maquina nunca retrasa. */
+function tcImpro(k){try{var c=G.tc;snUI('negar',0.6);var msg=k==='to'?L('Ya no quedan tiempos en el set','No time-outs left this set'):(c&&c.subs[0]>=TC_SUBS?L('Ya se hicieron los 15 cambios','All 15 subs used'):L('Ya hubo un pedido de cambio en este balón muerto: el próximo, después del rally','Already asked for a sub this dead ball: next one after the rally'));
+  if(!REGLAS_ON||!c){hintNow(msg);return;}
+  c.imp[0]++;c.log.push({k:'imp',t:0,why:k,sc:[G.sc[0],G.sc[1]]});
+  if(c.imp[0]===1){callout(L('Petición improcedente','Improper request'),'#ff8a7a');hintNow(msg+L('. Si lo pides otra vez en el set, es retraso.','. Asking again this set is a delay.'));if(narrOn())narrSay('d','improcedente',2,0.15,false,2.5);return;}
+  tcRetraso(0,'imp');}catch(e){}}
+function tcRetraso(t,why){try{var c=G.tc;if(!c||!REGLAS_ON)return;c.dl[t]++;var roja=c.dl[t]>=2,quien=t===0?CFG.team:(CFG.rival||'Rival');
+  c.log.push({k:roja?'roja':'amarilla',t:t,why:why,sc:[G.sc[0],G.sc[1]]});tcH.sb='';
+  sWhistle(false);callout((roja?L('Tarjeta roja','Red card'):L('Tarjeta amarilla','Yellow card'))+' · '+quien,roja?'#ff5a4a':'#FFCF27');
+  if(t===0)hintNow(roja?L('Retraso de juego: punto y saque para el rival.','Delay: point and serve to the opponent.'):L('Retraso de juego: aviso. El próximo retraso del partido es tarjeta roja y punto para el rival.','Delay warning. The next delay this match is a red card and a point for the opponent.'));
+  if(narrOn())narrSay('d',roja?'roja':'amarilla',2.5,0.2,false,3);
+  if(NET.on&&t===0)nSend('card',{k:roja?'r':'y'});
+  if(roja&&t===0)tcCastigo(1,'retraso');}catch(e){}}
+/* punto fuera del rally (segundo retraso u 8 segundos en el saque): punto y saque para w. En linea lo manda el telefono castigado,
+   con el marcador y la rotacion que quedan, y el otro lo aplica igual */
+function tcCastigo(w,why){try{if(!G||!G.sc||G.over||G.phase==='end'||G.phase==='menu'||!R)return;
+  if(TC.on){TC.on=false;tcVista(false);tcBanca(false);}var c=G.tc;if(c){if(c.card)tcCardCierra(true);c.hold=null;c.holdR=0;c.ask=null;c.req=false;c.reqN=false;c.subReq=false;}
+  R.ptIn=null;R.next=null;R.contacts=0;CTRL=null;
+  var ocho=why==='ocho',rs=ocho?L('8 segundos','8 seconds'):L('Retraso','Delay'),w2=ocho?L('El saque se tardó más de 8 segundos','The serve took longer than 8 seconds'):L('Segundo retraso: punto y saque para el rival','Second delay: point and serve to the opponent');
+  if(NET.on&&w===1){var rt2=[G.rot[0],G.rot[1]];if(G.serving!==w)rt2[w]=(rt2[w]+1)%6;nSend('pen',{why:ocho?'ocho':'retraso',sc:[G.sc[0],G.sc[1]+1],rt:rt2});}
+  if(ocho&&narrOn())narrSay('d','ocho_segundos',2.5,0.15,false,3);
+  if(c)c.log.push({k:'castigo',t:1-w,why:why,sc:[G.sc[0],G.sc[1]]});
+  G.ptL=true;point(w,rs,w2);G.ptL=false;}catch(e){if(G)G.ptL=false;}}
+/* en linea: tarjeta del rival y su castigo (el punto llega con el marcador del otro telefono) */
+function tcRxReglas(t,d){try{if(!G||!G.sc||!R||G.phase==='end'||G.phase==='menu')return;var c=G.tc;
+  if(t==='card'){var k=d&&d.k;if((k!=='y'&&k!=='r')||!c)return;c.dl[1]=Math.max(c.dl[1]+1,k==='r'?2:1);tcH.sb='';sWhistle(false);
+    callout((k==='r'?L('Tarjeta roja','Red card'):L('Tarjeta amarilla','Yellow card'))+' · '+(CFG.rival||'Rival'),k==='r'?'#ff5a4a':'#FFCF27');
+    if(narrOn())narrSay('d',k==='r'?'roja':'amarilla',2.5,0.2,false,3);c.log.push({k:k==='r'?'roja':'amarilla',t:1,why:'linea',sc:[G.sc[0],G.sc[1]]});return;}
+  if(t==='pen'){if(G.over)return;var sc=(d&&d.sc&&d.sc.length===2&&nNum(d.sc[0])&&nNum(d.sc[1]))?[d.sc[0]|0,d.sc[1]|0]:null,rt=(d&&d.rt&&d.rt.length===2&&nNum(d.rt[0])&&nNum(d.rt[1]))?[(((d.rt[0]|0)%6)+6)%6,(((d.rt[1]|0)%6)+6)%6]:null,ocho=!!(d&&d.why==='ocho');
+    if(TC.on){TC.on=false;tcVista(false);tcBanca(false);}if(c){if(c.card)tcCardCierra(true);c.hold=null;c.holdR=0;c.ask=null;c.reqN=false;c.subReq=false;c.log.push({k:'castigo',t:1,why:ocho?'ocho':'retraso',sc:[G.sc[0],G.sc[1]]});}
+    R.next=null;R.contacts=0;CTRL=null;R.ptIn={w:1,sc:sc,rt:rt};if(ocho&&narrOn())narrSay('d','ocho_segundos',2.5,0.15,false,3);
+    point(0,ocho?L('8 segundos','8 seconds'):L('Retraso','Delay'),ocho?L('El saque del rival se tardó más de 8 segundos','The opponent took longer than 8 seconds to serve'):L('Segundo retraso del rival: punto y saque','Opponent second delay: point and serve'));}}catch(e){}}
+function tcCardCierra(forzado){try{var c=G&&G.tc;if(c&&c.card){c.card=false;if(ovOpen()&&$('tcL')){ov.style.display='none';ov.innerHTML='';}if(forzado&&NET.on&&c.hold)hintNow(L('Ya sacaron: el cambio queda para el próximo balón muerto.','The serve is under way: sub at the next dead ball.'));}
+  if(c&&c.hold){c.hold=null;if(NET.on)nSend('go',{});}if(!forzado)snUI('cerrar',0.6);}catch(e){}}
+function tcCierra(){try{TC.on=false;tcVista(false);var e=$('tcb');if(e)e.style.display='none';tcH.v='';tcH.to='';tcH.cb='';tcH.aj='';tcH.sb='';tcH.cto='';tcH.ccl='';tcH.oc='';var o8=$('ocho');if(o8)o8.style.display='none';if(G&&G.tc){G.tc.card=false;G.tc.hold=null;}}catch(e){}}
+/* ---------- pantalla del tiempo, botones y camara ---------- */
+function tcConsejo(){try{var s=G.st,c=G.tc,rec=s.a+s.b+s.c+s.d,out=[],errA=s.attErr+s.blocked;
+  if(rec>=4&&(s.c+s.d)/rec>0.45)out.push(L('Recepción: '+(s.c+s.d)+' de '+rec+' pases difíciles. Llega antes a la marca y toca cuando los aros se junten.','Passing: '+(s.c+s.d)+' of '+rec+' tough passes. Get to the mark early and tap when the rings meet.'));
+  if(errA>=3&&errA>=s.kill)out.push(L('Ataque: '+errA+' remates errados o bloqueados. Mira el bloqueo y busca la zona libre o el toque.','Attack: '+errA+' errors or blocks. Watch the block and find the open zone or tip.'));
+  if(s.srvErr>=2)out.push(L('Saque: '+s.srvErr+' errores. Saca seguro adentro: toca cuando los aros se junten.','Serve: '+s.srvErr+' errors. Serve it in: tap when the rings meet.'));
+  if(s.aiKill>=4&&s.aiKill>s.kill)out.push(L('Defensa: el rival remató '+s.aiKill+' veces. Cierra la línea con la punta y salta a tiempo al bloqueo.','Defense: the rival got '+s.aiKill+' kills. Close the line with the outside and time the block.'));
+  if(!out.length&&c.run.t===1&&c.run.n>=3)out.push(L('Cortar la racha: un punto a la vez, saque seguro y buena recepción.','Stop the run: one point at a time, safe serve, good pass.'));
+  if(!out.length)out.push(L('Van bien: sigan con el plan y no regalen puntos con el saque.','Going well: stick to the plan and do not give away serve points.'));
+  return out.slice(0,2).join('<br>');}catch(e){return '';}}
+function tcVista(on){try{var e=$('tcv');if(!e)return;if(!on||!G||!G.tc){e.style.display='none';e.innerHTML='';return;}
+  var c=G.tc,t=TC.team,us=CFG.team,rv=CFG.rival||'Rival',q=TC_TO-c.to[t],s=G.st,r=c.run,h,rec=s.a+s.b+s.c+s.d;
+  h='<div class="tch">'+L('Tiempo fuera','Time-out')+' <span>· '+(t===0?us:rv)+'</span></div>';
+  h+='<div class="tcs">'+(q>0?L('Le queda 1 tiempo','1 time-out left'):L('Fue su último tiempo','That was the last time-out'))+(r.n>=2?' · '+L('racha de ','run: ')+(r.t===0?us:rv)+' '+r.n+'-0':'')+'</div>';
+  h+='<div class="tcm">'+us+' <b>'+G.sc[0]+'</b> : <b>'+G.sc[1]+'</b> '+rv+'</div>';
+  h+='<div class="tcg"><div><b>'+(rec?(s.a+s.b)+' / '+rec:'0')+'</b>'+L('Recepción y defensa buenas','Good passes and digs')+'</div><div><b>'+s.kill+' / '+s.att+'</b>'+L('Remates ganadores · ','Kills · ')+(s.attErr+s.blocked)+L(' errados',' errors')+'</div>'+
+    '<div><b>'+s.ace+' · '+s.srvErr+'</b>'+L('Aces · saques errados','Aces · serve errors')+'</div><div><b>'+s.blk+' · '+s.aiKill+'</b>'+L('Bloqueos · remates del rival','Blocks · rival kills')+'</div></div>';
+  h+='<div class="tcq"><b>'+L('Lo que hay que mejorar','What to improve')+'</b>'+tcConsejo()+'</div>';
+  if(TC_EF)h+='<div class="tce">'+(t===0?L('Ajuste del tiempo: los próximos 3 puntos el tiempo justo es más amplio.','Time-out boost: for the next 3 points the timing window is wider.'):L(rv+' se ajusta: los próximos 3 puntos falla menos.',rv+' adjusts: fewer errors for the next 3 points.'))+'</div>';
+  h+='<div class="tcb2"><button class="b2" id="tcC" type="button">'+L('Cambio','Sub')+'</button><button id="tcS" type="button">'+(NET.on?L('Listo','Ready'):L('Seguir','Resume'))+'</button></div><i class="tcr" id="tcR"></i>';
+  e.innerHTML=h;e.style.display='flex';TC.ok='';
+  tap($('tcC'),function(){tcBotonCambio();});tap($('tcS'),function(){tcListo();});}catch(er){}}
+function tcVistaPaso(){try{var r=$('tcR');if(r)r.style.transform='scaleX('+clamp(1-TC.t/TC_MAX,0,1).toFixed(3)+')';
+  if(NET.on&&TC.ready[0]&&TC.ok!=='w'){TC.ok='w';var b=$('tcS');if(b){b.textContent=L('Esperando a tu rival…','Waiting for your opponent…');b.className='b2';}}}catch(e){}}
+/* camara del tiempo: hacia la banca del que pidio; el grupo queda a la izquierda y la pantalla a la derecha.
+   La del rival va de su lado de la red (sin la malla delante) */
+function tcCam(){if(TC.team===1)return [-1.2,2.6,-1.6,-4.0,1.1,-6.9];return [-1.4,2.5,10.4,-5.1,1.1,4.4];}
+function tcHud(){try{var e=$('tcb');if(!e)return;var c=G&&G.tc,ph=G&&G.phase,on=tcActivo()&&!G.over&&(ph==='dead'||ph==='pre'||ph==='live'||ph==='windup')&&!BOT.sim&&!ENT.on;
+  var k=on?'1':'0';if(k!==tcH.v){tcH.v=k;e.style.display=on?'flex':'none';}
+  if(c&&c.card&&!ovOpen())tcCardCierra(true);
+  if(c&&c.ask&&nNow()-c.ask.t>2500){c.ask=null;hintNow(L('Tu rival no respondió: no hubo tiempo.','No answer: no time-out.'));}
+  tcMarc();tcOcho();if(!on)return;var q=TC_TO-c.to[0],z=G.sc[0]+G.sc[1]===0,ped=c.req||c.reqN;
+  var tt=z?'':(c.ask?L('Pidiendo tiempo…','Asking…'):(ped?L('Tiempo pedido','Time-out called'):L('Tiempo · ','Time-out · ')+q));
+  if(tt!==tcH.to){tcH.to=tt;var b=$('bTo');b.textContent=tt;b.style.display=tt?'':'none';}
+  var cto=(ped||c.ask)?'on':(q<=0?'no':'');if(cto!==tcH.cto){tcH.cto=cto;$('bTo').className=cto;}
+  var vivo=ph==='live'||ph==='windup',puede=vivo?c.subs[0]<TC_SUBS:tcPuedeCambio();
+  var cb=c.subReq?L('Cambio pedido','Sub called'):L('Cambio · ','Sub · ')+(TC_SUBS-c.subs[0]);if(cb!==tcH.cb){tcH.cb=cb;$('bCb').textContent=cb;}
+  var ccl=c.subReq?'on':(puede?'':'no');if(ccl!==tcH.ccl){tcH.ccl=ccl;$('bCb').className=ccl;}
+  var aj=(TC_EF&&c.aj[0]>0)?L('Ajuste del tiempo · ','Time-out boost · ')+c.aj[0]:'';if(aj!==tcH.aj){tcH.aj=aj;var s=$('tcA');s.textContent=aj;s.style.display=aj?'inline-block':'none';}}catch(er){}}
+/* 0.14.1: regla de los 8 segundos del saque (Carlos): la cuenta corre desde el silbato; los ultimos 3 se ven en pantalla */
+function tcOcho(){try{var e=$('ocho');if(!e)return;var t='';
+  if(REGLAS_ON&&G&&G.sc&&G.phase==='pre'&&G.serving===0&&!TUT.on&&!BOT.sim&&!NET.lobby&&!tcEspera()){var rest=(0.35+(G.preX||0)+8)-G.tPh;if(rest<=3.5&&rest>0)t=L('Saca · ','Serve · ')+Math.ceil(rest);}
+  if(t!==tcH.oc){tcH.oc=t;e.textContent=t;e.style.display=t?'block':'none';}}catch(er){}}
+/* tiempos que le quedan a cada equipo, en el marcador de transmision */
+function tcMarc(){try{var c=G&&G.tc,a=$('tUs'),b=$('tRv');if(!a||!b)return;var k=c&&G.phase!=='menu'?(c.to[0]+','+c.to[1]+','+c.dl[0]+','+c.dl[1]):'x';if(k===tcH.sb)return;tcH.sb=k;
+  [[$('kUs'),0],[$('kRv'),1]].forEach(function(o){if(o[0]){var n=(k!=='x'&&c)?c.dl[o[1]]:0;o[0].className='bcK'+(n>=2?' r':(n===1?' y':''));}});
+  [[a,0],[b,1]].forEach(function(o){o[0].className='bcT'+(k!=='x'?' on':'');var is=o[0].getElementsByTagName('i');for(var i=0;i<is.length;i++)is[i].className=(k!=='x'&&i<c.to[o[1]])?'u':'';});}catch(e){}}
+try{$('bTo').addEventListener('pointerdown',function(ev){try{ev.stopPropagation();if(ev.cancelable)ev.preventDefault();audio();tcPide();}catch(e){}});
+  $('bCb').addEventListener('pointerdown',function(ev){try{ev.stopPropagation();if(ev.cancelable)ev.preventDefault();audio();tcBotonCambio();}catch(e){}});}catch(e){}
 
 /* ======================= MOVIMIENTO ======================= */
 var _uv={x:0,z:0,snap:false};
@@ -1431,7 +1746,7 @@ function setGoals(){if(!R)return;var lus=[LU(0),LU(1)];
   /* solo el zaguero rival mas cercano a tu mira la lee; los otros cuidan su zona */
   R.rdP=null;if(R.att&&R.att.jumped&&!R.att.done){var o1=lus[1],bk=[o1.L,o1.ohB,o1.z1],bd=1e9;for(var k=0;k<3;k++){var dq=hyp(bk[k].x-R.att.aim.x,bk[k].z-R.att.aim.z);if(dq<bd){bd=dq;R.rdP=bk[k];}}}
   for(var i=0;i<ALL.length;i++){var p=ALL[i],t=p.team;
-    if(NET.on&&t===1){p.task=null;if(p.nx!=null){p.gx=p.nx;p.gz=p.nz;p.maxV=10.5;continue;}}
+    if(NET.on&&t===1&&G.phase!=='tiempo'){p.task=null;if(p.nx!=null){p.gx=p.nx;p.gz=p.nz;p.maxV=10.5;continue;}}
     if(p.task){p.gx=p.task.x;p.gz=p.task.z;continue;}
     var calm=G.phase==='pre'||G.phase==='dead'||G.phase==='menu';p.maxV=calm?6.5:(t===0?MATE_V:D.ai.spd);
     try{var g=goalOf(p,t,R.mode[t],lus[t]);if(g){p.gx=g.x;p.gz=g.z;}}catch(e){if(window.console)console.error(e);}}}
@@ -1452,7 +1767,7 @@ function stepPlayer(p,dt){var dvx=0,dvz=0,snap=false;
     /* entre puntos, el que va lejos (a la zona de saque, a su puesto) va de frente a donde camina y se vira a la malla al llegar */
     if(G.phase==='pre'&&!(p.fn>tG)&&hyp(p.gx-p.x,p.gz-p.z)>1.2&&hyp(p.vx,p.vz)>0.8)yt=Math.atan2(p.vx,p.vz);
     /* en linea el equipo de enfrente mira hacia donde mira en el telefono del rival */
-    if(NET.on&&p.team===1&&p.ny!=null)yt=p.ny;var dyw=wrapPi(yt-p.yaw)*Math.min(1,dt*9),cyw=YAW_MAX*dt;p.yaw+=clamp(dyw,-cyw,cyw);}
+    if(NET.on&&p.team===1&&p.ny!=null&&G.phase!=='tiempo')yt=p.ny;var dyw=wrapPi(yt-p.yaw)*Math.min(1,dt*9),cyw=YAW_MAX*dt;p.yaw+=clamp(dyw,-cyw,cyw);}
   p.root.position.set(p.x,p.air,p.z);p.root.rotation.y=p.yaw;}
 
 /* ======================= ANIMACION ======================= */
@@ -1824,12 +2139,15 @@ function stepLive(dt,rdt){var F=R.F;if(!F)return;F.t+=dt*(F.wk||1);
   if(A&&A.jumped&&!A.done)tsGoal=D.airTS<1?D.airTS:((A.tHit-tG)<0.1?0.45:1);
   else if(n&&n.team===0&&n.type==='first'&&(F.kind==='spike'||F.kind==='blockback'))tsGoal=D.spikeTS;
   else if(F.kind==='set'&&n&&n.type==='hit')tsGoal=D.setTS;}
-function stepPre(dt,rdt){var s=R.srv,st=G.serving;
-  if(st===0){s.aim.x=clamp(s.aim.x+JX*rdt*8,-4.3,4.3);s.aim.z=clamp(s.aim.z+JZ*rdt*8,-8.8,-1.5);if(G.tPh>8)startWindup();}
-  else if(!NET.on&&G.tPh>(G.first?2.4:1.5))startWindup();}
+function stepPre(dt,rdt){var s=R.srv,st=G.serving,px=G.preX||0;
+  /* 0.14.0: mientras alguien hace un cambio (o espera respuesta a un tiempo en linea) no se saca */
+  if(tcEspera()){if(G.tPh>0.3)G.tPh=0.3;return;}
+  if(st===0){s.aim.x=clamp(s.aim.x+JX*rdt*8,-4.3,4.3);s.aim.z=clamp(s.aim.z+JZ*rdt*8,-8.8,-1.5);
+    if(REGLAS_ON&&!TUT.on&&!BOT.sim){if(G.tPh>0.35+px+8){tcCastigo(1,'ocho');return;}}else if(G.tPh>8+px)startWindup();}
+  else if(!NET.on&&G.tPh>(G.first?2.4:1.5)+px)startWindup();}
 function stepDead(dt){var F=R.F;if(F){F.t+=dt;if(F.t>=F.tF){if(F.b===1){var p=fPos(F,F.tF,new V3());var nf=mkFlight('dead',new V3(p.x,BALL_R,p.z),new V3(p.x+F.v.x*0.12,BALL_R,p.z+F.v.z*0.12),0.22);nf.b=2;R.F=nf;}else{fPos(F,F.tF,ball.position);R.F=null;}}}
   if(REP.arm&&G.tPh>0.75){REP.arm=false;if(repStart()){G.repd=true;return;}}
-  if(G.tPh>(G.repd?1.15:1.9)){G.repd=false;if(G.over){G.phase='end';if(!BOT.sim)endCard();}else{G.first=false;startPoint(false);}}}
+  if(G.tPh>(G.repd?1.15:1.9)){if(!G.over&&tcLimite())return;G.repd=false;if(G.over){G.phase='end';if(!BOT.sim)endCard();}else{G.first=false;startPoint(false);}}}
 /* ---------- repeticion: se graban los ultimos cuadros y se vuelven a pasar despacio desde abajo ---------- */
 function recFrame(){try{var i=REP.n%REP.cap,f=REP.buf[i],sz=0,j,k=0,q;if(!f){for(j=0;j<ALL.length;j++)sz+=5+ALL[j].bl.length*4;f=REP.buf[i]={t:0,b:new Float32Array(3),d:new Float32Array(sz)};}
   var bq=(BVtg===tG)?BVIS:ball.position;f.t=tG;f.b[0]=bq.x;f.b[1]=bq.y;f.b[2]=bq.z;var d=f.d; /* 0.7.0: la repeticion guarda lo que se dibujo (balon y cuerpo corregidos) */
@@ -1941,7 +2259,7 @@ function crowdFrame(rdt){var tgt=G&&G.phase==='live'&&R?clamp((R.contacts-2)/7,0
 function step(dt,rdt){if(REP.on){tAll+=rdt;repStep(rdt);return;}
   tG+=dt;tAll+=rdt;if(!G)return;G.tPh+=dt;
   if(BOT.on)botStep();
-  if(G.phase==='pre')stepPre(dt,rdt);else if(G.phase==='live')stepLive(dt,rdt);else if(G.phase==='dead')stepDead(dt);
+  if(G.phase==='pre')stepPre(dt,rdt);else if(G.phase==='live')stepLive(dt,rdt);else if(G.phase==='dead')stepDead(dt);else if(G.phase==='tiempo')tcStep(dt,rdt);
   if(G.phase==='end'||REP.on)return;
   setGoals();
   var live=G.phase==='live'||G.phase==='windup';
@@ -2045,7 +2363,7 @@ function marcInit(){var lb=document.createElement('div');lb.id='lbx';lb.innerHTM
   '#hud.bcn #rotP{top:64px;max-width:calc(50% - 128px)}#hud.bcn #rly{top:96px}#hud.bcn #rep{top:128px}';
   document.head.appendChild(st);
   if(!MARC_ON)return;$('hud').classList.add('bc');var sb=$('sb');sb.className='sb bc';
-  sb.innerHTML='<span class="bcS"><i class="bcC" id="cUs"></i><span class="bcN" id="nUs"></span><i class="dot" id="dUs"></i></span><span class="bcP"><b class="pt" id="sUs">0</b><b class="pt" id="sRv">0</b></span><span class="bcS"><i class="dot" id="dRv"></i><span class="bcN" id="nRv"></span><i class="bcC" id="cRv"></i></span><span class="to" id="sTo"></span>';
+  sb.innerHTML='<span class="bcS"><i class="bcC" id="cUs"></i><span class="bcN" id="nUs"></span><span class="bcT" id="tUs"><i></i><i></i></span><i class="bcK" id="kUs"></i><i class="dot" id="dUs"></i></span><span class="bcP"><b class="pt" id="sUs">0</b><b class="pt" id="sRv">0</b></span><span class="bcS"><i class="dot" id="dRv"></i><i class="bcK" id="kRv"></i><span class="bcT" id="tRv"><i></i><i></i></span><span class="bcN" id="nRv"></span><i class="bcC" id="cRv"></i></span><span class="to" id="sTo"></span>';
   $('ban').className='bc';}
 /* pantallas angostas (menos de 760 px de ancho de juego): nombres mas cortos para que el marcador no choque con los botones */
 function marcSize(){try{if(MARC_ON)$('hud').classList.toggle('bcn',appW<760);}catch(e){}}
@@ -2184,6 +2502,11 @@ function nRx(m){try{if(!m||typeof m.t!=='string')return;var d=m.d||{},t=m.t;NET.
   if(t==='ver'){nGotVer(d);return;}
   if(t==='bye'){if(NET.on)nLost(true);else if(NET.lobby)nLobbyMsg(L('Tu rival salió de la sala.','Your opponent left the room.'));return;}
   if(!NET.on||!G||!R||G.phase==='end'||G.phase==='menu')return;
+  /* 0.14.0: tiempos y cambios en linea; si el rival ya saco, se acaba el tiempo o se cierra el panel de cambios */
+  if(t==='to'||t==='took'||t==='tono'||t==='tol'||t==='hold'||t==='go'||t==='sub'){tcRx(t,d);return;}
+  if(t==='card'||t==='pen'){tcRxReglas(t,d);return;}
+  if(G.phase==='tiempo'&&(t==='wind'||t==='fl'||t==='pass'||t==='set'||t==='two'))tcFin(true);
+  if(G.tc&&G.tc.hold&&(t==='wind'||t==='fl'))tcCardCierra(true);
   var i,p;
   if(t==='pos'){if(d.p&&d.p.length===18){for(i=0;i<6;i++){p=TEAM[1].pl[i];if(nNum(d.p[i*3])&&nNum(d.p[i*3+1])){p.nx=clamp(-d.p[i*3],-7.5,7.5);p.nz=clamp(-d.p[i*3+1],-12.5,-0.42);if(nNum(d.p[i*3+2]))p.ny=wrapPi(d.p[i*3+2]+Math.PI);}}}return;}
   if(t==='act'){p=nPl(d.i);if(p&&typeof d.n==='string'&&CLIPS[d.n]&&nNum(d.dt)){var o={},s=d.o||{},ks=['mark','lead','fin','tail','fout','boost','rate'];for(i=0;i<ks.length;i++){if(nNum(s[ks[i]]))o[ks[i]]=clamp(s[ks[i]],0,3);}setAct(p,d.n,tG+clamp(d.dt,-0.5,3),o);}return;}
@@ -2232,7 +2555,8 @@ function nLeave(silent){try{if(NET.helloT){clearInterval(NET.helloT);NET.helloT=
 function nLost(left){if(!NET.on)return;NET.dbg.lost++;var over=G&&G.over;nLeave(true);if(over)return;menu();
   ov.innerHTML='<div class="card" style="max-width:420px;text-align:center"><h2>'+(left?L('Tu rival salió','Your opponent left'):L('Se perdió la conexión','Connection lost'))+'</h2><p class="sub">'+L('El partido no cuenta para el récord.','The match does not count for the record.')+'</p><button class="btn" id="nlA" type="button">'+L('Otra sala','New room')+'</button><button class="btn b2" id="nlM" type="button">'+L('Menú','Menu')+'</button></div>';ov.style.display='flex';
   tap($('nlA'),function(){nLobby();});tap($('nlM'),function(){menu();});}
-function nPauseCard(){ov.innerHTML='<div class="card" style="max-width:400px;text-align:center"><h2>'+L('Partido en línea','Online match')+'</h2><p class="sub">'+L('El partido sigue corriendo: en línea no hay pausa.','The match keeps running: there is no pause online.')+'</p><button class="btn" id="npS" type="button">'+L('Seguir','Resume')+'</button><button class="btn b2" id="npX" type="button">'+L('Abandonar','Leave match')+'</button></div>';ov.style.display='flex';
+function nPauseCard(){ov.innerHTML='<div class="card" style="max-width:400px;text-align:center"><h2>'+L('Partido en línea','Online match')+'</h2><p class="sub">'+L('El partido sigue corriendo: en línea no hay pausa.','The match keeps running: there is no pause online.')+'</p><button class="btn" id="npS" type="button">'+L('Seguir','Resume')+'</button><button class="btn b2" id="npV" type="button">'+L('Volumen','Volume')+'</button><button class="btn b2" id="npX" type="button">'+L('Abandonar','Leave match')+'</button></div>';ov.style.display='flex';
+  tap($('npV'),function(){volCard(nPauseCard);});
   tap($('npS'),function(){ov.style.display='none';});tap($('npX'),function(){nLeave(false);menu();});}
 /* fin del partido: cada telefono reporta su marcador; cuenta si los dos coinciden */
 function nEnd(){var us=G.sc[0],th=G.sc[1],won=us>th,code=NET.code,opp=nLabel(NET.opp),club=nClub(NET.opp),gain=40+us*4+(won?120:0);PREF.xp+=gain;savePref();if(won)sCrowd(0.18);
@@ -2303,7 +2627,7 @@ function tap(e,fn){if(!e)return;var t0=null,done=0;
 function ovOpen(){return ov.style.display==='flex';}
 function toApp(ev){return ROT?{x:ev.clientY,y:window.innerWidth-ev.clientX}:{x:ev.clientX,y:ev.clientY};}
 function actionPress(){if(!G||paused||!R)return;var e;if(REP.on){repEnd();return;}if(TUT.hold){if(TUT.hold==='cho')return;tutRelease();}
-  if(G.phase==='pre'){if(G.serving===0&&G.tPh>0.6)startWindup();return;}
+  if(G.phase==='pre'){if(G.serving===0&&G.tPh>0.6+(G.preX||0)&&!tcEspera())startWindup();return;}
   if(G.phase==='windup'){if(G.serving===0&&R.srv.press==null){e=tG-(R.srv.tC-REC_LEAD);if(e>-0.6)R.srv.press=e;}return;}
   if(G.phase!=='live')return;var n=R.next,F=R.F,c=R.choose;
   if(c&&!c.made){if(c.seg){if(c.seg.k==='at2'){if(F&&F.t<c.seg.tD){c.useSeg=true;sUi();confirmChoice();}}else{c.useSeg=!c.useSeg;sUi();}}return;}
@@ -2318,7 +2642,7 @@ function secondaryPress(){if(!G||paused||!R)return;
 function joySet(dx,dy){var m=hyp(dx,dy),mx=46;if(m>mx){dx*=mx/m;dy*=mx/m;m=mx;}var k=$('joyK');k.style.transform='translate('+dx+'px,'+dy+'px)';
   if(m<7){JX=0;JZ=0;}else{var g=Math.min(1,(m-7)/(mx-12));JX=dx/m*g;JZ=dy/m*g;}}
 function joyRest(){var j=$('joy');j.className='';j.style.left=(118+SAFE_L)+'px';j.style.top=(appH-112)+'px';$('joyK').style.transform='translate(0px,0px)';}
-app.addEventListener('pointerdown',function(ev){try{if(ovOpen())return;var t=ev.target;if(t&&t.closest&&t.closest('button,.bb'))return;if(ev.cancelable)ev.preventDefault();audio();
+app.addEventListener('pointerdown',function(ev){try{if(ovOpen())return;var t=ev.target;if(t&&t.closest&&t.closest('button,.bb,#tcv'))return;if(ev.cancelable)ev.preventDefault();audio();
   var p=toApp(ev);if(p.x<appW*0.5){if(!joy){joy={id:ev.pointerId,x0:p.x,y0:p.y};var j=$('joy');j.className='on';j.style.left=p.x+'px';j.style.top=p.y+'px';try{app.setPointerCapture(ev.pointerId);}catch(e){}}}
   else actionPress();}catch(e){}});
 app.addEventListener('pointermove',function(ev){try{if(!joy||ev.pointerId!==joy.id)return;var p=toApp(ev);joySet(p.x-joy.x0,p.y-joy.y0);}catch(e){}});
@@ -2328,7 +2652,7 @@ $('btnA').addEventListener('pointerdown',function(ev){try{ev.stopPropagation();i
 $('btnB').addEventListener('pointerdown',function(ev){try{ev.stopPropagation();if(ev.cancelable)ev.preventDefault();secondaryPress();}catch(e){}});
 $('bPau').addEventListener('pointerdown',function(ev){try{ev.stopPropagation();pauseCard();}catch(e){}});
 $('bSnd').addEventListener('pointerdown',function(ev){try{ev.stopPropagation();PREF.snd=!PREF.snd;savePref();hudStatic();if(PREF.snd){sUi();ambStart();if(SB.a)snQueue();}else ambSet(0);}catch(e){}});
-$('bMus').addEventListener('pointerdown',function(ev){try{ev.stopPropagation();PREF.mus=!PREF.mus;savePref();hudStatic();if(PREF.mus)musStart();else musStop();}catch(e){}});
+$('bMus').addEventListener('pointerdown',function(ev){try{ev.stopPropagation();audio();volCard(null);}catch(e){}});
 document.addEventListener('touchmove',function(ev){if(ovOpen()&&ov.contains(ev.target))return;if(ev.cancelable)ev.preventDefault();},{passive:false});
 document.addEventListener('gesturestart',function(ev){ev.preventDefault();});
 document.addEventListener('contextmenu',function(ev){ev.preventDefault();});
@@ -2342,7 +2666,7 @@ document.addEventListener('keyup',function(e){KEYS[e.code]=false;keysToJoy();});
 document.addEventListener('visibilitychange',function(){try{if(document.hidden){musStop();ambSet(0);sndHide(true);if(G&&G.phase!=='menu'&&G.phase!=='end'&&!ovOpen())pauseCard();}else{sndHide(false);if(G&&G.phase!=='menu')musStart();else if(PREF.mus)SB.musOn=true;}}catch(e){}});
 
 /* ======================= HUD ======================= */
-function hudStatic(){$('bMus').textContent=L('Música: ','Music: ')+(PREF.mus?L('sí','on'):L('no','off'));$('bSnd').textContent=L('Sonido: ','Sound: ')+(PREF.snd?L('sí','on'):L('no','off'));$('bPau').textContent=L('Pausa','Pause');$('nUs').textContent=CFG.team;$('nRv').textContent=CFG.rival||'Rival';}
+function hudStatic(){$('bMus').textContent=L('Volumen','Volume');$('bSnd').textContent=L('Sonido: ','Sound: ')+(PREF.snd?L('sí','on'):L('no','off'));$('bPau').textContent=L('Pausa','Pause');$('nUs').textContent=CFG.team;$('nRv').textContent=CFG.rival||'Rival';}
 function hudScore(){if(!G||!G.sc)return;drawScore(G.sc[0],G.sc[1],G.serving);$('sUs').textContent=G.sc[0];$('sRv').textContent=G.sc[1];$('dUs').className='dot'+(G.serving===0?' on':'');$('dRv').className='dot'+(G.serving===1?' on':'');$('sTo').textContent=L('a ','to ')+(G.win||WIN_PTS);
   try{var r=G.rot[0],e=$('rotP');e.innerHTML='<b>R'+(r+1)+'</b>'+L(PB[r].es,PB[r].en);e.style.display='flex';}catch(er){}marcScore();}
 /* rol sobre cada jugador nuestro mientras se arma la formacion */
@@ -2386,7 +2710,7 @@ function hudFrame(rdt){var k=ctxNow(),C=CTXT[k],bA=$('btnA'),bB=$('btnB');
   if(bB.textContent!==bl){bB.textContent=bl;bB.style.display=bl?'block':'none';}
   var msg='';if(TUT.hold)msg=L(TUTTXT[TUT.hold][0],TUTTXT[TUT.hold][1]);else if(msgHold>0){msgHold-=rdt;msg=holdText;}else if(C.h&&((PREF.hints[k]||0)<6||k==='out'))msg=L(C.h[0],C.h[1]);
   if(msg!==msgShown){var el=$('msg');el.textContent=msg;el.style.display=msg?'block':'none';msgShown=msg;}
-  hudExtra();bubblesFrame();labelsFrame();}
+  hudExtra();bubblesFrame();labelsFrame();tcHud();}
 var hx={sp:-1,full:false,rly:'',tag:'',set:''};
 function proj(x,y,z){tmpV.set(x,y,z).project(camera);return tmpV;}
 function hudExtra(){var live=G&&G.phase==='live'&&R,v,el;
@@ -2448,7 +2772,7 @@ function retosHoy(){var d=prHoy(),k=d.getFullYear()*10000+(d.getMonth()+1)*100+d
   return [RETOS[ix[0]],RETOS[ix[1]],RETOS[ix[2]]];}
 function topHTML(d){if(!d||!d.top||!d.top.length)return '<div class="sub">'+L('Todavía nadie tiene marca. Sé el primero.','No scores yet. Be the first.')+'</div>';
   return d.top.slice(0,5).map(function(r){return '<div'+(r.me?' class="me"':'')+'><span>#'+r.pos+' · '+(r.number!=null?r.number+' ':'')+String(r.name||'').replace(/[<>&]/g,'')+'</span><span>'+Number(r.score).toLocaleString('es-PR')+'</span></div>';}).join('');}
-function menu(){MODO=null;if(NET.on||NET.tx)nLeave(false);REP.on=false;REP.arm=false;TUT.on=false;TUT.hold=null;try{$('rep').style.display='none';}catch(e0){}G={phase:'menu',tPh:0,serving:0};R={mode:['def','def'],F:null,next:null};CTRL=null;paused=false;clearMarks();hideBubbles();setupTeams();hudStatic();
+function menu(){MODO=null;if(NET.on||NET.tx)nLeave(false);tcCierra();REP.on=false;REP.arm=false;TUT.on=false;TUT.hold=null;try{$('rep').style.display='none';}catch(e0){}G={phase:'menu',tPh:0,serving:0};R={mode:['def','def'],F:null,next:null};CTRL=null;paused=false;clearMarks();hideBubbles();setupTeams();hudStatic();
   var L0=lvl(PREF.xp),x0=xpFor(L0),x1=xpFor(L0+1),rt=retosHoy(),i,h;
   h='<div class="card"><h1><img alt="BAREBORU" src="/juegos/bareboru6/assets/bareboru_logo.svg?v=2"><span>by VOLEII · 6 vs 6</span></h1><div class="cols"><div>'+
   '<div style="font-size:13px;font-weight:800">'+L('Nivel ','Level ')+L0+' <span class="sub" style="font-weight:600">· '+PREF.xp+' XP</span></div><div class="xpb"><i style="width:'+Math.round((PREF.xp-x0)*100/(x1-x0))+'%"></i></div>'+
@@ -2467,13 +2791,14 @@ function menu(){MODO=null;if(NET.on||NET.tx)nLeave(false);REP.on=false;REP.arm=f
   for(i=0;i<STYLES.length;i++){var lk=STYLES[i].lv>L0;h+=chip('st'+i,STYLES[i].id===STY,L(STYLES[i].es,STYLES[i].en)+(lk?' · '+L('Nv ','Lv ')+STYLES[i].lv:''),lk);}
   h+='</div><div class="row"><span class="lb">'+L('Uniforme','Uniform')+'</span>';
   for(i=0;i<KITS.length;i++){var lk2=KITS[i].lv>L0;h+=chip('kt'+i,KITS[i].id===PREF.kit||(i===0&&!KITS.some(function(z){return z.id===PREF.kit&&z.lv<=L0;})),L(KITS[i].es,KITS[i].en)+(lk2?' · '+L('Nv ','Lv ')+KITS[i].lv:''),lk2);}
-  h+='</div><div class="row"><span class="lb">'+L('Ayuda, idioma, música y locutor','Help, language, music and announcer')+'</span>'+chip('aN',!PREF.assist,L('Yo muevo','I move'))+chip('aY',PREF.assist,L('Asistido','Assisted'))+chip('lE',LANG==='es','Español')+chip('lN',LANG==='en','English')+chip('muT',PREF.mus,L('Música','Music'))+(LOC_ON?chip('lcT',PREF.loc,L('Locutor','Announcer')):'')+'</div>'+
+  h+='</div><div class="row"><span class="lb">'+L('Ayuda, idioma, música y locutor','Help, language, music and announcer')+'</span>'+chip('aN',!PREF.assist,L('Yo muevo','I move'))+chip('aY',PREF.assist,L('Asistido','Assisted'))+chip('lE',LANG==='es','Español')+chip('lN',LANG==='en','English')+chip('muT',PREF.mus,L('Música','Music'))+(LOC_ON?chip('lcT',PREF.loc,L('Locutor','Announcer')):'')+chip('vol',false,L('Volumen','Volume'))+'</div>'+
   '</div></div><div class="foot"><a href="'+backHref()+'">'+L('Volver a ','Back to ')+CFG.app+'</a><span>'+L('Versión ','Version ')+APP_VERSION+' · VOLEII · by Carlos Torres</span></div></div>';
   ov.innerHTML=h;ov.style.display='flex';
   function bind(id,fn){tap($(id),function(){if(fn()===false)return;savePref();menu();});}
   bind('dR',function(){PREF.real=true;});bind('bN',function(){PREF.real=false;});bind('dE',function(){PREF.diff='easy';});bind('dN',function(){PREF.diff='normal';});bind('dH',function(){PREF.diff='hard';});
   bind('aN',function(){PREF.assist=false;});bind('aY',function(){PREF.assist=true;});if(LOC_ON)bind('lcT',function(){PREF.loc=!PREF.loc;});
   bind('muT',function(){PREF.mus=!PREF.mus;try{if(PREF.mus){actx();musStart();}else musStop();}catch(e){}});
+  tap($('vol'),function(){try{actx();volCard(function(){menu();});}catch(e){}});
   bind('lE',function(){LANG='es';try{localStorage.setItem('plat_lang','es');}catch(e){}ctxLast='';});bind('lN',function(){LANG='en';try{localStorage.setItem('plat_lang','en');}catch(e){}ctxLast='';});
   RIVALS.forEach(function(r,k){bind('rv'+k,function(){PREF.rival=r.id;});});
   STYLES.forEach(function(r,k){bind('st'+k,function(){if(r.lv>L0)return false;PREF.style=r.id;});});
@@ -2484,9 +2809,20 @@ function menu(){MODO=null;if(NET.on||NET.tx)nLeave(false);REP.on=false;REP.arm=f
   tap($('onl'),function(ev){audio();nLobby();});
   tap($('mCq'),function(){CQ=null;cuadroCard();});tap($('mCopa'),function(){copaCard();});tap($('mTemp'),function(){tempCard();});
   if(RECORDS_ON)vqTop(function(d){try{var e=$('topm');if(e)e.innerHTML=topHTML(d);}catch(e2){}});}
+/* 0.14.1: tarjeta de volumen (musica, efectos y voces). Sin conexion pausa el partido; en linea el partido sigue */
+function volCard(vuelta){try{var pausa=!!(G&&G.sc&&G.phase!=='menu'&&G.phase!=='end'&&!NET.on);if(pausa){paused=true;joy=null;JX=0;JZ=0;joyRest();}snUI('abrir',0.6);
+  var F=[['vm',L('Música','Music')],['ve',L('Efectos y público','Effects and crowd')],['vv',L('Voces del locutor','Announcer voices')]],h='<div class="card" style="max-width:440px"><h2>'+L('Volumen','Volume')+'</h2>',i;
+  for(i=0;i<F.length;i++)h+='<div class="row vol"><span class="lb">'+F[i][1]+' · <b id="vl_'+F[i][0]+'">'+Math.round(PREF[F[i][0]]*100)+'%</b></span><input type="range" min="0" max="100" step="5" id="vr_'+F[i][0]+'" value="'+Math.round(PREF[F[i][0]]*100)+'"></div>';
+  h+='<div style="margin-top:8px"><button class="btn" id="vOk" type="button">'+L('Listo','Done')+'</button></div><div class="foot"><span>'+L('Se guarda en este teléfono. En 0, la música se apaga.','Saved on this phone. At 0, music is off.')+'</span><span>VOLEII · by Carlos Torres</span></div></div>';
+  ov.innerHTML=h;ov.style.display='flex';
+  F.forEach(function(f){var el=$('vr_'+f[0]);if(!el)return;el.addEventListener('input',function(){try{var v=Math.max(0,Math.min(100,parseInt(el.value,10)||0))/100;PREF[f[0]]=v;$('vl_'+f[0]).textContent=Math.round(v*100)+'%';
+      if(f[0]==='vm'){if(v<=0&&PREF.mus){PREF.mus=false;musStop();}else if(v>0&&!PREF.mus){PREF.mus=true;actx();musStart();}}volAplica();}catch(e){}});
+    el.addEventListener('change',function(){try{savePref();hudStatic();if(f[0]==='ve')snUI('aceptar',0.6);}catch(e){}});});
+  tap($('vOk'),function(){savePref();hudStatic();if(vuelta){vuelta();return;}ov.style.display='none';if(pausa){paused=false;last=performance.now();}snUI('cerrar',0.6);});}catch(e){}}
 function pauseCard(){if(!G||G.phase==='menu'||G.phase==='end')return;if(NET.on){nPauseCard();return;}paused=true;joy=null;JX=0;JZ=0;joyRest();snUI('abrir',0.6);
   ov.innerHTML='<div class="card" style="max-width:380px;text-align:center"><h2>'+L('Pausa','Paused')+'</h2><p class="sub">'+CFG.team+' '+G.sc[0]+' : '+G.sc[1]+' '+L('Rival','Rival')+'</p>'+
-  '<p class="sub">'+(fpsV?fpsV+L(' cuadros por segundo · calidad ',' frames per second · quality ')+(QMAX-qI)+'/'+QMAX:'')+'</p><button class="btn" id="pSeg" type="button">'+L('Seguir','Resume')+'</button><button class="btn b2" id="pMenu" type="button">'+L('Salir al menú','Quit to menu')+'</button></div>';ov.style.display='flex';
+  '<p class="sub">'+(fpsV?fpsV+L(' cuadros por segundo · calidad ',' frames per second · quality ')+(QMAX-qI)+'/'+QMAX:'')+'</p><button class="btn" id="pSeg" type="button">'+L('Seguir','Resume')+'</button><button class="btn b2" id="pVol" type="button">'+L('Volumen','Volume')+'</button><button class="btn b2" id="pMenu" type="button">'+L('Salir al menú','Quit to menu')+'</button></div>';ov.style.display='flex';
+  tap($('pVol'),function(){volCard(pauseCard);});
   tap($('pSeg'),function(ev){ov.style.display='none';paused=false;last=performance.now();snUI('cerrar',0.6);musStart();});
   tap($('pMenu'),function(ev){paused=false;menu();});}
 function matchScore(){var lv={easy:1,normal:2,hard:3}[curDiff()]||1,u=G.sc[0],t=G.sc[1];return lv*(u*10+Math.max(u-t,0)*5+(u>t?100:0));}
@@ -2669,7 +3005,7 @@ function endCard(){if(NET.on){nEnd();return;}var s=G.st,won=G.sc[0]>G.sc[1],rec=
   '<p class="sub">'+(MODO?etapaTxt()+' · ':'')+CFG.rival+' · '+L({easy:'fácil',normal:'normal',hard:'difícil'}[curDiff()],curDiff())+(realActivo()?L(' · balón real',' · real ball'):'')+(ASSIST?L(' · asistido',' · assisted'):'')+' · '+sc.toLocaleString('es-PR')+L(' puntos',' points')+'</p><div class="stats">'+
   st(pos+'%',L('Recepción positiva (# y +)','Positive pass (# and +)'))+st(s.kill+' / '+s.att,L('Remates ganadores','Kills'))+st(eff+'%',L('Eficiencia de ataque','Attack efficiency'))+st(s.ace,'Aces')+
   st(s.blk,L('Puntos de bloqueo','Block points'))+st(perf+'%',L('Toques perfectos','Perfect timing'))+st(s.maxRally,L('Rally más largo','Longest rally'))+st('# '+s.a+'  + '+s.b+'  ! '+s.c+'  0 '+s.d,L('Tus pases','Your passes'))+
-  '</div><p style="margin-top:8px"><b style="color:'+CFG.acc+'">+'+gain+' XP</b> · '+L('Nivel ','Level ')+L1+(L1>L0?' · <b style="color:#C6F432">'+L('Subiste de nivel.','Level up.')+un+'</b>':'')+(nd.length?'<br><span class="sub">'+L('Reto cumplido: ','Challenge done: ')+nd.join(' · ')+'</span>':'')+'</p>'+
+  '</div>'+(G.tc?'<p class="sub" style="margin-top:6px">'+L('Tiempos ','Time-outs ')+G.tc.to[0]+L(' de ',' of ')+TC_TO+' · '+L('cambios ','subs ')+G.tc.subs[0]+L(' de ',' of ')+TC_SUBS+(G.tc.dl[0]?' · '+(G.tc.dl[0]>=2?L('tarjeta roja por retraso','red card for delay'):L('tarjeta amarilla por retraso','yellow card for delay')):'')+'</p>':'')+'<p style="margin-top:8px"><b style="color:'+CFG.acc+'">+'+gain+' XP</b> · '+L('Nivel ','Level ')+L1+(L1>L0?' · <b style="color:#C6F432">'+L('Subiste de nivel.','Level up.')+un+'</b>':'')+(nd.length?'<br><span class="sub">'+L('Reto cumplido: ','Challenge done: ')+nd.join(' · ')+'</span>':'')+'</p>'+
   '<p class="sub" id="recm" style="margin-top:4px">'+(RECORDS_ON?(ASSIST?L('El modo asistido no cuenta para el top.','Assisted mode does not count for the top.'):L('Guardando tu marca…','Saving your score…')):L('Abre el juego desde '+CFG.app+' para guardar tu marca en el top.','Open the game from '+CFG.app+' to save your score.'))+'</p><div class="topl" id="tope" style="max-width:320px;margin:4px auto 0"></div>'+
   '<button class="btn" id="otra" type="button">'+L('Jugar otra vez','Play again')+'</button><button class="btn b2" id="eMenu" type="button">'+L('Menú','Menu')+'</button>'+
   '<div class="foot"><a href="'+backHref()+'">'+L('Volver a ','Back to ')+CFG.app+'</a><span>VOLEII · by Carlos Torres</span></div></div>';ov.style.display='flex';
@@ -2699,6 +3035,7 @@ function camUpdate(rdt,snap){if(CAMDBG){camera.position.set(CAMDBG[0],CAMDBG[1],
   var sh=camShot(ph);if(sh){camera.position.set(sh.px,sh.py,sh.pz);_shL.set(sh.lx,sh.ly,sh.lz);camera.lookAt(_shL);if(Math.abs(camera.fov-sh.fov)>0.01){camera.fov=sh.fov;camera.updateProjectionMatrix();}camShotOn=true;return;}
   if(camShotOn){camShotOn=false;snap=true;}
   if(ph==='menu'){px=Math.sin(tAll*0.14)*7.5;py=3.4;pz=10.5+Math.cos(tAll*0.14)*2;lx=0;ly=1.4;lz=0;lam=2;}
+  else if(ph==='tiempo'){var tcam=tcCam();px=tcam[0];py=tcam[1];pz=tcam[2];lx=tcam[3];ly=tcam[4];lz=tcam[5];lam=2.2;}
   else if(ph==='pre'||ph==='windup'){q=R.srv.pl;if(G.serving===0){px=q.x*0.85;py=3.5;pz=q.z+5.4;lx=lerp(q.x,R.srv.aim.x,0.4);ly=1.5;lz=-1;}else{px=0;py=4.4;pz=12.4;lx=0;ly=1.7;lz=-2.5;}lam=5;}
   else if(ph==='dead'||ph==='end'){var w=R.last&&G.sc?(G.serving):0;q=(R.last&&R.last.pl&&R.last.pl.team===w)?R.last.pl:TEAM[w].pl[1];
     if(w===0){var a=tAll*0.35;px=q.x+Math.sin(a)*1.2+(q.x>0?-1.6:1.6);py=1.9;pz=q.z-3.6;lx=q.x;ly=1.35;lz=q.z;}else{px=q.x*0.5;py=3.2;pz=4.8;lx=q.x;ly=1.3;lz=q.z;}lam=2.6;}
@@ -2810,8 +3147,13 @@ cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ()
 window.BB={version:APP_VERSION,all:function(){return ALL;},salto:function(){var o={s:SALTO,take:TAKE,blk:BLK_LEAD,tkd:TK_D,bkd:BK_D,clips:{}};try{var L2=[['ataque',0.35],['ataque_corto',0.35],['ataque_corto',0.3],['bloqueo_frente',0.28],['bloqueo_der',0.28],['bloqueo_izq',0.28],['saque_salto',0.32]];for(var i=0;i<L2.length;i++){var J=jfOf(CLIPS[L2[i][0]],L2[i][1]);if(J)o.clips[L2[i][0]+'@'+L2[i][1]]={k:J.k,Fc:J.Fc,Fn:J.Fn,H:J.H,fC:J.fC,tc0:J.fC*J.Fc,tc:J.fC*J.Fn};}}catch(e){}return o;},ap:function(v){if(v===true||v===false)AP_ON=v;return {on:AP_ON,t:AP};},mv:function(){return MV;},dbg:function(v){if(v===true)DBG={ev:[],n:0,cur:null,ct:'',cd:0};else if(v===false)DBG=null;return DBG;},
   q:function(v){if(v==='lock')QLOCK=true;else if(v==='auto')QLOCK=false;else if(typeof v==='number')qSet(v);return {i:qI,max:QMAX,pr:PR,body:qStep,wait:qWait,lv:QLV};},qfeed:function(ms,n){for(var i=0;i<n;i++)quality(ms);return qI;},
   loop:function(ms){var t=last;for(var i=0;i<ms.length;i++){t+=ms[i];NOREND=true;var raf=window.requestAnimationFrame;window.requestAnimationFrame=function(){};try{frame(t);}finally{window.requestAnimationFrame=raf;}}return {acc:ACC,ip:ipOn,ticks:TKN};},render:function(v){NOREND=!v;},net:NET,nLobby:function(){nLobby();},nCreate:function(c){nCreate(c);},nJoin:function(c){nJoin(c);},cam:function(a){CAMDBG=a||null;},hold:function(v){HOLD=!!v;last=performance.now();},adv:function(sec){ipRestore();bvOut();var n=Math.max(1,Math.round(sec*60));for(var i=0;i<n;i++){var rdt=1/60;freezeT=0;if(TUT.hold){if(TUT.hold==='cho'&&(Math.abs(JX)>0.35||Math.abs(JZ)>0.35))tutRelease();}else tutCheck();if(TUT.hold){hudFrame(rdt);continue;}TS+=(tsGoal-TS)*Math.min(1,rdt*14);step(rdt*TS,rdt);camUpdate(rdt,false);hudFrame(rdt);crowdFrame(rdt);}return ctxNow();},joy:function(x,z){JX=x;JZ=z;},state:function(){return {G:G,R:R,CTRL:CTRL,tG:tG,TS:TS,REP:REP,tAll:tAll};},bot:BOT,press:function(){actionPress();},
+  /* 0.14.0: ganchos de prueba de tiempos y cambios */
+  tc:function(){return {on:TC.on,team:TC.team,t:TC.t,ready:TC.ready,shown:TC.shown,tc:G&&G.tc,nom:SB.nom,ph:G&&G.phase,D:{winP:D.winP,winG:D.winG,err:D.ai.err,skill:D.ai.skill},espera:tcEspera()};},
+  tcPide:function(){tcPide();},tcCambio:function(r,n){return tcSub(r,n);},tcElegibles:function(r){return tcElegibles(r);},tcCard:function(){tcCard();},tcCierraCard:function(){tcCardCierra(false);},tcListo:function(){tcListo();},
+  tcRival:function(){return G&&G.tc?tcInicia(1,'prueba'):false;},tcElige:function(r,n){tcElige(r,n);},tcHacer:function(){tcHacer();},tcCancelar:function(){tcCancelar();},tcBoton:function(){tcBotonCambio();},
+  castigo:function(w,k){tcCastigo(w,k);},vol:function(){return {vm:PREF.vm,ve:PREF.ve,vv:PREF.vv,mus:PREF.mus,g:{mus:VG.mus?VG.mus.gain.value:null,fx:VG.fx?VG.fx.gain.value:null,voz:VG.voz?VG.voz.gain.value:null}};},volCard:function(){volCard(null);},nr:function(){return NR;},modo:function(m){jugarModo(m);},
   start:function(diff,assist,tut){if(diff)PREF.diff=diff;PREF.assist=!!assist;ov.style.display='none';newMatch(!!tut);},tut:function(){return TUT;},
-  sim:function(matches,diff,sd,skip,aim,assist,react){var out={wins:0,losses:0,rallies:0,contacts:0,pts:[0,0],secs:0,st:{a:0,b:0,c:0,d:0,att:0,kill:0,attErr:0,blocked:0,ace:0,blk:0,srvErr:0,aiAtt:0,aiKill:0,aiErr:0,dive:0,aiDive:0},hist:{}};BOT.react=react||0;
+  sim:function(matches,diff,sd,skip,aim,assist,react){var out={wins:0,losses:0,rallies:0,contacts:0,pts:[0,0],secs:0,st:{a:0,b:0,c:0,d:0,att:0,kill:0,attErr:0,blocked:0,ace:0,blk:0,srvErr:0,aiAtt:0,aiKill:0,aiErr:0,dive:0,aiDive:0,f1:0,s1:0},hist:{}};BOT.react=react||0;
     PREF.diff=diff||'easy';PREF.assist=!!assist;BOT.on=true;BOT.sim=true;BOT.sd=sd==null?0.05:sd;BOT.skip=skip||0;BOT.aim=aim||'open';BOT.log=[];var snd=PREF.snd;PREF.snd=false;
     for(var m=0;m<matches;m++){newMatch(false);var t0=tG,guard=0;while(G.phase!=='end'&&guard<400000){freezeT=0;step(1/60,1/60);guard++;}
       if(G.sc[0]>G.sc[1])out.wins++;else out.losses++;out.pts[0]+=G.sc[0];out.pts[1]+=G.sc[1];out.secs+=tG-t0;out.rallies+=G.st.rallies;out.contacts+=G.st.contacts;for(var k in out.st)out.st[k]+=G.st[k];}
