@@ -135,7 +135,7 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.8.1',ASSET_V='2';
+var APP_VERSION='0.8.2',ASSET_V='2';
 /* BAREBORU by VOLEII 6x6: voleibol seis contra seis contra la maquina, a 15 con ventaja de 2.
    Sistema 5-1 con libero y las seis rotaciones del Playbook de Vaqueros (formaciones de recepcion, target, defensa Middle/Middle y cobertura).
    Sale del motor del 3x3 (juegos/bareboru): mismos cuerpos, clips y controles. Controlas al jugador que le toca jugar el balon; los demas van solos.
@@ -149,7 +149,9 @@ var APP_VERSION='0.8.1',ASSET_V='2';
    0.8.0 (entrega A): peso del golpe (golpe grave, estela, marca y polvo en el piso, red que se sacude), camaras de saque, celebracion y
    repeticion con teleobjetivo, encuadre de la carrera, marcador de transmision y senales de lectura en Facil y Normal.
    0.8.1: cuerpos sin manchas (texturas limpias, la ropa no deja ver el blanco de abajo, relieve suave en la piel) y carrera sin brinco
-   (ciclo de dos pasos y fundido en la costura de todos los ciclos de desplazamiento). ?piel=0 y ?carrera=0 vuelven a lo de 0.8.0. */
+   (ciclo de dos pasos y fundido en la costura de todos los ciclos de desplazamiento). ?piel=0 y ?carrera=0 vuelven a lo de 0.8.0.
+   0.8.2: carrera de captura real (CMU Graphics Lab Motion Capture Database, mocap.cs.cmu.edu): un trote y una carrera del mismo
+   corredor que se mezclan segun la velocidad, con el largo del paso y el ritmo de una persona. ?corre=0 vuelve a la carrera de 0.8.1. */
 var CFG={team:'Vaqueros',rival:'Rival',acc:'#FFCF27',azul:'#023B9F',
   kitUs:{jersey:'#00389C',shorts:'#F1F3F6',trim:'#FCCC24'},kitRival:{jersey:'#E8559A',shorts:'#F1F3F6',trim:'#FFFFFF'},
   court:{inn:'#2f63b8',out:'#1a2f57'},ball:['#FCCC24','#00389C','#F2EFE8'],ls:'vq_bareboru6_cfg_v1',app:'STATION',schema:'station',brand:'vaqueros'};
@@ -212,9 +214,9 @@ function sgn(v){return v<0?-1:1;}
 /* ---------- sonido (sintetizado, sin archivos) ---------- */
 /* 0.8.0 (entrega A): golpe, camara, marcador y lectura. Cada parte se apaga por enlace para comparar: ?golpe=0, ?camara=0,
    ?marcador=0, ?lectura=0 (?lectura=2 la deja activa tambien en el robot, solo para medir). */
-var GOLPE_ON=true,CAM_ON=true,MARC_ON=true,LECT_ON=true,LECT_SIM=false,PIEL_ON=true,CARRERA_ON=true;
+var GOLPE_ON=true,CAM_ON=true,MARC_ON=true,LECT_ON=true,LECT_SIM=false,PIEL_ON=true,CARRERA_ON=true,CORRE_ON=true;
 try{var _q8=new URLSearchParams(location.search);if(_q8.get('golpe')==='0')GOLPE_ON=false;if(_q8.get('camara')==='0')CAM_ON=false;if(_q8.get('marcador')==='0')MARC_ON=false;
-  if(_q8.get('lectura')==='0')LECT_ON=false;if(_q8.get('lectura')==='2')LECT_SIM=true;if(_q8.get('piel')==='0')PIEL_ON=false;if(_q8.get('carrera')==='0')CARRERA_ON=false;}catch(e){}
+  if(_q8.get('lectura')==='0')LECT_ON=false;if(_q8.get('lectura')==='2')LECT_SIM=true;if(_q8.get('piel')==='0')PIEL_ON=false;if(_q8.get('carrera')==='0')CARRERA_ON=false;if(_q8.get('corre')==='0')CORRE_ON=false;}catch(e){}
 /* azar propio de lo que solo se dibuja (polvo, ondas): no usa Math.random, asi el robot sembrado da los mismos partidos */
 var VR_S=7919;function vrnd(){VR_S=(VR_S*16807)%2147483647;return (VR_S-1)/2147483646;}
 var ac=null,noiseBuf=null;
@@ -1014,7 +1016,26 @@ function moveSegs(c,list){var out=[];for(var i=0;i<list.length;i++){var s0=list[
 function mvBuild(){try{var a=CLIPS.desplaza_def_lateral,b=CLIPS.desplaza_def_frente_atras,r=CLIPS.carrera_salto_corto;if(!a||!b||!a.hip||!b.hip)return;
   var m={cS:a,cF:b,cR:(r&&r.hip)?r:null,side:moveSegs(a,MV_SEG.desplaza_def_lateral),fb:moveSegs(b,MV_SEG.desplaza_def_frente_atras),run:null};
   if(m.cR)m.run=moveSegs(r,MV_SEG.carrera_salto_corto)[0];
-  if(m.side[0].dx*m.side[1].dx>=0||m.fb[0].dz*m.fb[1].dz>=0)return;MV=m;}catch(e){MV=null;}}
+  if(m.side[0].dx*m.side[1].dx>=0||m.fb[0].dz*m.fb[1].dz>=0)return;corrBuild(m);MV=m;}catch(e){MV=null;}}
+/* 0.8.2: carrera de captura real (CMU Graphics Lab Motion Capture Database, mocap.cs.cmu.edu, sujeto 16): trote (16_35) y carrera (16_45),
+   cada uno un ciclo de dos pasos cerrado que empieza en el apoyo del pie izquierdo (pruebas/bb6/carrera_cmu.py). Se mezclan segun la
+   velocidad y la fase avanza con lo recorrido dividido por el largo del ciclo a esa velocidad. Fuera del rango de los dos clips, la mitad
+   del cambio de velocidad va al largo del paso y la otra mitad al ritmo (CORRE_K). El rumbo de cada clip es el medio de la cadera en el
+   ciclo, porque la pelvis gira de un lado a otro al correr. */
+var CORRE_SEG={carrera_trote:[0.2527,1.0443],carrera_rapida:[0.2167,0.9167]},CORRE_K=0.5,poseRT=null,poseRQ=null;
+function corrYaw(c,s0,s1){try{var sx=0,sz=0;for(var i=0;i<24;i++){sampleQ(c.tr.Hips,s0+(s1-s0)*i/24,_qb);_vc.copy(FWDV).applyQuaternion(_qb);sx+=_vc.x;sz+=_vc.z;}return Math.atan2(sx,sz);}catch(e){return c.yawRef||0;}}
+function corrBuild(m){try{if(!CORRE_ON)return;var t=CLIPS.carrera_trote,q=CLIPS.carrera_rapida;if(!t||!q||!t.hip||!q.hip||!t.tr.Hips||!q.tr.Hips)return;
+    var st=CORRE_SEG.carrera_trote,sq=CORRE_SEG.carrera_rapida;t.yawRef=corrYaw(t,st[0],st[1]);q.yawRef=corrYaw(q,sq[0],sq[1]);
+    var gt=moveSegs(t,[st])[0],gq=moveSegs(q,[sq])[0],vt=gt.len/((gt.a1-gt.a0)*t.dur),vq=gq.len/((gq.a1-gq.a0)*q.dur);
+    if(!(vt>0.5&&vq>vt+0.3))return;
+    m.cT=t;m.cQ=q;m.sT=gt;m.sQ=gq;m.vT=vt;m.vQ=vq;poseRT=newPose();poseRQ=newPose();}catch(e){m.cT=null;m.cQ=null;}}
+function corrPose(p,spd,out){try{var M=MV,w=clamp((spd-M.vT)/(M.vQ-M.vT),0,1),len=lerp(M.sT.len,M.sQ.len,w);
+    if(spd>M.vQ)len=M.sQ.len*Math.pow(spd/M.vQ,CORRE_K);else if(spd<M.vT)len=M.sT.len*Math.pow(Math.max(spd,0.3)/M.vT,CORRE_K);
+    var dd=p.rd==null?0:p.dist-p.rd;p.rd=p.dist;if(!(dd>0&&dd<1))dd=0;p.rph=(((p.rph||0)+dd/len)%1+1)%1;var u=p.rph;
+    if(w<1)clipPose(M.cT,M.sT.a0+(M.sT.a1-M.sT.a0)*u,poseRT);
+    if(w>0)clipPose(M.cQ,M.sQ.a0+(M.sQ.a1-M.sQ.a0)*u,poseRQ);
+    if(w<=0)copyPose(poseRT,out);else if(w>=1)copyPose(poseRQ,out);else blendPose(poseRT,poseRQ,w,out);
+    return true;}catch(e){return false;}}
 function mvPick(list,v,ax){var s=list[0];return ((ax?s.dz:s.dx)>=0)===(v>=0)?s:list[1];}
 function mvPh(d,len){return ((d/len)%1+1)%1;}
 function animate(p){var spd=hyp(p.vx,p.vz);
@@ -1025,7 +1046,8 @@ function animate(p){var spd=hyp(p.vx,p.vz);
   if(spd>0.05&&MV&&!p.netc){var fy0=p.yaw,l0=p.vx*Math.cos(fy0)-p.vz*Math.sin(fy0),f0=p.vx*Math.sin(fy0)+p.vz*Math.cos(fy0);
     var sS=mvPick(MV.side,l0,0),sF=mvPick(MV.fb,f0,1);mvLoop(MV.cS,sS,p.dist,poseMove);mvLoop(MV.cF,sF,p.dist,poseMoveF);
     blendPose(poseMoveF,poseMove,Math.abs(l0)/(Math.abs(l0)+Math.abs(f0)+1e-6),poseG);
-    if(MV.run&&f0>0){var rw=clamp((spd-1.6)/0.6,0,1)*clamp((f0/spd-0.6)/0.25,0,1);if(rw>0){mvLoop(MV.cR,MV.run,p.dist,poseRun);blendPose(poseG,poseRun,rw,poseG);}}
+    if(MV.cT&&f0>0){var rw2=clamp((spd-1.6)/0.6,0,1)*clamp((f0/spd-0.6)/0.25,0,1);if(rw2>0&&corrPose(p,spd,poseRun))blendPose(poseG,poseRun,rw2,poseG);}
+    else if(MV.run&&f0>0){var rw=clamp((spd-1.6)/0.6,0,1)*clamp((f0/spd-0.6)/0.25,0,1);if(rw>0){mvLoop(MV.cR,MV.run,p.dist,poseRun);blendPose(poseG,poseRun,rw,poseG);}}
     blendPose(poseIdle,poseG,clamp(spd/1.1,0,1)*0.9,p.pose);}
   else if(spd>0.05){var fy=p.yaw,lf=p.vx*Math.cos(fy)-p.vz*Math.sin(fy),lfw=p.vx*Math.sin(fy)+p.vz*Math.cos(fy);
     var cl=CLIPS.desplaza_lateral,a0=lf>=0?0.03:0.36,a1=lf>=0?0.30:0.76,segLen=(lf>=0?1.30:1.95);
@@ -2122,7 +2144,7 @@ var B3='/juegos/bareboru/3d/',B6='/juegos/bareboru6/3d/';
 var CLIP_LIST={espera:{},espera_defensa:{},desplaza_lateral:{},desplaza_frente_atras:{},recibo_frente:{contact:0.4589},recibo_izq:{contact:0.5706},recibo_der:{contact:0.4654},
   plancha_frente:{contact:0.3964},defensa_rodilla:{contact:0.4776},voleo_frente:{contact:0.7179},devolucion:{contact:0.4507},
   ataque:{takeoff:0.5874,landing:0.7273,contact:0.6573},bloqueo_frente:{takeoff:0.5812,landing:0.7749,contact:0.6702},
-  desplaza_def_lateral:{b6:1},desplaza_def_frente_atras:{b6:1},carrera_salto_corto:{b6:1},
+  desplaza_def_lateral:{b6:1},desplaza_def_frente_atras:{b6:1},carrera_salto_corto:{b6:1},carrera_trote:{b6:1},carrera_rapida:{b6:1},
   saque_flotante:{contact:0.4983},saque_salto:{takeoff:0.6176,landing:0.739,contact:0.6875},celebra_1:{},celebra_2:{},lamenta_1:{},
   bloqueo_izq:{takeoff:0.7169,landing:0.8382,contact:0.75},bloqueo_der:{takeoff:0.5363,landing:0.7039,contact:0.6201},voleo_izq:{contact:0.5812},voleo_der:{contact:0.3},
   plancha_izq:{contact:0.3348},plancha_der:{contact:0.3012},celebra_3:{},lamenta_2:{},ataque_corto:{takeoff:0.4555,landing:0.6545,contact:0.5602,b6:1}};
