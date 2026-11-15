@@ -877,6 +877,10 @@ table.data tr:hover td{background:rgba(81,183,228,.04);}
 .sb-table td.ok{font-weight:600;}
 .sb-table .sb-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#51B7E4;margin-right:6px;vertical-align:1px;}
 .sb-table tfoot td{font-weight:700;border-top:2px solid var(--line-strong);}
+.scout-opt.exam{border-color:#EB448F;background:rgba(235,68,143,.10);}
+.sb-table td.mid{color:#F5A524;font-weight:700;}
+.sb-table td.low{color:#FF5A5F;font-weight:700;}
+.sb-table td.wr{white-space:normal;min-width:120px;color:var(--dim);}
 /* QR por jugador y hoja imprimible */
 #qr-sheet{position:fixed;inset:0;z-index:130;background:var(--bg0);overflow:auto;padding:16px;}
 .qr-toolbar{max-width:210mm;margin:0 auto 14px;}
@@ -1957,6 +1961,7 @@ html.modo-staff .logo img{width:64px;height:auto;max-width:100%;}
   <div id="dash-reminder"></div>
   <div id="dash-semaforo"></div>
   <div id="dash-scout"></div>
+  <div id="dash-exam"></div>
 
   <div class="chart-row">
     <div class="panel">
@@ -2512,7 +2517,7 @@ html.modo-staff .logo img{width:64px;height:auto;max-width:100%;}
 <script>
 // Version visible en pantalla. Cuando alguien reporte algo raro, lo primero
 // es saber que version esta corriendo su telefono.
-const APP_VERSION = 'v4.11.1';
+const APP_VERSION = 'v4.12.0';
 
 // ============ SUPABASE ============
 // Backend de Angels: esquema "angels" dentro del proyecto de Supabase de
@@ -3092,7 +3097,11 @@ function openScouting(){
     var h = '<div class="modal-box" style="max-width:420px">'+
       '<div class="modal-title">'+T('Scouting')+'</div>'+
       '<div class="modal-subtitle">'+T('Escoge el rival. Se abre en el Playbook de Angels (código ADC).')+'</div>'+
-      '<div class="scout-list">';
+      '<div class="scout-list">'+
+      '<button type="button" class="scout-opt exam" onclick="openExam()">'+
+        '<span class="so-round">'+T('Examen')+'</span>'+
+        '<span class="so-name">'+T('Sistema y scouting')+'</span>'+
+        '<span class="so-when">'+T('30 preguntas · tu nota le llega al coach')+'</span></button>';
     SCOUT_RIVALS.forEach(function(r, i){
       h += '<button type="button" class="scout-opt'+(i===0?' next':'')+'" onclick="openScoutRival(\''+r.id+'\')">'+
         '<span class="so-round">'+htmlEscape(r.round)+(i===0?' · '+T('próximo'):'')+'</span>'+
@@ -3116,6 +3125,72 @@ function openScoutRival(id){
       }).catch(function(e){ console.warn('scout open', e); });
     }
   } catch(e){ console.error('openScoutRival', e); }
+}
+// Examen del sistema y del scouting: vive en angelsplay (#/examen). El jugador
+// lo abre desde aquí y su token viaja en el hash (no llega a ningún servidor);
+// al terminar, angelsplay entrega las respuestas por RPC (player_exam_submit) y
+// la nota se calcula en la base de datos. Solo el staff ve las notas.
+var EXAM_ID = 'buzzer-2026';
+function openExam(){
+  try {
+    var url = SCOUT_BASE + 'examen';
+    if(PLAYER_TOKEN && !isStaff()) url += '&t=' + encodeURIComponent(PLAYER_TOKEN);
+    window.open(url, '_blank', 'noopener');
+    closeScouting();
+  } catch(e){ console.error('openExam', e); }
+}
+var _examRes = null, _examAt = 0, _examLoading = false;
+async function loadExamResults(force){
+  try {
+    if(_examLoading) return;
+    if(!force && _examRes && (Date.now() - _examAt) < 60000) return;
+    _examLoading = true;
+    var res = await sb.from('exam_results').select('player_id,score,total,wrong,submitted_at').eq('exam', EXAM_ID).order('submitted_at', { ascending: true }).limit(3000);
+    _examLoading = false;
+    if(res.error){ console.warn('exam_results', res.error.message); return; }
+    _examRes = res.data || []; _examAt = Date.now();
+    renderExamBoard();
+  } catch(e){ _examLoading = false; console.error('loadExamResults', e); }
+}
+function examCls(score, total){
+  var p = total ? score / total : 0;
+  return p >= 0.8 ? 'ok' : (p >= 0.6 ? 'mid' : 'low');
+}
+function renderExamBoard(){
+  try {
+    var slot = document.getElementById('dash-exam');
+    if(!slot) return;
+    if(!isStaff()){ slot.innerHTML = ''; return; }
+    if(!_examRes){ slot.innerHTML = ''; loadExamResults(); return; }
+    loadExamResults();
+    var players = activeOnly(DB.players).slice().sort(function(a,b){ return (parseInt(a.number,10)||0) - (parseInt(b.number,10)||0); });
+    var by = {};
+    _examRes.forEach(function(r){ (by[r.player_id] = by[r.player_id] || []).push(r); });
+    var done = 0, sumFirst = 0, rows = '';
+    players.forEach(function(p){
+      var list = by[p.id] || [];
+      rows += '<tr><td class="notr">#'+htmlEscape(p.number||'')+' '+htmlEscape(callName(p))+'</td>';
+      if(!list.length){ rows += '<td class="no">'+T('No lo ha hecho')+'</td><td class="no">-</td><td class="no">-</td><td class="no">-</td><td class="no">-</td></tr>'; return; }
+      var first = list[0], last = list[list.length - 1], best = list[0];
+      list.forEach(function(r){ if(r.score > best.score) best = r; });
+      done++; sumFirst += first.score;
+      var wr = (last.wrong || []).join(', ');
+      rows += '<td class="'+examCls(first.score, first.total)+'">'+first.score+' '+T('de')+' '+first.total+'</td>'+
+        '<td class="'+examCls(best.score, best.total)+'">'+best.score+' '+T('de')+' '+best.total+'</td>'+
+        '<td>'+list.length+'</td>'+
+        '<td>'+htmlEscape(scoutWhen(last.submitted_at))+'</td>'+
+        '<td class="wr">'+(wr ? htmlEscape(wr) : T('Ninguna'))+'</td></tr>';
+    });
+    var avg = done ? (sumFirst / done).toFixed(1) : '-';
+    var head = '<tr><th>'+T('Jugador')+'</th><th>'+T('Primer intento')+'</th><th>'+T('Mejor')+'</th><th>'+T('Intentos')+'</th><th>'+T('Último')+'</th><th>'+T('Falló (último intento)')+'</th></tr>';
+    var foot = '<tr><td>'+T('Lo hicieron')+'</td><td><b>'+done+'</b> '+T('de')+' '+players.length+'</td><td colspan="4">'+T('Promedio del primer intento')+': <b>'+avg+'</b></td></tr>';
+    slot.innerHTML = '<div class="panel scout-board exam-board">'+
+      '<div class="panel-title"><span class="dot"></span>'+T('Examen · sistema y scouting')+
+        '<button class="btn-ghost sb-refresh" onclick="loadExamResults(true)">'+T('Actualizar')+'</button></div>'+
+      '<div class="sb-wrap"><table class="sb-table"><thead>'+head+'</thead><tbody>'+rows+'</tbody><tfoot>'+foot+'</tfoot></table></div>'+
+      '<div class="mono-note">'+T('La nota la calcula la base de datos con la clave del examen. Cuenta solo si el jugador lo abrió desde el botón Scouting de su app. El primer intento es el más honesto; los demás son repaso. Los números de la última columna son las preguntas que falló. Solo lo ves tú.')+'</div>'+
+    '</div>';
+  } catch(e){ console.error('renderExamBoard', e); }
 }
 // Panel del staff: quién abrió el scouting de cada rival.
 var _scoutOpens = null, _scoutOpensAt = 0, _scoutLoading = false;
@@ -6471,6 +6546,7 @@ function renderDashboard(teamFilter) {
   updateAlertBadge();
   renderSemaforo(tf);
   try { renderScoutBoard(); } catch(e){ console.log('scout board:', e); }
+  try { renderExamBoard(); } catch(e){ console.log('exam board:', e); }
   renderProgresionBoard();
 
   document.getElementById('load-chart-tabs').innerHTML = TEAM_ORDER.length < 2 ? '' : teamTabList().map(function(t){
