@@ -525,10 +525,10 @@ Builder.prototype.flush=function(group,matFor){for(var k in this.L){var a=this.L
         if(ua){U[(o+j)*2]=ua.getX(j);U[(o+j)*2+1]=ua.getY(j);}C[(o+j)*3]=it.c[0];C[(o+j)*3+1]=it.c[1];C[(o+j)*3+2]=it.c[2];}
       if(g.index){for(j=0;j<g.index.count;j++)I[io+j]=g.index.getX(j)+o;io+=g.index.count;}else{for(j=0;j<pa.count;j++)I[io+j]=o+j;io+=pa.count;}o+=pa.count;}
     var geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(P,3));geo.setAttribute('normal',new THREE.BufferAttribute(N,3));geo.setAttribute('uv',new THREE.BufferAttribute(U,2));geo.setAttribute('color',new THREE.BufferAttribute(C,3));geo.setIndex(new THREE.BufferAttribute(I,1));geo.computeBoundingSphere();
-    var mesh=new THREE.Mesh(geo,matFor(k));mesh.castShadow=k!=='crowd0'&&k!=='crowd1'&&k!=='crowd2'&&k.indexOf('hoja')<0;mesh.receiveShadow=true;group.add(mesh);}
+    var mesh=new THREE.Mesh(geo,matFor(k));mesh.castShadow=k!=='crowd0'&&k!=='crowd1'&&k!=='crowd2'&&k!=='nube'&&k!=='lejos'&&k.indexOf('hoja')<0;mesh.receiveShadow=true;group.add(mesh);}
   this.L={};};
-var LEJOS_M=new THREE.MeshBasicMaterial({vertexColors:true,fog:false});
-function matFor(k){if(k==='lejos')return LEJOS_M;if(MATS[k])return MATS[k];if(k.indexOf('fach')===0)return FACH_M[+k.slice(4)];if(k.indexOf('crowd')===0)return CROWD_M[+k.slice(5)];if(k==='hoja')return HOJA_M;if(k==='valla')return VALLA_M;if(k==='red')return RED_M;return MATS.vc;}
+var LEJOS_M=new THREE.MeshBasicMaterial({vertexColors:true,fog:false}),NUBE_M=null;
+function matFor(k){if(k==='lejos')return LEJOS_M;if(k==='nube')return NUBE_M;if(MATS[k])return MATS[k];if(k.indexOf('fach')===0)return FACH_M[+k.slice(4)];if(k.indexOf('crowd')===0)return CROWD_M[+k.slice(5)];if(k==='hoja')return HOJA_M;if(k==='valla')return VALLA_M;if(k==='red')return RED_M;return MATS.vc;}
 var VALLA_M=new THREE.MeshStandardMaterial({map:vallaTex,transparent:true,alphaTest:0.3,side:THREE.DoubleSide,roughness:0.5,metalness:0.6});
 var RED_M=new THREE.MeshBasicMaterial({map:redTex,transparent:true,alphaTest:0.3,side:THREE.DoubleSide});
 
@@ -587,7 +587,7 @@ function mundoBase(){try{
   var hb=new Builder();hb.add('lejos',_ico,1250,3,-240,60,10,30,0,0,0,'#8fb39a');hb.flush(WORLD,matFor);
   /* nubes */
   var nubT=canvasTex(256,128,function(g,w,h){g.clearRect(0,0,w,h);for(var i=0;i<14;i++){var x=40+vr()*176,y=60+vr()*30,r=20+vr()*30,gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(255,255,255,0.95)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,w,h);}});
-  var nm=new THREE.MeshBasicMaterial({map:nubT,transparent:true,depthWrite:false,fog:false,opacity:0.9});for(i=0;i<40;i++){var n=new THREE.Mesh(_pl,nm);n.scale.set(90+vr()*90,30+vr()*25,1);n.position.set(-200+i*45+vr()*30,70+vr()*90,-520-vr()*80);WORLD.add(n);}
+  NUBE_M=new THREE.MeshBasicMaterial({map:nubT,transparent:true,depthWrite:false,fog:false,opacity:0.9});var NB=new Builder();for(i=0;i<40;i++){NB.add('nube',_pl,-200+i*45+vr()*30,70+vr()*90,-520-vr()*80,90+vr()*90,30+vr()*25,1,0,0,0);}NB.flush(WORLD,matFor);
   }catch(e){if(window.console)console.warn('mundo',e);}}
 var ESPUMA=null,REDC=null,NETF=0,CORD=[];
 function cordillera(sd,top,bot,amp,z,h,par){var R=rngDe(sd),ph=[R()*6,R()*6,R()*6],t=canvasTex(2048,256,function(g,w,hh){g.clearRect(0,0,w,hh);var gr=g.createLinearGradient(0,0,0,hh);gr.addColorStop(0,top);gr.addColorStop(1,bot);g.fillStyle=gr;g.beginPath();g.moveTo(0,hh);
@@ -644,7 +644,7 @@ function bandera(){var t=canvasTex(256,128,function(g,w,h){g.fillStyle=CFG.AMA;g
   var g=new THREE.Group(),f=new THREE.Mesh(new THREE.PlaneGeometry(1.1,0.55),new THREE.MeshStandardMaterial({map:t,transparent:true,alphaTest:0.3,side:THREE.DoubleSide,emissive:'#ffffff',emissiveMap:t,emissiveIntensity:0.3}));f.position.set(0.55,2.1,0);g.add(f);
   var p=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,2.4,8),new THREE.MeshStandardMaterial({color:'#F2EFE8'}));p.position.y=1.2;g.add(p);return g;}
 function letrerosUpdate(cx){try{var i;for(i=1;i<ZONAS.length;i++){var key='z'+i,x=MX(ZONAS[i].x0);if(Math.abs(x-cx)<120){if(!SIGNS[key]){var s=cartel(ZONAS[i].n,CFG.AZUL,2.2);s.position.set(x,0,-1.4);WORLD.add(s);SIGNS[key]=s;}}else if(SIGNS[key]){WORLD.remove(SIGNS[key]);delete SIGNS[key];}}
-  var a=Math.max(1,Math.floor((cx-40)/MX(500))),b=Math.floor((cx+140)/MX(500));for(i=a;i<=b;i++){var k2='m'+i;if(!SIGNS[k2]){var m=marca50(i);m.position.set(MX(i*500),0,-0.9);WORLD.add(m);SIGNS[k2]=m;}}
+  var a=Math.max(1,Math.floor((cx-40)/MX(500))),b=Math.floor((cx+(S&&(S.fase==='vuelo'||S.fase==='fin')?90:24))/MX(500));for(i=a;i<=b;i++){var k2='m'+i;if(!SIGNS[k2]){var m=marca50(i);m.position.set(MX(i*500),0,-0.9);WORLD.add(m);SIGNS[k2]=m;}}
   for(var k in SIGNS){if(k.charAt(0)==='m'&&(+k.slice(1)<a-1||+k.slice(1)>b+1)){WORLD.remove(SIGNS[k]);delete SIGNS[k];}}
   if(best>0){if(!bestFlag){bestFlag=bandera();WORLD.add(bestFlag);}bestFlag.position.set(MX(best*PX_M),0,-0.6);bestFlag.visible=true;}else if(bestFlag)bestFlag.visible=false;}catch(e){}}
 
@@ -701,7 +701,7 @@ function obMesh(o){var g=new THREE.Group(),w=MX(o.w),h=MX(o.h),cx=w/2;g.userData
   g.traverse(function(n){if(n.isMesh){n.castShadow=n.castShadow!==false;}});
   WORLD.add(g);return g;}
 var OBV=[];
-function obsUpdate(cx){try{var i,o,g,x0=cx-45,x1=cx+130;
+function obsUpdate(cx){try{var i,o,g,x0=cx-45,x1=cx+(S.fase==='vuelo'||S.fase==='fin'?130:36);
   for(i=0;i<W.ob.length;i++){o=W.ob[i];var ox=MX(o.x);if(ox+MX(o.w)<x0||ox>x1){if(o.__g){quitaG(o.__g);o.__g=null;}continue;}
     if(!o.__g){o.__g=obMesh(o);OBV.push(o);}g=o.__g;var u=g.userData;
     if(o.tp==='pelicano'){if(o.gone&&MX(o.y)>40){g.visible=false;continue;}g.position.set(MX(o.x+o.w/2),MX(o.y),0);var fl=Math.sin(TT*(o.gone||(S.ball.carry&&S.ball.pel===o)?16:7)+o.ph);
