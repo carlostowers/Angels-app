@@ -881,6 +881,24 @@ table.data tr:hover td{background:rgba(81,183,228,.04);}
 .sb-table td.mid{color:#F5A524;font-weight:700;}
 .sb-table td.low{color:#FF5A5F;font-weight:700;}
 .sb-table td.wr{white-space:normal;min-width:120px;color:var(--dim);}
+/* Examen: controles del coach, intentos y preguntas más falladas (v4.13.0) */
+.ex-ctrl{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px;}
+.ex-tg{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line-strong);background:transparent;color:var(--text);font-family:inherit;font-size:13px;font-weight:600;line-height:1;cursor:pointer;}
+.ex-tg .ex-tg-dot{width:10px;height:10px;border-radius:50%;background:#FF5A5F;}
+.ex-tg.on{border-color:#2BD46B;}
+.ex-tg.on .ex-tg-dot{background:#2BD46B;}
+.ex-tg[disabled]{opacity:.55;cursor:default;}
+.sb-table tr.ex-row{cursor:pointer;}
+.ex-caret{display:inline-block;width:14px;color:var(--dim);}
+.ex-live{color:#51B7E4;font-weight:700;}
+.sb-table tr.ex-det td{white-space:normal;padding:4px 0 10px 14px;border-top:0;}
+.ex-att{padding:6px 0;font-size:13px;line-height:1.45;border-bottom:1px dashed var(--line);max-width:calc(100vw - 100px);white-space:normal;}
+.ex-att .ok{font-weight:700;}.ex-att .mid{color:#F5A524;font-weight:700;}.ex-att .low{color:#FF5A5F;font-weight:700;}
+.ex-att-wr{color:var(--dim);}
+.ex-top{margin:12px 0 4px;font-size:13px;line-height:1.45;}
+.ex-top-t{font-weight:700;margin-bottom:4px;}
+.ex-top-r{padding:3px 0;color:var(--dim);}
+.ex-top-r b{color:var(--text);}
 /* QR por jugador y hoja imprimible */
 #qr-sheet{position:fixed;inset:0;z-index:130;background:var(--bg0);overflow:auto;padding:16px;}
 .qr-toolbar{max-width:210mm;margin:0 auto 14px;}
@@ -2519,7 +2537,7 @@ html.modo-staff .logo img{width:64px;height:auto;max-width:100%;}
 <script>
 // Version visible en pantalla. Cuando alguien reporte algo raro, lo primero
 // es saber que version esta corriendo su telefono.
-const APP_VERSION = 'v4.12.1';
+const APP_VERSION = 'v4.13.0';
 
 // ============ SUPABASE ============
 // Backend de Angels: esquema "angels" dentro del proyecto de Supabase de
@@ -3103,7 +3121,7 @@ function openScouting(){
       '<button type="button" class="scout-opt exam" onclick="openExam()">'+
         '<span class="so-round">'+T('Examen')+'</span>'+
         '<span class="so-name">'+T('Sistema y scouting')+'</span>'+
-        '<span class="so-when">'+T('30 preguntas · tu nota le llega al coach')+'</span></button>';
+        '<span class="so-when">'+T('30 preguntas · 20 minutos · libro cerrado')+'</span></button>';
     SCOUT_RIVALS.forEach(function(r, i){
       h += '<button type="button" class="scout-opt'+(i===0?' next':'')+'" onclick="openScoutRival(\''+r.id+'\')">'+
         '<span class="so-round">'+htmlEscape(r.round)+(i===0?' · '+T('próximo'):'')+'</span>'+
@@ -3129,16 +3147,18 @@ function openScoutRival(id){
   } catch(e){ console.error('openScoutRival', e); }
 }
 // Examen del sistema y del scouting: vive en angelsplay (#/examen). El jugador
-// lo abre desde aquí y su token viaja en el hash (no llega a ningún servidor);
-// al terminar, angelsplay entrega las respuestas por RPC (player_exam_submit) y
-// la nota se calcula en la base de datos. Solo el staff ve las notas.
+// lo abre desde aquí; su token viaja en el hash (no llega a ningún servidor como
+// dirección). Libro cerrado (decisiones de Carlos, 14 nov 2026): el coach abre y
+// cierra el examen y el repaso desde este panel; el servidor revisa cada respuesta
+// (verde o roja), cuenta 20 minutos y guarda cada intento con su tiempo y las
+// veces que el jugador salió del examen. Solo el staff ve las notas.
 var EXAM_ID = 'buzzer-2026';
 function openExam(){
   try {
     var url = SCOUT_BASE + 'examen';
     if(PLAYER_TOKEN && !isStaff()){
       url += '&t=' + encodeURIComponent(PLAYER_TOKEN);
-      // nombre con que lo nombra su app: el examen lo muestra en lugar de la lista de nombres
+      // nombre con que lo nombra su app: el examen lo muestra al empezar
       var yo = DB.players.find(function(x){ return x.id === PLAYER_ID; });
       if(yo){ var nm = callName(yo) + (yo.number ? ' #' + yo.number : ''); if(nm) url += '&n=' + encodeURIComponent(nm); }
     }
@@ -3146,57 +3166,128 @@ function openExam(){
     closeScouting();
   } catch(e){ console.error('openExam', e); }
 }
-var _examRes = null, _examAt = 0, _examLoading = false;
+var _examRes = null, _examAt = 0, _examLoading = false, _examBusy = false, _examMsg = '', _examOpen = {}, _examTimer = null;
 async function loadExamResults(force){
   try {
     if(_examLoading) return;
-    if(!force && _examRes && (Date.now() - _examAt) < 60000) return;
+    if(!force && _examRes && (Date.now() - _examAt) < 15000) return;
     _examLoading = true;
-    var res = await sb.from('exam_results').select('player_id,score,total,wrong,submitted_at').eq('exam', EXAM_ID).order('submitted_at', { ascending: true }).limit(3000);
+    var res = await sb.rpc('staff_exam_board', { p_exam: EXAM_ID });
     _examLoading = false;
-    if(res.error){ console.warn('exam_results', res.error.message); return; }
-    _examRes = res.data || []; _examAt = Date.now();
+    if(res.error){ console.warn('staff_exam_board', res.error.message); _examMsg = res.error.message; renderExamBoard(); return; }
+    _examRes = res.data || null; _examAt = Date.now(); _examMsg = '';
     renderExamBoard();
   } catch(e){ _examLoading = false; console.error('loadExamResults', e); }
+}
+// Abrir o cerrar el examen ('abierto') o el repaso ('repaso').
+async function toggleExam(campo){
+  try {
+    if(_examBusy || !_examRes) return;
+    var actual = !!_examRes[campo];
+    _examBusy = true; renderExamBoard();
+    var res = await sb.rpc('staff_exam_config', { p_exam: EXAM_ID, p_abierto: campo === 'abierto' ? !actual : null, p_repaso: campo === 'repaso' ? !actual : null });
+    _examBusy = false;
+    if(res.error){ _examMsg = res.error.message; renderExamBoard(); return; }
+    await loadExamResults(true);
+  } catch(e){ _examBusy = false; console.error('toggleExam', e); }
+}
+function toggleExamRow(pid){
+  try { _examOpen[pid] = !_examOpen[pid]; renderExamBoard(); } catch(e){ console.error('toggleExamRow', e); }
 }
 function examCls(score, total){
   var p = total ? score / total : 0;
   return p >= 0.8 ? 'ok' : (p >= 0.6 ? 'mid' : 'low');
+}
+function examDur(a){
+  try {
+    if(!a.finished_at) return '';
+    var s = Math.max(0, Math.round((new Date(a.finished_at) - new Date(a.started_at)) / 1000));
+    var m = Math.floor(s / 60), r = s % 60;
+    return m + ':' + (r < 10 ? '0' : '') + r;
+  } catch(e){ return ''; }
+}
+function examSal(n){ return n+' '+(n === 1 ? T('salida') : T('salidas')); }
+function examMMSS(s){ s = Math.max(0, s || 0); var m = Math.floor(s / 60), r = s % 60; return m + ':' + (r < 10 ? '0' : '') + r; }
+// Mientras el examen esté abierto y el panel a la vista, se actualiza solo cada 15 segundos.
+function examAutoRefresh(){
+  try {
+    var on = !!(_examRes && _examRes.abierto && isStaff() && document.getElementById('dash-exam') && document.visibilityState !== 'hidden');
+    if(on && !_examTimer){ _examTimer = setInterval(function(){ try { if(document.getElementById('dash-exam') && document.visibilityState !== 'hidden') loadExamResults(true); } catch(e){} }, 15000); }
+    if(!on && _examTimer){ clearInterval(_examTimer); _examTimer = null; }
+  } catch(e){ console.error('examAutoRefresh', e); }
 }
 function renderExamBoard(){
   try {
     var slot = document.getElementById('dash-exam');
     if(!slot) return;
     if(!isStaff()){ slot.innerHTML = ''; return; }
-    if(!_examRes){ slot.innerHTML = ''; loadExamResults(); return; }
+    if(!_examRes){ slot.innerHTML = _examMsg ? '<div class="panel scout-board exam-board"><div class="mono-note">'+htmlEscape(_examMsg)+'</div></div>' : ''; loadExamResults(); return; }
     loadExamResults();
+    var X = _examRes, total = X.total || 30, preg = X.preguntas || [];
     var players = activeOnly(DB.players).slice().sort(function(a,b){ return (parseInt(a.number,10)||0) - (parseInt(b.number,10)||0); });
     var by = {};
-    _examRes.forEach(function(r){ (by[r.player_id] = by[r.player_id] || []).push(r); });
-    var done = 0, sumFirst = 0, rows = '';
+    (X.intentos || []).forEach(function(a){ (by[a.player_id] = by[a.player_id] || []).push(a); });
+    var done = 0, sumFirst = 0, enCurso = 0, rows = '', falla = {};
     players.forEach(function(p){
       var list = by[p.id] || [];
-      rows += '<tr><td class="notr">#'+htmlEscape(p.number||'')+' '+htmlEscape(callName(p))+'</td>';
-      if(!list.length){ rows += '<td class="no">'+T('No lo ha hecho')+'</td><td class="no">-</td><td class="no">-</td><td class="no">-</td><td class="no">-</td></tr>'; return; }
-      var first = list[0], last = list[list.length - 1], best = list[0];
-      list.forEach(function(r){ if(r.score > best.score) best = r; });
-      done++; sumFirst += first.score;
-      var wr = (last.wrong || []).join(', ');
-      rows += '<td class="'+examCls(first.score, first.total)+'">'+first.score+' '+T('de')+' '+first.total+'</td>'+
-        '<td class="'+examCls(best.score, best.total)+'">'+best.score+' '+T('de')+' '+best.total+'</td>'+
-        '<td>'+list.length+'</td>'+
-        '<td>'+htmlEscape(scoutWhen(last.submitted_at))+'</td>'+
-        '<td class="wr">'+(wr ? htmlEscape(wr) : T('Ninguna'))+'</td></tr>';
+      var fin = list.filter(function(a){ return !!a.finished_at; });
+      var cur = list.filter(function(a){ return !a.finished_at; })[0];
+      var first = fin.filter(function(a){ return !a.practica; })[0] || fin[0];
+      var nm = '#'+htmlEscape(p.number||'')+' '+htmlEscape(callName(p));
+      var abre = list.length ? ' class="ex-row" onclick="toggleExamRow(\''+htmlEscape(p.id)+'\')"' : '';
+      rows += '<tr'+abre+'><td class="notr">'+(list.length ? '<span class="ex-caret">'+(_examOpen[p.id] ? '&#9662;' : '&#9656;')+'</span>' : '')+nm+'</td>';
+      if(first){
+        done++; sumFirst += first.score;
+        (first.wrong || []).forEach(function(q){ falla[q] = (falla[q] || 0) + 1; });
+        rows += '<td class="'+examCls(first.score, first.total)+'">'+first.score+' '+T('de')+' '+first.total+'</td>'+
+          '<td>'+examDur(first)+(first.cierre === 'tiempo' ? ' · '+T('tiempo') : '')+'</td>'+
+          '<td class="'+(first.salidas > 0 ? 'mid' : '')+'">'+first.salidas+'</td>';
+      } else {
+        rows += '<td class="no">'+(cur ? T('Contestando') : T('No lo ha hecho'))+'</td><td class="no">-</td><td class="no">-</td>';
+      }
+      rows += '<td>'+(cur ? '<span class="ex-live">'+cur.contestadas+' '+T('de')+' '+total+' · '+examMMSS(cur.restantes)+'</span>' : (fin.length ? fin.length : '-'))+'</td></tr>';
+      if(cur) enCurso++;
+      if(_examOpen[p.id] && list.length){
+        var det = '';
+        list.forEach(function(a, i){
+          var wr = (a.wrong || []).join(', ');
+          det += '<div class="ex-att">'+
+            '<b>'+(i + 1)+'.</b> '+(a.practica ? T('Práctica') : T('Examen'))+' · '+htmlEscape(scoutWhen(a.started_at))+' · '+
+            (a.finished_at
+              ? '<span class="'+examCls(a.score, a.total)+'">'+a.score+' '+T('de')+' '+a.total+'</span> · '+examDur(a)+(a.cierre === 'tiempo' ? ' ('+T('se acabó el tiempo')+')' : '')+' · '+examSal(a.salidas)+
+                '<div class="ex-att-wr">'+(wr ? T('Falló')+': '+htmlEscape(wr) : T('No falló ninguna'))+'</div>'
+              : T('contestando')+' '+a.contestadas+' '+T('de')+' '+a.total+' · '+T('le quedan')+' '+examMMSS(a.restantes)+' · '+examSal(a.salidas))+
+          '</div>';
+        });
+        rows += '<tr class="ex-det"><td colspan="5">'+det+'</td></tr>';
+      }
     });
     var avg = done ? (sumFirst / done).toFixed(1) : '-';
-    var head = '<tr><th>'+T('Jugador')+'</th><th>'+T('Primer intento')+'</th><th>'+T('Mejor')+'</th><th>'+T('Intentos')+'</th><th>'+T('Último')+'</th><th>'+T('Falló (último intento)')+'</th></tr>';
-    var foot = '<tr><td>'+T('Lo hicieron')+'</td><td><b>'+done+'</b> '+T('de')+' '+players.length+'</td><td colspan="4">'+T('Promedio del primer intento')+': <b>'+avg+'</b></td></tr>';
+    // preguntas más falladas en el primer intento
+    var top = Object.keys(falla).map(function(q){ return { q: parseInt(q, 10), n: falla[q] }; })
+      .sort(function(a, b){ return b.n - a.n || a.q - b.q; }).slice(0, 5);
+    var topH = top.length ? '<div class="ex-top"><div class="ex-top-t">'+T('Más falladas en el primer intento')+'</div>'+
+      top.map(function(t){ return '<div class="ex-top-r"><b>'+t.q+'</b> · '+t.n+' '+(t.n === 1 ? T('jugador') : T('jugadores'))+' · '+htmlEscape(preg[t.q - 1] || '')+'</div>'; }).join('')+'</div>' : '';
+    var btn = function(campo, on, txtOn, txtOff){
+      return '<button class="ex-tg'+(on ? ' on' : '')+'" onclick="toggleExam(\''+campo+'\')"'+(_examBusy ? ' disabled' : '')+'>'+
+        '<span class="ex-tg-dot"></span>'+(on ? txtOn : txtOff)+'</button>';
+    };
+    var ctrl = '<div class="ex-ctrl">'+
+      btn('abierto', X.abierto, T('Examen abierto · cerrar'), T('Examen cerrado · abrir'))+
+      btn('repaso', X.repaso, T('Repaso abierto · cerrar'), T('Repaso cerrado · abrir'))+
+      '</div>';
+    var head = '<tr><th>'+T('Jugador')+'</th><th>'+T('Primer intento')+'</th><th>'+T('Tiempo')+'</th><th>'+T('Salidas')+'</th><th>'+T('Intentos')+'</th></tr>';
+    var foot = '<tr><td>'+T('Lo hicieron')+'</td><td><b>'+done+'</b> '+T('de')+' '+players.length+'</td><td colspan="3">'+T('Promedio')+': <b>'+avg+'</b>'+(enCurso ? ' · '+enCurso+' '+T('contestando ahora') : '')+'</td></tr>';
     slot.innerHTML = '<div class="panel scout-board exam-board">'+
       '<div class="panel-title"><span class="dot"></span>'+T('Examen · sistema y scouting')+
         '<button class="btn-ghost sb-refresh" onclick="loadExamResults(true)">'+T('Actualizar')+'</button></div>'+
+      ctrl+
+      (_examMsg ? '<div class="mono-note">'+htmlEscape(_examMsg)+'</div>' : '')+
       '<div class="sb-wrap"><table class="sb-table"><thead>'+head+'</thead><tbody>'+rows+'</tbody><tfoot>'+foot+'</tfoot></table></div>'+
-      '<div class="mono-note">'+T('La nota la calcula la base de datos con la clave del examen. Cuenta solo si el jugador lo abrió desde el botón Scouting de su app. El primer intento es el más honesto; los demás son repaso. Los números de la última columna son las preguntas que falló. Solo lo ves tú.')+'</div>'+
+      topH+
+      '<div class="mono-note">'+T('Libro cerrado: el servidor revisa cada respuesta (verde o roja, sin decir la correcta) y da 20 minutos desde que el jugador empieza. Cerrado, nadie puede empezar; quien ya empezó termina en su tiempo. Cuenta el primer intento; con el repaso abierto pueden ver las correctas y repetir como práctica. Salidas: veces que salió del examen a otra app o página. Toca un jugador para ver cada intento. Los números son las preguntas en el orden del examen. Solo lo ves tú.')+'</div>'+
     '</div>';
+    examAutoRefresh();
   } catch(e){ console.error('renderExamBoard', e); }
 }
 // Panel del staff: quién abrió el scouting de cada rival.
