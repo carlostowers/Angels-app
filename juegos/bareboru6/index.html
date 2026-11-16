@@ -186,7 +186,7 @@ try{if(!(window.VOLEII&&window.VOLEII.T3)){window.BB6_MOTOR=false;document.write
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.15.2',ASSET_V='2';
+var APP_VERSION='0.15.4',ASSET_V='2';
 /* BAREBORU by VOLEII 6x6: voleibol seis contra seis contra la maquina, a 15 con ventaja de 2.
    Sistema 5-1 con libero y las seis rotaciones del Playbook de Vaqueros (formaciones de recepcion, target, defensa Middle/Middle y cobertura).
    Sale del motor del 3x3 (juegos/bareboru): mismos cuerpos, clips y controles. Controlas al jugador que le toca jugar el balon; los demas van solos.
@@ -693,24 +693,27 @@ sun.target.position.set(0,0,0);scene.add(sun);scene.add(sun.target);
    Nivel (GX.lv, guardado en bb6_g): 4 gama alta completa; 3 sin brillo; 2 sin brillo ni reflejo; 1 gama media (luz del HDRI);
    0 como la 0.14.1. El telefono empieza en el nivel que le toca y baja solo si no aguanta 60 cuadros.
    Interruptores: ?motor=0 (el three y el render de la 0.14.1), ?hdri=0 (la luz pintada de antes) y ?g=0..4 (fija el nivel). */
-var GX_V='1',GX={motor:false,lv:0,lv0:0,top:0,lock:false,robot:false,hdri:true,refl:true,piso:true,brillo:true,completa:true,okT:0,env0:null,envH:null,K:0.44};
+var GX_V='1',GX={motor:false,lv:0,lv0:0,top:0,lock:false,robot:false,hdri:true,refl:true,piso:true,brillo:true,completa:true,okT:0,env0:null,envH:null,K:0.44,U:null,ui:0,S:null,cur:null,ar:0,malo:0,pef:false,soft:false,nuevo:false,hz:1,wE:12,fondo:0,nd:0,ga:false,tac:false,tF:0};
+var GX_PX=1700000;
 function gxQ(k){try{return new URLSearchParams(location.search).get(k);}catch(e){return null;}}
 /* nivel de partida de un telefono que abre por primera vez. Los jugadores tienen iPhone 14 o mas nuevo y Samsung de gama alta
    (Carlos, 15 nov.); lo demas empieza en gama media. Si en la version anterior el telefono ya tuvo que bajar la resolucion, no sube. */
 function gxGuess(){try{var n=navigator,ua=n.userAgent||'',dpr=window.devicePixelRatio||1,dm=n.deviceMemory||0,hc=n.hardwareConcurrency||0;
   var ios=/iPhone|iPad|iPod/.test(ua)||(n.platform==='MacIntel'&&n.maxTouchPoints>1),tactil=(n.maxTouchPoints||0)>0,q0=0;
-  try{q0=parseInt(localStorage.getItem('bb6_q'),10)||0;}catch(e1){}
-  if(q0>=2)return q0>=4?0:1;
   /* sin tarjeta grafica (dibujo por software, como Chrome sin pantalla en las pruebas): como la 0.14.1 */
-  try{var gl=renderer.getContext(),dx=gl.getExtension('WEBGL_debug_renderer_info'),rn=dx?String(gl.getParameter(dx.UNMASKED_RENDERER_WEBGL)):'';if(/swiftshader|llvmpipe|software/i.test(rn))return 0;}catch(e2){}
-  if(ios)return dpr>=3?4:1;
+  try{var gl=renderer.getContext(),dx=gl.getExtension('WEBGL_debug_renderer_info'),rn=dx?String(gl.getParameter(dx.UNMASKED_RENDERER_WEBGL)):'';if(/swiftshader|llvmpipe|software/i.test(rn)){GX.soft=true;return 0;}}catch(e2){}
+  /* iPhone de tres pixeles por punto, y iPad o plegable (600 puntos o mas en el lado corto): gama alta. La escalera unica les busca su escalon. */
+  if(ios)return (dpr>=3||Math.min(screen.width||0,screen.height||0)>=600)?4:1;
   if(!tactil)return 4;
   if(dm>=6&&hc>=8)return 4;
   return (dm>=4||hc>=6)?1:0;}catch(e){return 1;}}
 (function(){try{GX.motor=!!(window.BB6_MOTOR&&T3&&T3.HDRLoader&&T3.EffectComposer&&renderer.capabilities.isWebGL2);GX.robot=gxQ('robot')==='1';
-  var g=parseInt(gxQ('g'),10),sv=NaN;try{sv=parseInt(localStorage.getItem('bb6_g'),10);}catch(e1){}
+  /* 0.15.3: en el telefono se guarda solo la gama (bb6_n: 0 baja, 1 media, 2 alta). Lo que guardo la 0.15.2 (bb6_g, bb6_gf) ya no se lee:
+     dejaba en gama media a un telefono bueno que tuvo un mal rato. */
+  var g=parseInt(gxQ('g'),10),sv=NaN;try{sv=parseInt(localStorage.getItem('bb6_n'),10);}catch(e1){}
   var ga=parseInt(gxQ('gauto'),10);
-  if(!GX.motor)GX.lv=0;else if(!isNaN(g)){GX.lv=clamp(g,0,4);GX.lock=true;}else if(!isNaN(ga))GX.lv=clamp(ga,0,4);else if(GX.robot)GX.lv=0;else if(!isNaN(sv))GX.lv=clamp(sv,0,4);else GX.lv=gxGuess();
+  if(!GX.motor)GX.lv=0;else if(!isNaN(g)){GX.lv=clamp(g,0,4);GX.lock=true;}else if(!isNaN(ga)){GX.lv=clamp(ga,0,4);GX.ga=true;}else if(GX.robot)GX.lv=0;else if(!isNaN(sv))GX.lv=sv>=2?4:clamp(sv,0,1);else{GX.lv=gxGuess();GX.nuevo=true;}
+  try{GX.nd=parseInt(localStorage.getItem('bb6_nd'),10)||0;GX.tac=(navigator.maxTouchPoints||0)>0;}catch(e3){}
   if(gxQ('hdri')==='0')GX.hdri=false;if(gxQ('reflejo')==='0')GX.refl=false;if(gxQ('madera')==='0')GX.piso=false;if(gxQ('brillo')==='0')GX.brillo=false;if(gxQ('completa')==='0')GX.completa=false;
   /* tope: hasta donde puede volver a subir este telefono si recupera margen (un telefono de gama alta, hasta el 4) */
   GX.lv0=GX.lv;GX.top=GX.lock?GX.lv:(GX.lv>=2?4:GX.lv);}catch(e){GX.motor=false;GX.lv=0;GX.lv0=0;GX.top=0;}})();
@@ -721,7 +724,7 @@ function gxEnvApply(){try{var on=!!(GX.envH&&GX.lv>=1&&GX.hdri);if(!GX.env0)retu
 function gxEnvLoad(){return new Promise(function(res){try{if(!GX.motor||GX.lv<1||!GX.hdri||!scene.environment){res(false);return;}
   new T3.HDRLoader().load(B6+'luz/coliseo_512.hdr?v='+GX_V,function(t){try{t.mapping=THREE.EquirectangularReflectionMapping;GX.env0=scene.environment;GX.envH=t;gxEnvApply();res(true);}catch(e){res(false);}},undefined,function(){res(false);});}catch(e){res(false);}});}
 function gxFps(){try{return ' · '+(GX.motor?'g'+GX.lv+(PP.on?L(' brillo',' bloom'):'')+(RF.on?L(' reflejo',' reflection'):'')+(GX.alta?L(' arena completa',' full arena'):''):L('motor de antes','old engine'));}catch(e){return '';}}
-function gxSave(v){try{if(!GX.lock&&!GX.robot)localStorage.setItem('bb6_g',String(v));}catch(e){}}
+function gxSave(v){try{if(!GX.lock&&!GX.robot)localStorage.setItem('bb6_n',String(v>=2?2:Math.max(0,v)));}catch(e){}}
 /* ---- 0.15.1: piso de madera con color, normal y rugosidad (desde el nivel 2) y reflejo del piso (desde el 3) ----
    Madera: Wooden Floor 01 de Poly Haven (CC0), a 1K: un mosaico cubre 3 m y la madera solo se ve fuera de la zona libre, lejos de la
    camara; a 2K no se nota la diferencia y pesa 1.1 MB mas (pruebas/bb6/motor_herramientas/madera.py). ?madera=0 deja la del archivo.
@@ -731,7 +734,7 @@ function gxSave(v){try{if(!GX.lock&&!GX.robot)localStorage.setItem('bb6_g',Strin
    con desenfoque (mas borroso donde la madera es mas rugosa), mas fuerte a ras de piso y ondulado por el relieve de la madera, para
    que brille como un piso barnizado y no como un espejo. Se vuelve a dibujar un cuadro si y uno no (30 veces por segundo): el piso lo
    busca con la matriz del cuadro en que se dibujo, asi que no se corre al mover la camara. ?reflejo=0 lo apaga. */
-var RF={ok:false,on:false,rt:null,cam:null,u:null,n:0,s:0.5,f:0,hecho:false};
+var RF={ok:false,on:false,rt:null,cam:null,u:null,n:0,s:0.5,f:0,hecho:false,k:0,kT:0};
 function gxTex(u,color){return new Promise(function(res){try{new THREE.TextureLoader().load(B6+u+'?v='+GX_V,function(t){try{t.flipY=false;t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.RepeatWrapping;
   t.colorSpace=color?THREE.SRGBColorSpace:THREE.NoColorSpace;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());}catch(e){}res(t);},undefined,function(){res(null);});}catch(e){res(null);}});}
 function gxPisoLoad(){try{if(!GX.motor||GX.lv<2||!GX.piso)return Promise.resolve(null);
@@ -747,6 +750,14 @@ function gxPisoMat(mm,nm,wd){try{if(nm==='piso_madera'&&wd){GX.madera=true;mm.ma
       '\tvec3 gxC=texture2D(tGx,gxUv,uGxB+roughnessFactor*3.0).rgb;\n\toutgoingLight+=min(gxC,vec3(8.0))*(gxF*gxG*uGxK*'+kk+');}\n\t#include <opaque_fragment>');}catch(e){}};
   mm.customProgramCacheKey=function(){return 'gx_'+nm;};mm.needsUpdate=true;RF.n++;}catch(e){}}
 function gxLay(o){try{o.layers.enable(1);}catch(e){}}
+/* 0.15.3: en el reflejo los jugadores van con el cuerpo liviano (10,800 triangulos en vez de 36,000): el reflejo sale borroso y no se
+   nota, y dibujarlo cuesta un 70 % menos. El cuerpo completo se ve solo en la camara de juego (capa 0) y su gemelo liviano solo en
+   la camara espejo (capa 1), con la misma pose. Un jugador que ya juega con el liviano se ve en las dos. */
+function gxBody(p){try{if(!p||!p.v||!p.kind)return;var c=p.v[p.kind],lt=p.v.light,j,tw=!!(RF.ok&&p.kind==='full'&&lt);
+  for(j=0;j<c.meshes.length;j++){c.meshes[j].layers.set(0);if(!tw)c.meshes[j].layers.enable(1);}
+  if(tw){if(lt.body.parent!==p.root)p.root.add(lt.body);for(j=0;j<lt.meshes.length;j++)lt.meshes[j].layers.set(1);}}catch(e){}}
+function gxTwins(){try{for(var i=0;i<ALL.length;i++){var p=ALL[i];if(p.kind!=='full'||!p.v.light)continue;var a=p.v.full.bones,b=p.v.light.bones,k,x,y;
+  for(k in a){x=a[k];y=b[k];if(!y)continue;y.quaternion.copy(x.quaternion);y.position.copy(x.position);y.scale.copy(x.scale);}}}catch(e){}}
 /* arena completa (nivel 2 o mas): la misma arena v3 con las texturas a su tamano (tableros LED, banderolas y publico al doble),
    comprimida con gltf-transform (pruebas/bb6/motor_herramientas/arena_alta.mjs). La liviana sigue en los demas niveles, en el robot
    y en los minijuegos. ?completa=0 deja la liviana. */
@@ -756,16 +767,18 @@ function gxArena(){var liv=function(){return loadGLB(B6+'arena/arena_'+CFG.brand
 function gxReflLayers(){try{var i,j,k;scene.traverse(function(o){if(o.isLight)gxLay(o);});
   for(i=0;i<scene.children.length;i++){var o=scene.children[i];if(o.isMesh&&o.geometry&&o.geometry.type==='CylinderGeometry')gxLay(o);}
   gxLay(ball);
-  for(i=0;i<ALL.length;i++)for(k in ALL[i].v){var ms=ALL[i].v[k].meshes;for(j=0;j<ms.length;j++)gxLay(ms[j]);}
+  for(i=0;i<ALL.length;i++)gxBody(ALL[i]);
   if(AR&&AR.g)AR.g.children.forEach(function(m){var n=m.name||'';if(n.indexOf('ar_led_')===0||n==='ar_caja_led'||(m.material&&AR_SCRT&&m.material.map===AR_SCRT))gxLay(m);});}catch(e){}}
 function gxReflInit(){try{if(!GX.motor||GX.top<3||!GX.refl||!AR||RF.n<1||RF.rt)return;
   var hf=false;try{hf=renderer.extensions.has('EXT_color_buffer_half_float')||renderer.extensions.has('EXT_color_buffer_float');}catch(e1){}
   RF.rt=new THREE.WebGLRenderTarget(64,64,{type:hf?THREE.HalfFloatType:THREE.UnsignedByteType,generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter,magFilter:THREE.LinearFilter,depthBuffer:true});
   RF.cam=new THREE.PerspectiveCamera();RF.cam.matrixAutoUpdate=false;RF.cam.matrixWorldAutoUpdate=false;RF.cam.layers.set(1);
-  RF.u.tGx.value=RF.rt.texture;gxReflLayers();RF.ok=true;}catch(e){RF.ok=false;}}
+  RF.u.tGx.value=RF.rt.texture;RF.ok=true;gxReflLayers();}catch(e){RF.ok=false;}}
 /* camara espejo: la de juego reflejada en el plano del piso (y=0). Se le da vuelta tambien al eje X de la camara para que siga
    siendo una rotacion y las caras no queden al reves; el piso busca cada punto con la matriz uGxM. */
-function gxReflDraw(){try{if(!RF.on||!RF.ok)return;RF.f=1-RF.f;if(RF.f===0&&RF.hecho&&!HOLD)return;RF.hecho=true;var w=Math.max(64,Math.round(appW*PR*RF.s)),h=Math.max(64,Math.round(appH*PR*RF.s));if(w!==RF.rt.width||h!==RF.rt.height)RF.rt.setSize(w,h);
+function gxReflDraw(){try{if(!RF.on||!RF.ok)return;RF.f=1-RF.f;if(RF.f===0&&RF.hecho&&!HOLD)return;RF.hecho=true;
+  /* media resolucion, con tope de 450 mil pixeles en pantallas grandes */
+  var sc=Math.min(RF.s,Math.sqrt(450000/Math.max(1,appW*PR*appH*PR))),w=Math.max(64,Math.round(appW*PR*sc)),h=Math.max(64,Math.round(appH*PR*sc));if(w!==RF.rt.width||h!==RF.rt.height)RF.rt.setSize(w,h);gxTwins();
   camera.updateMatrixWorld();var c=RF.cam,e=c.matrixWorld.copy(camera.matrixWorld).elements;
   e[1]=-e[1];e[5]=-e[5];e[9]=-e[9];e[13]=-e[13];e[0]=-e[0];e[1]=-e[1];e[2]=-e[2];
   c.matrixWorldInverse.copy(c.matrixWorld).invert();c.projectionMatrix.copy(camera.projectionMatrix);c.projectionMatrixInverse.copy(camera.projectionMatrixInverse);
@@ -779,7 +792,7 @@ function gxReflDraw(){try{if(!RF.on||!RF.ok)return;RF.f=1-RF.f;if(RF.f===0&&RF.h
    focos, las luces del techo (que en el archivo emiten 60 y 30, y con el brillo prendido bajan a 5 para que el halo no lo tape todo)
    y lo mas claro de los tableros LED, que emiten un poco mas mientras el brillo esta prendido.
    Si el telefono no puede dibujar con muestras en alto rango, el brillo no se prende y el tope queda en el nivel 3. ?brillo=0 lo apaga. */
-var PP={ok:false,on:false,comp:null,bloom:null,w:0,h:0,em:[],T:1.6,S:0.36,R:0.2,EF:5,KL:1.25,KH:0.1};
+var PP={ok:false,on:false,f:0,fT:0,comp:null,bloom:null,w:0,h:0,em:[],T:1.6,S:0.31,R:0,EF:5,KL:1.25,KH:0.1};
 function gxMsaaOk(){try{var gl=renderer.getContext();if(gl.getParameter(gl.MAX_SAMPLES)<4)return false;gl.getError();
   var rb=gl.createRenderbuffer(),fb=gl.createFramebuffer(),ok=false;gl.bindRenderbuffer(gl.RENDERBUFFER,rb);gl.renderbufferStorageMultisample(gl.RENDERBUFFER,4,gl.RGBA16F,16,16);
   gl.bindFramebuffer(gl.FRAMEBUFFER,fb);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.RENDERBUFFER,rb);
@@ -790,31 +803,95 @@ function gxPostInit(){try{if(!GX.motor||GX.top<4||!GX.brillo||PP.comp)return;
   var w=Math.max(2,Math.round(appW*PR)),h=Math.max(2,Math.round(appH*PR));
   PP.comp=new T3.EffectComposer(renderer,new THREE.WebGLRenderTarget(w,h,{type:THREE.HalfFloatType,samples:4,depthBuffer:true}));
   PP.comp.setPixelRatio(1);
-  PP.comp.addPass(new T3.RenderPass(scene,camera));PP.bloom=new T3.UnrealBloomPass(new THREE.Vector2(w/2,h/2),PP.S,PP.R,PP.T);PP.comp.addPass(PP.bloom);PP.comp.addPass(new T3.OutputPass());PP.w=w;PP.h=h;
+  PP.comp.addPass(new T3.RenderPass(scene,camera));PP.bloom=new T3.UnrealBloomPass(new THREE.Vector2(w/2,h/2),PP.S,PP.R,PP.T);PP.comp.addPass(PP.bloom);PP.comp.addPass(new T3.OutputPass());PP.bloom.setSize(w/2,h/2);PP.w=w;PP.h=h;
   if(AR&&AR.g)AR.g.children.forEach(function(m){try{var n=m.name||'',mt=m.material;if(!mt||mt.emissiveIntensity===undefined)return;
     if(n==='ar_foco'||n==='ar_luz_techo')PP.em.push({m:mt,e0:mt.emissiveIntensity,k:PP.EF/Math.max(1,mt.emissiveIntensity)});
     else if(n.indexOf('ar_led_')===0||(AR_SCRT&&mt.map===AR_SCRT))PP.em.push({m:mt,e0:mt.emissiveIntensity,k:PP.KL});}catch(e1){}});
   PP.ok=true;}catch(e){PP.ok=false;}}
 /* aplica un nivel: prende o apaga lo que le toca y lo guarda para la proxima vez que se abra el juego */
-function gxSet(lv){try{lv=clamp(lv,0,GX.lock?4:Math.max(GX.top,GX.lv0));GX.lv=lv;RF.on=!!(RF.ok&&lv>=3&&GX.refl);if(RF.u)RF.u.uGxK.value=RF.on?1:0;
-  PP.on=!!(PP.ok&&lv>=4&&GX.brillo);for(var i=0;i<PP.em.length;i++)PP.em[i].m.emissiveIntensity=PP.em[i].e0*(PP.on?PP.em[i].k:1);
-  /* los haces de luz se suman en luz lineal cuando hay post-procesado y saldrian mas fuertes: se les baja la opacidad */
-  GX.hz=PP.on?PP.KH:1;
-  gxEnvApply();gxSave(lv);}catch(e){}}
-function gxStart(){try{if(!GX.motor)return;try{renderer.info.autoReset=false;}catch(e1){}gxReflInit();gxPostInit();gxSet(GX.lv);}catch(e){}}
+function gxSet(lv){try{lv=clamp(lv,0,GX.lock?4:Math.max(GX.top,GX.lv0));GX.lv=lv;
+  RF.kT=(RF.ok&&lv>=3&&GX.refl)?1:0;if(RF.kT>0)RF.on=true;
+  PP.fT=(PP.ok&&lv>=4&&GX.brillo)?1:0;if(PP.fT>0&&!PP.on){PP.on=true;PP.f=0;gxMix();}
+  if(HOLD)gxFade(9);
+  gxEnvApply();}catch(e){}}
+/* 0.15.3: el reflejo y el brillo no se prenden ni se apagan de golpe: entran y salen en 0.7 s. Con el brillo prendido los focos
+   emiten 5 en vez de 60 (para que el halo no lo tape todo), los tableros LED un poco mas, y los haces de luz van con menos opacidad
+   porque con el post-procesado se suman en luz lineal y saldrian mas fuertes. */
+function gxMix(){try{var f=PP.on?PP.f:0,i,e;if(PP.bloom)PP.bloom.strength=PP.S*f;
+  for(i=0;i<PP.em.length;i++){e=PP.em[i];e.m.emissiveIntensity=e.e0*(PP.on?(e.k<1?e.k:1+(e.k-1)*f):1);}
+  GX.hz=PP.on?PP.KH:1;}catch(e2){}}
+function gxFade(dt){try{var k=dt/0.7;
+  if(RF.k!==RF.kT){RF.k=RF.kT>RF.k?Math.min(RF.kT,RF.k+k):Math.max(RF.kT,RF.k-k);if(RF.u)RF.u.uGxK.value=RF.k;if(RF.k<=0)RF.on=false;}
+  if(PP.f!==PP.fT){PP.f=PP.fT>PP.f?Math.min(PP.fT,PP.f+k):Math.max(PP.fT,PP.f-k);if(PP.f<=0)PP.on=false;gxMix();}}catch(e){}}
+function gxStart(){try{if(!GX.motor)return;try{renderer.info.autoReset=false;}catch(e1){}gxReflInit();gxPostInit();gxSet(GX.lv);gxFade(9);if(GX.nuevo)gxSave(GX.lv);}catch(e){}}
 /* escalones graficos, por encima de los de siempre: si el telefono no aguanta 60 cuadros se apaga primero el brillo (4 a 3), despues
    el reflejo (3 a 2) y, si ni asi, la proxima vez abre en gama media con la arena liviana; luego siguen los escalones de la 0.4.0. */
-function gxDown(){try{if(!GX.motor||GX.lock)return false;if(GX.lv>=3){gxSet(GX.lv-1);return true;}
-  if(GX.lv===2&&GX.lv0>=2&&!GX.cayo){GX.cayo=true;gxSave(1);try{if(!GX.robot)localStorage.setItem('bb6_gf',String((parseInt(localStorage.getItem('bb6_gf'),10)||0)+1));}catch(e1){}}return false;}catch(e){return false;}}
-function gxUp(){try{if(!GX.motor||GX.lock||GX.lv<2||GX.lv>=GX.top)return false;gxSet(GX.lv+1);return true;}catch(e){return false;}}
+function gxDown(){try{if(!GX.motor||GX.lock||GX.U)return false;if(GX.lv>=3){gxSet(GX.lv-1);return true;}return false;}catch(e){return false;}}
+function gxUp(){try{if(!GX.motor||GX.lock||GX.U||GX.lv<2||GX.lv>=GX.top)return false;gxSet(GX.lv+1);return true;}catch(e){return false;}}
+/* ---- 0.15.3: una sola escalera para la gama alta ----
+   Antes, lo primero que se apagaba era el brillo y el reflejo, y el telefono los prendia y apagaba cada rato. Ahora primero va lo que
+   casi no se nota (el rival con cuerpos livianos y la resolucion al 85 y al 72 %) y lo nuevo se apaga al final: el brillo antes de
+   bajar al 60 % y el reflejo antes de bajar al 50 %. Cada escalon es [cuerpos, resolucion, nivel grafico]. Apagar un efecto pide dos
+   evaluaciones malas seguidas, y si al volver a prenderlo no aguanta, espera cuatro veces mas (hasta 8 minutos) antes de probar otra vez.
+   0.15.4: no se guarda un escalon sino lo que aguanta el telefono (bb6_p): los cuerpos, los pixeles del lienzo y el nivel grafico del
+   escalon que sostuvo. Cada pantalla arranca en su primer escalon que cabe en eso. En el iPhone Duo de Carlos las dos pantallas
+   aguantan lo mismo, unos 0.9 millones de pixeles con todo prendido: cerrada es la resolucion completa (8/8) y abierta, el 72 % (5/8). */
+var GXU=[[0,1,4],[1,1,4],[1,0.85,4],[1,0.72,4],[1,0.72,3],[1,0.6,3],[1,0.6,2],[1,0.5,2],[4,0.5,2]];
+function uBuild(){try{if(!QLV)qBuild();var u=[],lo=Math.min(1,PRMAX),i,j,q,g,l;
+  for(i=0;i<GXU.length;i++){var pr=Math.max(lo,Math.round(PRMAX*GXU[i][1]*100)/100);q=-1;for(j=0;j<QLV.length;j++)if(QLV[j].b===GXU[i][0]&&QLV[j].pr===pr){q=j;break;}
+    if(q<0)continue;g=Math.min(GXU[i][2],GX.top);l=u[u.length-1];if(l&&l[0]===q&&l[1]===g)continue;u.push([q,g]);}
+  return u.length?u:null;}catch(e){return null;}}
+/* pixeles del lienzo en un escalon, y el estado de un escalon: [cuerpos, pixeles, nivel grafico] */
+function uPx(i){try{var pr=QLV[GX.U[i][0]].pr;return Math.round(appW*pr)*Math.round(appH*pr);}catch(e){return 0;}}
+function uEst(i){try{var u=GX.U[i];return [QLV[u[0]].b,uPx(i),u[1]];}catch(e){return null;}}
+/* el primer escalon de esta pantalla que cabe en lo que el telefono aguanta (con 8 % de holgura en los pixeles). Si ni la resolucion
+   mas baja de esta pantalla cabe, el primero con esa resolucion: los efectos se intentan antes de apagarlos. */
+function uFit(s){try{var U=GX.U,i,mn;if(!U||!s)return -1;mn=uPx(U.length-1);
+  for(i=0;i<U.length;i++)if(QLV[U[i][0]].b>=s[0]&&U[i][1]<=s[2]&&uPx(i)<=s[1]*1.08)return i;
+  for(i=0;i<U.length;i++)if(QLV[U[i][0]].b>=s[0]&&U[i][1]<=s[2]&&uPx(i)<=mn)return i;
+  return U.length-1;}catch(e){return -1;}}
+function uLoad(){try{if(!GX.U)return 0;
+  if(!GX.S&&!GX.robot){var t=String(localStorage.getItem('bb6_p')||'').split('|');if(t.length===3){var a=parseInt(t[0],10),b=parseInt(t[1],10),c=parseInt(t[2],10);if(!isNaN(a)&&b>0&&!isNaN(c))GX.S=[a,b,c];}}
+  var i=uFit(GX.S);return i<0?0:i;}catch(e){return 0;}}
+function uSet(i){try{if(!GX.U)return;i=clamp(i,0,GX.U.length-1);GX.ui=i;var u=GX.U[i];qSet(u[0]);if(GX.lv!==u[1])gxSet(u[1]);GX.cur=uEst(i);}catch(e){}}
+/* se guarda lo que aguanto 5 s seguidos a 60 cuadros, no cada bajada: un mal rato (el telefono caliente, la pagina en segundo
+   plano) no deja guardado algo peor que lo que el telefono sostiene */
+function uKeep(){try{if(!GX.U)return;var e=uEst(GX.ui);if(!e)return;var k=e.join('|');if(GX.uk===k)return;GX.uk=k;GX.S=e;if(!GX.robot)localStorage.setItem('bb6_p',k);}catch(e2){}}
+function uDown(n){try{var U=GX.U,i=GX.ui;if(!U)return;if(i>=U.length-1){gxFondo();return;}
+  if(U[i+1][1]<U[i][1]){if(GX.malo<1){GX.malo++;return;}GX.malo=0;uSet(i+1);return;}
+  var j=i;while(j<U.length-1&&j<i+n&&U[j+1][1]===U[j][1])j++;GX.malo=0;uSet(j);}catch(e){}}
+/* red de seguridad: un telefono que ni en el ultimo escalon de la gama alta (cuerpos livianos, mitad de resolucion, sin reflejo
+   ni brillo) llega a 50 cuadros durante 20 evaluaciones seguidas abre en gama media la proxima vez. Desde ahi vuelve a subir solo
+   cuando aguanta 60 cuadros con la calidad al maximo; cada caida le pide el doble de tiempo, pero nunca se queda trancado. */
+function gxFondo(){try{if(GX.robot||GX.lock||GX.cayo)return;GX.fondo++;if(GX.fondo>=20){GX.cayo=true;gxSave(1);GX.nd++;try{localStorage.setItem('bb6_nd',String(GX.nd));}catch(e1){}}}catch(e){}}
+function qTxt(){try{if(GX.U)return (GX.U.length-1-GX.ui)+'/'+(GX.U.length-1);}catch(e){}return (QMAX-qI)+'/'+QMAX;}
+/* arranca la escalera de la gama alta en el escalon que cabe en lo guardado (?gauto=N: en el primero con ese nivel) */
+function gxLadder(){try{if(!GX.motor||GX.lock||GX.top<3){GX.U=null;return;}GX.U=uBuild();if(!GX.U)return;GX.ar=Math.max(1,appW*appH);var i=uLoad(),j;
+  if(GX.ga){i=GX.U.length-1;for(j=0;j<GX.U.length;j++)if(GX.U[j][1]<=GX.lv0){i=j;break;}}
+  qI=-1;uSet(i);gxFade(9);}catch(e){GX.U=null;}}
+/* tamano de pantalla: tope de pixeles del lienzo en la gama alta (1.7 millones en pantallas tactiles: un iPhone grande queda igual;
+   una pantalla plegable o una tableta dibujan esos mismos pixeles y se estiran, con los botones y los textos nitidos; el doble en
+   computadoras). Sin tope, una pantalla grande apagaba el reflejo y el brillo para poder con sus pixeles.
+   Cuando la pantalla cambia (se abre o se cierra un plegable, o la ventana cambia mas de 12 %), la escalera se rehace y arranca en
+   el escalon que cabe en lo que el telefono venia aguantando: lo peor entre lo guardado y el escalon en que estaba. Las esperas de
+   los sondeos vuelven a empezar. */
+function gxSize(){try{var px=Math.max(1,appW*appH),mx=Math.min(window.devicePixelRatio||1,2);
+  if(GX.motor&&GX.top>=3)mx=Math.min(mx,Math.max(1,Math.round(Math.sqrt((GX.tac?GX_PX:GX_PX*2)/px)*100)/100));
+  var camb=(mx!==PRMAX)||!!(GX.U&&GX.ar>0&&Math.abs(px-GX.ar)>GX.ar*0.12);if(!camb)return;
+  var s=GX.S?GX.S.slice():null,c=GX.U?GX.cur:null;if(c){if(!s)s=c.slice();else{s[0]=Math.max(s[0],c[0]);s[1]=Math.min(s[1],c[1]);s[2]=Math.min(s[2],c[2]);}}
+  PRMAX=mx;GX.ar=px;QLV=null;qBuild();qGood=0;qProbe=0;GX.malo=0;
+  if(GX.U){GX.U=uBuild();if(GX.U){var i=uFit(s);qWait=8;GX.wE=12;qI=-1;uSet(i<0?Math.min(GX.ui,GX.U.length-1):i);return;}}
+  qI=clamp(qI,0,QMAX);var l=QLV[qI];PR=l.pr;if(l.b!==qStep){qStep=l.b;applyQ();}}catch(e){}}
 /* los cuadros de 50 ms o mas no entran al promedio de la calidad (son tirones). Pero un telefono que con lo nuevo queda siempre por
    debajo de 20 cuadros nunca bajaria: si se juntan 30 cuadros asi sin que los buenos los compensen, se baja un escalon grafico. */
-function gxLento(){try{if(!GX.motor||GX.lock||GX.lv<2)return;GX.sl=(GX.sl||0)+1;if(GX.sl>=30){GX.sl=0;gxDown();}}catch(e){}}
-/* un telefono que abrio en gama media y lleva 40 s a 60 cuadros prueba la gama alta la proxima vez que abra. Si la gama alta ya le
-   fallo dos veces (bb6_gf), no vuelve a subir solo: asi un mal rato de un telefono bueno no lo deja en gama media para siempre. */
-function gxPromo(avg){try{if(!GX.motor||GX.lock||GX.robot||GX.lv!==1||GX.okT<0)return;GX.okT+=avg*0.06;if(GX.okT>=40){GX.okT=-1;var f=0;try{f=parseInt(localStorage.getItem('bb6_gf'),10)||0;}catch(e1){}if(f<2)gxSave(4);}}catch(e){}}
-function gxDraw(){try{renderer.info.reset();}catch(e){}gxReflDraw();
-  if(PP.on){var w=Math.max(2,Math.round(appW*PR)),h=Math.max(2,Math.round(appH*PR));if(w!==PP.w||h!==PP.h){PP.comp.setSize(w,h);PP.w=w;PP.h=h;}PP.comp.render();}
+function gxLento(){try{if(!GX.motor||GX.lock||GX.lv<2)return;GX.sl=(GX.sl||0)+1;if(GX.sl>=30){GX.sl=0;if(GX.U){GX.malo=1;uDown(1);}else gxDown();}}catch(e){}}
+/* un telefono que abrio en gama baja o media y lleva 40 s a 60 cuadros con la calidad al maximo sube una gama la proxima vez que
+   abra (de baja a media y de media a alta). En la gama alta, la escalera unica encuentra su escalon y lo guarda por tamano de pantalla. */
+function gxPromo(avg){try{if(!GX.motor||GX.lock||GX.robot||GX.soft||GX.lv>1||GX.okT<0)return;GX.okT+=avg*0.06;if(GX.okT>=40*Math.pow(2,Math.min(GX.nd,4))){GX.okT=-1;gxSave(GX.lv+1);}}catch(e){}}
+function gxDraw(){try{renderer.info.reset();}catch(e){}
+  try{var tn=performance.now();if(RF.k!==RF.kT||PP.f!==PP.fT)gxFade(Math.min(0.1,Math.max(0,(tn-(GX.tF||tn))/1000)));GX.tF=tn;}catch(e2){}
+  gxReflDraw();
+  if(PP.on){var w=Math.max(2,Math.round(appW*PR)),h=Math.max(2,Math.round(appH*PR));if(w!==PP.w||h!==PP.h){PP.comp.setSize(w,h);PP.bloom.setSize(w/2,h/2);PP.w=w;PP.h=h;}PP.comp.render();}
   else renderer.render(scene,camera);}
 
 function canvasTex(w,h,draw,color){var c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);var t=new THREE.CanvasTexture(c);t.colorSpace=color===false?THREE.NoColorSpace:THREE.SRGBColorSpace;t.anisotropy=8;return t;}
@@ -1113,7 +1190,7 @@ Avatar.prototype.addBody=function(kind,body,mask,kit,maps){var o={body:body,bone
     if(n.isMesh){n.castShadow=true;n.receiveShadow=false;n.frustumCulled=false;n.material=kitMaterial(maps||n.material,mask,kit);o.mats.push(n.material);o.meshes.push(n);}});
   o.hipRest=o.bones.Hips.position.clone();this.v[kind]=o;};
 Avatar.prototype.use=function(kind){var o=this.v[kind];if(!o||this.kind===kind)return;if(this.kind)this.root.remove(this.v[this.kind].body);
-  this.root.add(o.body);this.kind=kind;this.bones=o.bones;this.rest=o.rest;this.hipRest=o.hipRest;this.bl=o.bl;};
+  this.root.add(o.body);this.kind=kind;this.bones=o.bones;this.rest=o.rest;this.hipRest=o.hipRest;this.bl=o.bl;gxBody(this);};
 Avatar.prototype.shadow=function(on){for(var k in this.v){var ms=this.v[k].meshes;for(var i=0;i<ms.length;i++)ms[i].castShadow=!!on;}this.blob.visible=!on;};
 Avatar.prototype.apply=function(p){var ks=p.k;for(var i=0;i<ks.length;i++){var k=ks[i],b=this.bones[k];if(!b)continue;b.quaternion.copy(p.q[k]).multiply(this.rest[k]);}
   this.bones.Hips.position.set(this.hipRest.x,this.hipRest.y*p.hy,this.hipRest.z);};
@@ -2956,7 +3033,7 @@ function volCard(vuelta){try{var pausa=!!(G&&G.sc&&G.phase!=='menu'&&G.phase!=='
   tap($('vOk'),function(){savePref();hudStatic();if(vuelta){vuelta();return;}ov.style.display='none';if(pausa){paused=false;last=performance.now();}snUI('cerrar',0.6);});}catch(e){}}
 function pauseCard(){if(!G||G.phase==='menu'||G.phase==='end')return;if(NET.on){nPauseCard();return;}paused=true;joy=null;JX=0;JZ=0;joyRest();snUI('abrir',0.6);
   ov.innerHTML='<div class="card" style="max-width:380px;text-align:center"><h2>'+L('Pausa','Paused')+'</h2><p class="sub">'+CFG.team+' '+G.sc[0]+' : '+G.sc[1]+' '+L('Rival','Rival')+'</p>'+
-  '<p class="sub">'+(fpsV?fpsV+L(' cuadros por segundo · calidad ',' frames per second · quality ')+(QMAX-qI)+'/'+QMAX:'')+'</p><button class="btn" id="pSeg" type="button">'+L('Seguir','Resume')+'</button><button class="btn b2" id="pVol" type="button">'+L('Volumen','Volume')+'</button><button class="btn b2" id="pMenu" type="button">'+L('Salir al menú','Quit to menu')+'</button></div>';ov.style.display='flex';
+  '<p class="sub">'+(fpsV?fpsV+L(' cuadros por segundo · calidad ',' frames per second · quality ')+qTxt()+gxFps():'')+'</p><button class="btn" id="pSeg" type="button">'+L('Seguir','Resume')+'</button><button class="btn b2" id="pVol" type="button">'+L('Volumen','Volume')+'</button><button class="btn b2" id="pMenu" type="button">'+L('Salir al menú','Quit to menu')+'</button></div>';ov.style.display='flex';
   tap($('pVol'),function(){volCard(pauseCard);});
   tap($('pSeg'),function(ev){ov.style.display='none';paused=false;last=performance.now();snUI('cerrar',0.6);musStart();});
   tap($('pMenu'),function(ev){paused=false;menu();});}
@@ -3157,7 +3234,7 @@ function size(){var W=window.innerWidth,H=window.innerHeight;ROT=H>W;appW=ROT?H:
   app.style.width=appW+'px';app.style.height=appH+'px';app.style.transform=ROT?'translate('+W+'px,0px) rotate(90deg)':'none';app.className=ROT?'rot':'';
   try{var pr=$('safe'),cs=getComputedStyle(pr),it=parseFloat(cs.paddingTop)||0,ib=parseFloat(cs.paddingBottom)||0,il=parseFloat(cs.paddingLeft)||0,ir=parseFloat(cs.paddingRight)||0;
     app.style.setProperty('--sl',(ROT?it:il)+'px');app.style.setProperty('--sr',(ROT?ib:ir)+'px');SAFE_L=ROT?it:il;}catch(e){}
-  renderer.setPixelRatio(PR);renderer.setSize(appW,appH,true);var asp=appW/appH;camera.aspect=asp;
+  gxSize();renderer.setPixelRatio(PR);renderer.setSize(appW,appH,true);var asp=appW/appH;camera.aspect=asp;
   /* mismo ancho de cancha en cualquier pantalla: el campo horizontal manda */
   var hf=2*Math.atan(Math.tan(47*Math.PI/360)*2.05);baseFov=clamp(2*Math.atan(Math.tan(hf/2)/asp)*180/Math.PI,40,64);camera.fov=baseFov;camera.updateProjectionMatrix();
   if(!joy)joyRest();camUpdate(0,true);marcSize();}
@@ -3217,14 +3294,16 @@ function qBuild(){try{QLV=[];var lo=Math.min(1,PRMAX);for(var i=0;i<QL.length;i+
 function qSet(i){try{if(!QLV)qBuild();i=clamp(i,0,QMAX);if(i===qI)return;qI=i;var l=QLV[i];if(l.b!==qStep){qStep=l.b;applyQ();}
   if(l.pr!==PR){PR=l.pr;renderer.setPixelRatio(PR);renderer.setSize(appW,appH,true);}try{localStorage.setItem('bb6_q',String(qI));}catch(e2){}}catch(e){}}
 function quality(ms){fAcc+=ms;fN++;if(ms<fMin)fMin=ms;if(fN<60)return;var avg=fAcc/fN,mn=fMin;fAcc=0;fN=0;fMin=99;fpsV=Math.round(1000/avg);if(!QLV)qBuild();
-  if(FPS_ON){var fe=$('fps');fe.style.display='block';fe.textContent=fpsV+' fps · '+L('calidad ','quality ')+(QMAX-qI)+'/'+QMAX+' · '+renderer.info.render.triangles+' tri'+gxFps();}
+  if(FPS_ON){var fe=$('fps');fe.style.display='block';fe.textContent=fpsV+' fps · '+L('calidad ','quality ')+qTxt()+' · '+renderer.info.render.triangles+' tri · '+Math.round(appW*PR)+'x'+Math.round(appH*PR)+gxFps();}
   if(QLOCK)return;
   /* tope de 30 cuadros del sistema (modo de bajo consumo): ningun cuadro sale rapido y bajar la calidad no ayuda */
   if(avg>31.5&&avg<35.5&&mn>29){qGood=0;return;}
-  if(avg>19){if(!(qI===0&&gxDown()))qSet(qI+(avg>27?2:1));qGood=0;if(qProbe>0){qWait=Math.min(120,qWait*2);qProbe=0;}return;}
+  if(avg>19){if(GX.U){if(qProbe>0)GX.malo=1;uDown(avg>27?2:1);}else if(!(qI===0&&gxDown()))qSet(qI+(avg>27?2:1));qGood=0;if(qProbe>0){if(GX.U&&GX.pef)GX.wE=Math.min(480,GX.wE*4);else qWait=Math.min(120,qWait*2);qProbe=0;}return;}
   if(qProbe>0)qProbe--;
   if(GX.sl>0)GX.sl=Math.max(0,GX.sl-15);
-  if(avg<17.4){qGood+=avg*0.06;if(qI===0)gxPromo(avg);if(qGood>=qWait){if(qI>0){qSet(qI-1);qGood=0;qProbe=3;}else if(gxUp()){qGood=0;qProbe=3;}}}else qGood=0;}
+  if(avg<17.4){qGood+=avg*0.06;GX.malo=0;GX.fondo=0;if(qI===0)gxPromo(avg);if(qGood>=5)uKeep();
+    if(GX.U){if(GX.ui>0){var ef=GX.U[GX.ui-1][1]>GX.U[GX.ui][1];if(qGood>=(ef?GX.wE:qWait)){GX.pef=ef;uSet(GX.ui-1);qGood=0;qProbe=3;}}}
+    else if(qGood>=qWait){if(qI>0){qSet(qI-1);qGood=0;qProbe=3;}else if(gxUp()){qGood=0;qProbe=3;}}}else qGood=0;}
 /* paso fijo (0.4.0): el juego avanza siempre en pasos de 1/60 s, igual en cualquier telefono. Si el cuadro cae justo en 1, 2 o 3 pasos
    se dibuja el estado al dia; si no, se acumula el tiempo y se dibuja mezclando el paso anterior con el actual. */
 var H60=1/60,ACC=0,IPL=[],ipOn=false,hudDt=0,TKN=0;
@@ -3274,7 +3353,7 @@ var PRMAX=Math.min(window.devicePixelRatio||1,2);PR=PRMAX;qBuild();
 hudStatic();size();requestAnimationFrame(frame);
 cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ();gxStart();mvBuild();apBuild();jfInit();
   try{ipAdd(camera,6,'pq');ipAdd(ball,2.5,'p');ipAdd(ballShadow,2.5,'p');ipAdd(ctrlRing,1.2,'p');for(var qi=0;qi<ALL.length;qi++){ipAdd(ALL[qi].root,1.2,'py');ipAdd(ALL[qi].blob,1.2,'p');}
-    var q0=parseInt(localStorage.getItem('bb6_q'),10);if(q0>0&&q0<=QMAX)qSet(q0);}catch(e){}$('load').style.display='none';
+    var q0=parseInt(localStorage.getItem('bb6_q'),10);if(q0>0&&q0<=QMAX)qSet(q0);gxLadder();}catch(e){}$('load').style.display='none';
   G={phase:'menu',tPh:0,serving:0};R={mode:['def','def'],F:null,next:null};setGoals();
   for(var i=0;i<ALL.length;i++){var p=ALL[i];p.x=p.gx;p.z=p.gz;p.fn=0;}
   ball.position.set(0.6,BALL_R,3.2);ready=true;menu();window.BB_READY=true;
@@ -3282,7 +3361,7 @@ cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ()
 },function(e){if(window.console)console.error(e);$('load').textContent=L('No se pudo cargar el juego. Revisa tu conexión y ábrelo otra vez.','Could not load the game. Check your connection and open it again.');});
 
 /* ganchos de prueba (robot que juega solo, para medir rallies y balance) */
-window.BB={version:APP_VERSION,gx:function(){return GX;},gxSet:function(v){gxSet(v);return GX.lv;},gxDbg:function(){return {scene:scene,camera:camera,renderer:renderer,RF:RF,PP:PP,AR:AR,sun:sun};},gxInfo:function(){try{return {lv:GX.lv,lv0:GX.lv0,top:GX.top,brillo:PP.on,alta:!!GX.alta,madera:!!GX.madera,calls:renderer.info.render.calls,tri:renderer.info.render.triangles,refl:RF.on,rt:RF.rt?[RF.rt.width,RF.rt.height]:null,tex:renderer.info.memory.textures,geo:renderer.info.memory.geometries};}catch(e){return null;}},all:function(){return ALL;},salto:function(){var o={s:SALTO,take:TAKE,blk:BLK_LEAD,tkd:TK_D,bkd:BK_D,clips:{}};try{var L2=[['ataque',0.35],['ataque_corto',0.35],['ataque_corto',0.3],['bloqueo_frente',0.28],['bloqueo_der',0.28],['bloqueo_izq',0.28],['saque_salto',0.32]];for(var i=0;i<L2.length;i++){var J=jfOf(CLIPS[L2[i][0]],L2[i][1]);if(J)o.clips[L2[i][0]+'@'+L2[i][1]]={k:J.k,Fc:J.Fc,Fn:J.Fn,H:J.H,fC:J.fC,tc0:J.fC*J.Fc,tc:J.fC*J.Fn};}}catch(e){}return o;},ap:function(v){if(v===true||v===false)AP_ON=v;return {on:AP_ON,t:AP};},mv:function(){return MV;},dbg:function(v){if(v===true)DBG={ev:[],n:0,cur:null,ct:'',cd:0};else if(v===false)DBG=null;return DBG;},
+window.BB={version:APP_VERSION,gx:function(){return GX;},gxSet:function(v){gxSet(v);return GX.lv;},gxDbg:function(){return {scene:scene,camera:camera,renderer:renderer,RF:RF,PP:PP,AR:AR,sun:sun,ALL:ALL};},gxInfo:function(){try{return {lv:GX.lv,lv0:GX.lv0,top:GX.top,ui:GX.ui,un:GX.U?GX.U.length:0,U:GX.U,S:GX.S,cur:GX.cur,pr:PR,prmax:PRMAX,wE:GX.wE,qt:qTxt(),rk:RF.k,pf:PP.f,brillo:PP.on,alta:!!GX.alta,madera:!!GX.madera,calls:renderer.info.render.calls,tri:renderer.info.render.triangles,refl:RF.on,rt:RF.rt?[RF.rt.width,RF.rt.height]:null,tex:renderer.info.memory.textures,geo:renderer.info.memory.geometries};}catch(e){return null;}},all:function(){return ALL;},salto:function(){var o={s:SALTO,take:TAKE,blk:BLK_LEAD,tkd:TK_D,bkd:BK_D,clips:{}};try{var L2=[['ataque',0.35],['ataque_corto',0.35],['ataque_corto',0.3],['bloqueo_frente',0.28],['bloqueo_der',0.28],['bloqueo_izq',0.28],['saque_salto',0.32]];for(var i=0;i<L2.length;i++){var J=jfOf(CLIPS[L2[i][0]],L2[i][1]);if(J)o.clips[L2[i][0]+'@'+L2[i][1]]={k:J.k,Fc:J.Fc,Fn:J.Fn,H:J.H,fC:J.fC,tc0:J.fC*J.Fc,tc:J.fC*J.Fn};}}catch(e){}return o;},ap:function(v){if(v===true||v===false)AP_ON=v;return {on:AP_ON,t:AP};},mv:function(){return MV;},dbg:function(v){if(v===true)DBG={ev:[],n:0,cur:null,ct:'',cd:0};else if(v===false)DBG=null;return DBG;},
   q:function(v){if(v==='lock')QLOCK=true;else if(v==='auto')QLOCK=false;else if(typeof v==='number')qSet(v);return {i:qI,max:QMAX,pr:PR,body:qStep,wait:qWait,lv:QLV};},qfeed:function(ms,n){for(var i=0;i<n;i++)quality(ms);return qI;},
   loop:function(ms){var t=last;for(var i=0;i<ms.length;i++){t+=ms[i];NOREND=true;var raf=window.requestAnimationFrame;window.requestAnimationFrame=function(){};try{frame(t);}finally{window.requestAnimationFrame=raf;}}return {acc:ACC,ip:ipOn,ticks:TKN};},render:function(v){NOREND=!v;},net:NET,nLobby:function(){nLobby();},nCreate:function(c){nCreate(c);},nJoin:function(c){nJoin(c);},cam:function(a){CAMDBG=a||null;},hold:function(v){HOLD=!!v;last=performance.now();},adv:function(sec){ipRestore();bvOut();var n=Math.max(1,Math.round(sec*60));for(var i=0;i<n;i++){var rdt=1/60;freezeT=0;if(TUT.hold){if(TUT.hold==='cho'&&(Math.abs(JX)>0.35||Math.abs(JZ)>0.35))tutRelease();}else tutCheck();if(TUT.hold){hudFrame(rdt);continue;}TS+=(tsGoal-TS)*Math.min(1,rdt*14);step(rdt*TS,rdt);camUpdate(rdt,false);hudFrame(rdt);crowdFrame(rdt);}return ctxNow();},joy:function(x,z){JX=x;JZ=z;},state:function(){return {G:G,R:R,CTRL:CTRL,tG:tG,TS:TS,REP:REP,tAll:tAll};},bot:BOT,press:function(){actionPress();},
   /* 0.14.0: ganchos de prueba de tiempos y cambios */
