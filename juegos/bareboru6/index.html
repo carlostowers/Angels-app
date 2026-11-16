@@ -186,7 +186,7 @@ try{if(!(window.VOLEII&&window.VOLEII.T3)){window.BB6_MOTOR=false;document.write
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.15.4',ASSET_V='2';
+var APP_VERSION='0.16.0',ASSET_V='2';
 /* BAREBORU by VOLEII 6x6: voleibol seis contra seis contra la maquina, a 15 con ventaja de 2.
    Sistema 5-1 con libero y las seis rotaciones del Playbook de Vaqueros (formaciones de recepcion, target, defensa Middle/Middle y cobertura).
    Sale del motor del 3x3 (juegos/bareboru): mismos cuerpos, clips y controles. Controlas al jugador que le toca jugar el balon; los demas van solos.
@@ -488,6 +488,10 @@ function sndFrame(rdt){if(!SB.a)return;try{var a=SB.a,now=a.currentTime,ph=G?G.p
   if(!PREF.snd||!G||ph==='menu'||ph==='end'||BOT.sim)return;
   if(ph==='pre'&&G.tPh>=0.35+(G.preX||0)&&SB.svR!==R){SB.svR=R;snSilbato('silbato_corto');}
   }catch(e){}}
+/* 0.16.0 (Carlos, 16 nov. 2026): los puntas y los opuestos son un solo grupo, los atacantes. En Mi cuadro y en los cambios cualquier
+   atacante puede ir de punta o de opuesto; el cuadro automatico (snLineup) sigue poniendo a cada uno en su posicion real.
+   snLista da los que pueden ocupar un puesto: para un puesto de punta empieza por los puntas y para el de opuesto, por los opuestos. */
+function snLista(P,pos){try{if(pos!=='OH'&&pos!=='OPP')return (P&&P[pos])||[];var a=(P[pos]||[]).slice(),b=P[pos==='OH'?'OPP':'OH']||[],i;for(i=0;i<b.length;i++)if(a.indexOf(b[i])<0)a.push(b[i]);return a;}catch(e){return (P&&P[pos])||[];}}
 /* cuadro del partido: los de la misma posicion rotan; con Mi cuadro (0.10.0) manda el del jugador */
 function snLineup(fc){var R0=SN_ROS[CFG.brand];if(!R0)return null;var cats=Object.keys(R0),cat=(fc&&R0[fc])?fc:cats[Math.floor(snRnd()*cats.length)%cats.length],P=R0[cat],used={},o={cat:cat};
   function pick(list){var c=[],i;for(i=0;i<list.length;i++)if(!used[list[i]])c.push(list[i]);if(!c.length)return null;var k=c[Math.floor(snRnd()*c.length)%c.length];used[k]=1;return k;}
@@ -890,9 +894,12 @@ function gxLento(){try{if(!GX.motor||GX.lock||GX.lv<2)return;GX.sl=(GX.sl||0)+1;
 function gxPromo(avg){try{if(!GX.motor||GX.lock||GX.robot||GX.soft||GX.lv>1||GX.okT<0)return;GX.okT+=avg*0.06;if(GX.okT>=40*Math.pow(2,Math.min(GX.nd,4))){GX.okT=-1;gxSave(GX.lv+1);}}catch(e){}}
 function gxDraw(){try{renderer.info.reset();}catch(e){}
   try{var tn=performance.now();if(RF.k!==RF.kT||PP.f!==PP.fT)gxFade(Math.min(0.1,Math.max(0,(tn-(GX.tF||tn))/1000)));GX.tF=tn;}catch(e2){}
-  gxReflDraw();
-  if(PP.on){var w=Math.max(2,Math.round(appW*PR)),h=Math.max(2,Math.round(appH*PR));if(w!==PP.w||h!==PP.h){PP.comp.setSize(w,h);PP.bloom.setSize(w/2,h/2);PP.w=w;PP.h=h;}PP.comp.render();}
-  else renderer.render(scene,camera);}
+  /* 0.16.0: los zurdos se dibujan reflejados y despues todo vuelve a como lo dejo el juego */
+  var zz=zurPone();
+  try{gxReflDraw();
+    if(PP.on){var w=Math.max(2,Math.round(appW*PR)),h=Math.max(2,Math.round(appH*PR));if(w!==PP.w||h!==PP.h){PP.comp.setSize(w,h);PP.bloom.setSize(w/2,h/2);PP.w=w;PP.h=h;}PP.comp.render();}
+    else renderer.render(scene,camera);}
+  finally{if(zz)zurQuita();}}
 
 function canvasTex(w,h,draw,color){var c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);var t=new THREE.CanvasTexture(c);t.colorSpace=color===false?THREE.NoColorSpace:THREE.SRGBColorSpace;t.anisotropy=8;return t;}
 
@@ -1782,7 +1789,7 @@ function tcComent(w){try{var c=G&&G.tc;if(!c||!c.post||!c.post.fresh||c.post.tea
 /* ---------- cambios del jugador ---------- */
 function tcElegibles(r){try{var c=G.tc,N=SB.nom,R0=SN_ROS[CFG.brand],P=R0&&N&&R0[N.cat],out=[],i,k,on={};if(!P||!TC_POS[r])return out;
   for(i=0;i<TC_RO.length;i++)if(N[TC_RO[i]])on[N[TC_RO[i]]]=1;if(N.L1)on[N.L1]=1;if(N.L2)on[N.L2]=1;
-  var L0=P[TC_POS[r]]||[];for(i=0;i<L0.length;i++){k=L0[i];if(on[k])continue;if(c.pos[k]&&c.pos[k]!==r)continue;if(out.indexOf(k)<0)out.push(k);}return out;}catch(e){return [];}}
+  var L0=snLista(P,TC_POS[r]);for(i=0;i<L0.length;i++){k=L0[i];if(on[k])continue;if(c.pos[k]&&c.pos[k]!==r)continue;if(out.indexOf(k)<0)out.push(k);}return out;}catch(e){return [];}}
 function tcSub(r,nm){try{var c=G.tc,N=SB.nom,ix=TC_RO.indexOf(r);if(!tcActivo()||!N||ix<0||c.subs[0]>=TC_SUBS)return false;
   var p=TEAM[0].pl[ix];if(p&&p.lib)return false;if(tcElegibles(r).indexOf(nm)<0)return false;
   var sale=N[r];N[r]=nm;c.pos[nm]=r;c.pool[nm]=1;c.subs[0]++;c.log.push({k:'cb',t:0,r:r,sale:sale,entra:nm,sc:[G.sc[0],G.sc[1]]});
@@ -1799,13 +1806,13 @@ function tcElegP(r){var c=G.tc,el=tcElegibles(r),out=[],k,i,ocup={};for(k in c.p
 function tcCardHtml(){try{var c=G.tc,N=SB.nom,lim=c.subs[0]>=TC_SUBS,i,j,h,r,p,el,ids=[],np=0,res=[],k,fuera=c.hold==='cambio';
   for(k in c.pend)if(c.pend[k])np++;
   h='<div class="card"><h2>'+L('Cambios','Substitutions')+' · '+CFG.team+(N.cat?' '+N.cat:'')+'</h2><p class="sub">'+L('Usados ','Used ')+c.subs[0]+L(' de ',' of ')+TC_SUBS+
-    L(' · regla de USA Volleyball: cada jugador entra las veces que quiera, siempre al mismo puesto de la rotación. Puedes cambiar a varios a la vez. El líbero no cuenta.',' · USA Volleyball rule: a player may enter any number of times, always in the same rotation spot. You can sub several at once. Libero swaps do not count.')+'</p>';
+    L(' · regla de USA Volleyball: cada jugador entra las veces que quiera, siempre al mismo puesto de la rotación. Por un punta o por el opuesto entra cualquier atacante de la banca. Puedes cambiar a varios a la vez. El líbero no cuenta.',' · USA Volleyball rule: a player may enter any number of times, always in the same rotation spot. Any bench hitter can come in for an outside or for the opposite. You can sub several at once. Libero swaps do not count.')+'</p>';
   h+='<div class="tcgr">';
   for(i=0;i<TC_RO.length;i++){r=TC_RO[i];p=TEAM[0].pl[i];
     h+='<div class="row"><span class="lb">'+L(TC_RNOM[r][0],TC_RNOM[r][1])+' · '+L('zona ','zone ')+zoneOf(p)+(isFront(p)?L(' · adelante',' · front'):L(' · atrás',' · back'))+' · <b style="color:#F2EFE8">'+snNomV(N[r])+'</b></span>';
     if(p&&p.lib)h+='<span class="sub">'+L('Está afuera por el líbero: el cambio se hace cuando vuelva.','Out for the libero: sub him when he is back.')+'</span>';
     else if(lim)h+='<span class="sub">'+L('Ya se hicieron los 15 cambios.','All 15 subs used.')+'</span>';
-    else{el=tcElegP(r);if(!el.length)h+='<span class="sub">'+L('Sin banca en esta posición.','No bench at this position.')+'</span>';
+    else{el=tcElegP(r);if(!el.length)h+='<span class="sub">'+L('Sin banca para este puesto.','No bench for this spot.')+'</span>';
       for(j=0;j<el.length;j++){h+=chip('tcj'+i+'_'+j,c.pend[r]===el[j],L('Entra ','In: ')+snNomV(el[j]));ids.push([i,j,r,el[j]]);}}
     h+='</div>';}
   h+='</div>';
@@ -2052,7 +2059,7 @@ function animate(p){var spd=hyp(p.vx,p.vz);
     if(w>0){clipPose(c,u,poseTmp);blendPose(p.pose,poseTmp,w,p.pose);
       if(A.boost&&c.marks.takeoff!=null){if(A.bc==null)A.bc=A.boost;if(A.vo)A.bc+=(A.vo.b-A.bc)*0.2;var f=(u-c.marks.takeoff)/(c.marks.landing-c.marks.takeoff);if(f>0&&f<1){if(A.jf)jfAir(p,A,u,f,w);else{p.air=A.bc*4*f*(1-f)*w;p.airN=A.boost*4*f*(1-f)*w;}}}}
     if(tl>A.tail+A.fout)p.act=null;}
-  p.apply(p.pose);if(p.act&&p.act.back)archBack(p);contacto(p);p.airO=p.airN;pies(p,spd);vida(p,spd);}
+  p.apply(p.pose);if(p.act&&p.act.back)archBack(p);contacto(p);p.airO=p.airN;pies(p,spd);vida(p,spd);zurStep(p);}
 /* ======================= SALTO (0.7.2) =======================
    Antes el salto tenia dos fuentes: la cadera del clip (que sube como un salto de unos 0.53 m y dura 0.66 s en el aire) mas una
    parabola que el juego le sumaba (0.35 m en el remate) en ese mismo tiempo. Subia casi 0.9 m en 0.33 s: como con gravedad de 16 m/s2,
@@ -2229,6 +2236,91 @@ function contacto(p){try{var A=p.act;if(!CT_ON||!A||REP.on||!G||G.phase==='menu'
   if(V.ty!=='R'&&B.LeftArm&&B.LeftForeArm&&B.LeftHand){_ch.setFromMatrixPosition(B.LeftHand.matrixWorld).add(_cd);ik2(B.LeftArm,B.LeftForeArm,B.LeftHand,_ch);}
   if(B.RightArm&&B.RightForeArm&&B.RightHand){_ch.setFromMatrixPosition(B.RightHand.matrixWorld).add(_cd);ik2(B.RightArm,B.RightForeArm,B.RightHand,_ch);}
   }catch(e){}}
+/* ======================= ZURDOS (0.16.0) =======================
+   Carlos (16 nov. 2026): en el 16M juegan con la izquierda Kiki, Hariam, Negron y El Zurdo. "Los zurdos son un espejo del derecho".
+   Solo se ve: el juego sigue calculando todo con la mano derecha (posiciones, tiempos, manos y vuelos quedan igual, y el robot
+   tambien). Al dibujar, y al grabar la repeticion, el cuerpo del zurdo se cambia por su imagen en un espejo y se devuelve enseguida:
+   1. la pose final de cada hueso (con el contacto, los pies y la vida ya puestos) pasa a su hueso gemelo, reflejada. Sale de los giros
+      de reposo del propio cuerpo, asi que vale para el cuerpo completo y para el liviano;
+   2. el espejo no pasa por el centro del cuerpo sino por la mano que golpea: el cuerpo se corre de lado dos veces lo que esa mano se
+      aparta del centro en el cuadro del contacto (medido una vez por clip, al cargar), y asi la mano izquierda llega al mismo punto al
+      que llegaba la derecha. Cerca del contacto el plano pasa exactamente por donde esta la mano;
+   3. se refleja en los gestos de una mano: el saque (desde que va a sacar), la carrera de ataque y el remate, el toque y la rapida.
+      Lo de dos manos (recibo, voleo, bloqueo, planchas) queda igual. Entra en 0.22 s y sale en 0.28 s;
+   4. el corrimiento entra mientras corre o camina y despues del gesto se va de a poco, mas rapido cuanto mas se mueve, para que los
+      pies no patinen;
+   5. mientras el zurdo tiene el balon para sacar, el balon y los aros se dibujan en su mano izquierda; el aro del jugador que controlas,
+      la marca de salto, la sombra y la etiqueta van con el cuerpo.
+   Los rivales de la maquina y el rival en linea siguen derechos. ?zurdos=0 lo apaga y ?zurdos=todos pone zurdo a todo tu equipo. */
+var SN_ZUR={kiki:1,hariam:1,negron:1,el_zurdo:1},ZUR_ON=true,ZUR_TODOS=false,ZUR_CL=['ataque','ataque_corto','saque_flotante','saque_salto'];
+var ZUR={h:{},n:0,sv:[],tq:new Float64Array(64*4),bola:false,b0:new V3(),s0:new V3(),r0:new V3(),r1:new V3(),aro:false,c0:new V3(),sal:false,m0:new V3()},_zq=new Q4(),_zv=new V3(),poseZ=null;
+try{var zq0=new URLSearchParams(location.search).get('zurdos');if(zq0==='0')ZUR_ON=false;else if(zq0==='todos')ZUR_TODOS=true;}catch(e){}
+function zurEs(p){try{if(!ZUR_ON||!p||p.team!==0)return false;if(ZUR_TODOS)return true;var k=snNom(p);return !!(k&&SN_ZUR[k]);}catch(e){return false;}}
+function zurMir(q){return q.set(q.x,-q.y,-q.z,q.w);}
+/* tabla del espejo de un cuerpo: para cada hueso, su gemelo y el giro P que lleva una rotacion reflejada al marco del gemelo.
+   Con L = giro de reposo (en el marco del jugador) del padre de cada hueso, P = L(gemelo)^-1 * espejo(L(hueso)). */
+function zurTab(o){if(o.zt)return o.zt;var t=[],W={},k,i,j;
+  function padre(b,out){out.set(0,0,0,1);var par=b.parent;if(par&&par.isBone)return out.copy(mundo(par));var ch=[],n=par;while(n&&n!==o.body.parent){ch.push(n);n=n.parent;}for(var c=ch.length-1;c>=0;c--)out.multiply(ch[c].quaternion);return out;}
+  function mundo(b){if(W[b.name])return W[b.name];var q=new Q4();padre(b,q);q.multiply(o.rest[b.name]);W[b.name]=q;return q;}
+  for(k in o.bones){var b=o.bones[k],mk=k.indexOf('Left')===0?'Right'+k.slice(4):(k.indexOf('Right')===0?'Left'+k.slice(5):k),mb=o.bones[mk];if(!mb){mk=k;mb=b;}
+    var Lk=padre(b,new Q4()),Lm=padre(mb,new Q4()),P=Lm.clone().invert().multiply(zurMir(Lk.clone()));
+    t.push({b:b,mb:mb,P:P,Pi:P.clone().invert(),ri:o.rest[k].clone().invert(),rm:o.rest[mk],mi:0});}
+  for(i=0;i<t.length;i++)for(j=0;j<t.length;j++)if(t[j].b===t[i].mb){t[i].mi=j;break;}
+  o.zt=t;return t;}
+/* guarda la pose de un jugador en e y, si m > 0, le pone la reflejada (m = 1: espejo completo) */
+function zurPon(p,m,e){var o=p.v[p.kind],t=zurTab(o),n=t.length,i,q,a,j,T=ZUR.tq,Q=e.q;
+  for(i=0;i<n;i++){q=t[i].b.quaternion;Q[i*4]=q.x;Q[i*4+1]=q.y;Q[i*4+2]=q.z;Q[i*4+3]=q.w;}
+  e.hx=o.bones.Hips.position.x;if(!(m>0))return;
+  for(i=0;i<n;i++){a=t[i];_zq.set(Q[i*4],Q[i*4+1],Q[i*4+2],Q[i*4+3]).multiply(a.ri);zurMir(_zq);_zq.premultiply(a.P).multiply(a.Pi).multiply(a.rm);j=a.mi*4;T[j]=_zq.x;T[j+1]=_zq.y;T[j+2]=_zq.z;T[j+3]=_zq.w;}
+  for(i=0;i<n;i++){q=t[i].b.quaternion;if(m>=0.999)q.set(T[i*4],T[i*4+1],T[i*4+2],T[i*4+3]);else{_zq.set(T[i*4],T[i*4+1],T[i*4+2],T[i*4+3]);q.slerp(_zq,m);}}
+  o.bones.Hips.position.x=e.hx*(1-2*m);}
+/* antes de dibujar (y de grabar la repeticion): pone el espejo y el corrimiento a los zurdos que lo llevan. Devuelve true si toco algo */
+function zurPone(){try{ZUR.n=0;if(!ZUR_ON||REP.on||!G||!TEAM[0]||G.phase==='menu')return false;var P=TEAM[0].pl,i,pre=(G.phase==='pre'||G.phase==='windup')&&G.serving===0&&R&&R.srv;
+  for(i=0;i<P.length;i++){var p=P[i],w=p.zw||0,sx=p.zx||0,sz=p.zz||0;if(w<=0&&!sx&&!sz)continue;
+    var e=ZUR.sv[ZUR.n]||(ZUR.sv[ZUR.n]={p:null,kind:'',q:new Float64Array(64*4),hx:0,rx:0,ry:0,rz:0,bx:0,bz:0,m:0});ZUR.n++;
+    var m=w*w*(3-2*w),rp=p.root.position,yw=p.root.rotation.y,cy=Math.cos(yw),sy=Math.sin(yw),A=p.act;
+    e.p=p;e.kind=p.kind;e.m=m;e.rx=rp.x;e.ry=rp.y;e.rz=rp.z;e.bx=p.blob.position.x;e.bz=p.blob.position.z;
+    /* cerca del contacto, el plano del espejo pasa justo por la mano que golpea */
+    if(m>=0.999&&A&&ZUR.h[A.clip.name]!=null){var k=1-Math.abs(tG-A.tC)/0.12;if(k>0){k=k*k*(3-2*k);p.root.updateMatrixWorld(true);p.bones.RightHand.getWorldPosition(_zv);
+        var d=2*((_zv.x-rp.x)*cy-(_zv.z-rp.z)*sy-(p.zh||0))*k;sx+=d*cy;sz-=d*sy;}}
+    /* el balon en la mano del que saca, y los aros que lo siguen */
+    if(pre&&R.srv.pl===p&&m>0&&!ZUR.bola){var xb=(ball.position.x-rp.x)*cy-(ball.position.z-rp.z)*sy,bx=-2*xb*cy*m+sx,bz=2*xb*sy*m+sz;
+      ZUR.bola=true;ZUR.b0.copy(ball.position);ZUR.s0.copy(ballShadow.position);ZUR.r0.copy(ring.position);ZUR.r1.copy(ringT.position);
+      ball.position.x+=bx;ball.position.z+=bz;ballShadow.position.x+=bx;ballShadow.position.z+=bz;ring.position.x+=bx;ring.position.z+=bz;ringT.position.x+=bx;ringT.position.z+=bz;}
+    /* el aro del jugador que controlas y la marca de salto van con el cuerpo */
+    if((CTRL||(pre?R.srv.pl:null))===p&&!ZUR.aro){ZUR.aro=true;ZUR.c0.copy(ctrlRing.position);ctrlRing.position.x+=sx;ctrlRing.position.z+=sz;}
+    if(R&&R.att&&R.att.pl===p&&!R.att.jumped&&!R.att.done&&!ZUR.sal){ZUR.sal=true;ZUR.m0.copy(spotMark.position);spotMark.position.x+=sx;spotMark.position.z+=sz;}
+    zurPon(p,m,e);rp.x+=sx;rp.z+=sz;p.blob.position.x+=sx;p.blob.position.z+=sz;}
+  return ZUR.n>0;}catch(e){return ZUR.n>0||ZUR.bola||ZUR.aro||ZUR.sal;}}
+/* despues de dibujar: todo vuelve a como lo dejo el juego */
+function zurQuita(){try{for(var i=0;i<ZUR.n;i++){var e=ZUR.sv[i],p=e.p,o=p.v[e.kind],t=o.zt,Q=e.q,j;
+    if(e.m>0&&t){for(j=0;j<t.length;j++)t[j].b.quaternion.set(Q[j*4],Q[j*4+1],Q[j*4+2],Q[j*4+3]);o.bones.Hips.position.x=e.hx;}
+    p.root.position.set(e.rx,e.ry,e.rz);p.blob.position.x=e.bx;p.blob.position.z=e.bz;}}catch(e2){}
+  try{if(ZUR.bola){ball.position.copy(ZUR.b0);ballShadow.position.copy(ZUR.s0);ring.position.copy(ZUR.r0);ringT.position.copy(ZUR.r1);}if(ZUR.aro)ctrlRing.position.copy(ZUR.c0);if(ZUR.sal)spotMark.position.copy(ZUR.m0);}catch(e3){}
+  ZUR.n=0;ZUR.bola=false;ZUR.aro=false;ZUR.sal=false;}
+/* en cada paso del juego: cuanto espejo y cuanto corrimiento lleva cada uno. No toca nada de lo que el juego calcula */
+function zurStep(p){try{if(p.team!==0)return;var w=p.zw||0,sx=p.zx||0,sz=p.zz||0,on=false,h=0,fijo=false,saca=false,A=p.act,nm=A?A.clip.name:'',tl=A?tG-A.tC:9;
+  if(ZUR_ON&&G&&G.phase!=='menu'&&G.phase!=='end'&&(w>0||sx||sz||A||p.ap||G.phase==='pre'||G.phase==='windup')&&zurEs(p)){
+    if((G.phase==='pre'||G.phase==='windup')&&G.serving===0&&R&&R.srv&&R.srv.pl===p){on=true;saca=true;h=ZUR.h[R.srv.type==='jump'?'saque_salto':'saque_flotante'];}
+    else if(A&&ZUR.h[nm]!=null&&tl<0.3){on=true;h=ZUR.h[nm];}
+    else if(p.ap&&!p.ap.out&&ZUR.h[p.ap.n]!=null){on=true;h=ZUR.h[p.ap.n];}
+    if(on&&A&&ZUR.h[nm]!=null&&tl>-0.12)fijo=true;}
+  if(on&&!(h===h&&Math.abs(h)<1.5)){on=false;}
+  /* el que no lleva espejo ni corrimiento no escribe nada en este paso */
+  if(!on&&w<=0&&!sx&&!sz){if(p.zT!=null)p.zT=null;return;}
+  var dt=p.zT==null?1/60:clamp(tG-p.zT,0,0.05);p.zT=tG;
+  p.zw=on?Math.min(1,w+dt/0.22):Math.max(0,w-dt/0.28);
+  var spd=hyp(p.vx+p.avx,p.vz+p.avz),tx=0,tz=0,v;
+  /* el que va a sacar camina y se vira antes de llegar: su corrimiento va desde el principio hacia donde queda al sacar, de frente a la malla */
+  if(on){p.zh=h;var yw=(saca&&!fijo)?(p.s>0?Math.PI:0):p.yaw+p.ay;tx=2*h*Math.cos(yw);tz=-2*h*Math.sin(yw);v=fijo?99:2.4+spd;}else v=0.12+0.8*spd+(p.air>0.02?1.5:0);
+  var dx=tx-sx,dz=tz-sz,dl=hyp(dx,dz),st=v*dt;if(dl<=st||dl<1e-5){sx=tx;sz=tz;}else{sx+=dx/dl*st;sz+=dz/dl*st;}
+  p.zx=sx;p.zz=sz;}catch(e){p.zw=0;p.zx=0;p.zz=0;}}
+/* al cargar: en cada gesto de una mano, cuanto se aparta la mano derecha del centro del cuerpo en el cuadro del contacto */
+function zurMide(){try{var p=TEAM[0].pl[0],o=p.v[p.kind],bl=o.bl,q0=[],i,hp=o.bones.Hips.position.clone(),rp=p.root.position.clone(),ry=p.root.rotation.y;
+  for(i=0;i<bl.length;i++)q0.push(bl[i].quaternion.clone());if(!poseZ)poseZ=newPose();
+  p.root.position.set(0,0,0);p.root.rotation.y=0;
+  for(i=0;i<ZUR_CL.length;i++){var c=CLIPS[ZUR_CL[i]];if(!c||c.marks.contact==null)continue;clipPose(c,c.marks.contact,poseZ);p.apply(poseZ);p.root.updateMatrixWorld(true);o.bones.RightHand.getWorldPosition(_zv);ZUR.h[ZUR_CL[i]]=_zv.x;}
+  for(i=0;i<bl.length;i++)bl[i].quaternion.copy(q0[i]);o.bones.Hips.position.copy(hp);p.root.position.copy(rp);p.root.rotation.y=ry;p.root.updateMatrixWorld(true);}catch(e){ZUR.h={};}}
 /* ======================= PIES (0.6.0) =======================
    Pisadas calculadas en vivo: cada pie se queda clavado donde piso hasta que le toca dar el paso; el paso cae por delante del cuerpo,
    hacia donde va el jugador. La pierna (muslo y pantorrilla) se acomoda con IK de dos huesos para que el tobillo llegue a su pisada y el
@@ -2477,7 +2569,7 @@ function step(dt,rdt){if(REP.on){tAll+=rdt;repStep(rdt);return;}
   var live=G.phase==='live'||G.phase==='windup';
   for(var i=0;i<ALL.length;i++){var p=ALL[i];p.low=live&&R.mode[p.team]!=='att'&&R.mode[p.team]!=='serve'&&Math.abs(p.z)>1.3;p.netc=live&&R.mode[p.team]==='def'&&Math.abs(p.z)<=1.6;stepPlayer(p,dt);animate(p);if(p.blob.visible)p.blob.position.set(p.x+p.ax,0.02,p.z+p.az);}
   ballUpdate(dt);marks(dt);
-  if(!BOT.sim&&!NET.on&&(G.phase==='live'||(G.phase==='dead'&&G.tPh<0.3)))recFrame();
+  if(!BOT.sim&&!NET.on&&(G.phase==='live'||(G.phase==='dead'&&G.tPh<0.3))){var zr=zurPone();recFrame();if(zr)zurQuita();} /* 0.16.0: la repeticion graba a los zurdos ya reflejados */
   if(NET.on)nTick(rdt);}
 
 /* ======================= GOLPE, CAMARA, MARCADOR Y LECTURA (0.8.0, entrega A) =======================
@@ -2886,7 +2978,7 @@ var LBL=[],_pl=new V3();
 function labelsMake(){try{var box=$('lbl');box.innerHTML='';LBL=[];for(var i=0;i<6;i++){var d=document.createElement('div');d.className='rl';box.appendChild(d);LBL.push({el:d,p:TEAM[0].pl[i],t:''});}}catch(e){}}
 function labelsText(){try{for(var i=0;i<LBL.length;i++){var o=LBL[i],t=codeOf(o.p);var nk=snNom(o.p);if(nk)t+=' · '+snNomV(nk);if(t!==o.t){o.t=t;o.el.textContent=t;o.el.className='rl'+(o.p.lib?' lib':'');}}}catch(e){}}
 function labelsFrame(){try{var on=!!(G&&G.sc&&(G.phase==='pre'||G.phase==='windup')&&!BOT.sim),box=$('lbl');if(box.style.display!==(on?'block':'none'))box.style.display=on?'block':'none';if(!on)return;
-  for(var i=0;i<LBL.length;i++){var o=LBL[i],p=o.p;_pl.set(p.x,1.98+p.air,p.z).project(camera);
+  for(var i=0;i<LBL.length;i++){var o=LBL[i],p=o.p;_pl.set(p.x+(p.zx||0),1.98+p.air,p.z+(p.zz||0)).project(camera);
     o.el.style.transform=_pl.z>1?'translate(-999px,-999px)':('translate('+((_pl.x*0.5+0.5)*appW).toFixed(1)+'px,'+((-_pl.y*0.5+0.5)*appH).toFixed(1)+'px) translate(-50%,-100%)');}}catch(e){}}
 function ctxNow(){if(!G||!R||!G.sc)return 'wait';if(G.phase==='pre')return G.serving===0?'srv0':'wait';if(G.phase==='windup')return G.serving===0?(R.srv.press==null?'srv1':'wait'):'wait';if(G.phase!=='live')return 'wait';
   var n=R.next,c=R.choose,A=R.att;if(c&&!c.made&&c.opts.length>1)return c.seg?(c.seg.k==='at2'?((R.F&&R.F.t<c.seg.tD)?'cho3':'cho2'):'cho'):'cho2';if(A&&A.jumped&&!A.done)return 'aim';if(A&&!A.done&&!A.jumped&&!A.late&&CTRL===A.pl)return 'att';
@@ -3061,32 +3153,34 @@ function figura(pst){var best=null,bv=0;for(var k in pst){var o=pst[k],v=o.k+o.a
 
 /* ---------- Mi cuadro ---------- */
 var CQ_ROLES=[['S','S'],['OH1','OH'],['MB1','MB'],['OPP','OPP'],['OH2','OH'],['MB2','MB'],['L1','L'],['L2','L']];
-function cqLabel(r){return {S:L('Colocador · zona 1','Setter · zone 1'),OH1:L('Punta · zona 2','Outside · zone 2'),MB1:L('Central · zona 3','Middle · zone 3'),
-  OPP:L('Opuesto · zona 4','Opposite · zone 4'),OH2:L('Punta · zona 5','Outside · zone 5'),MB2:L('Central · zona 6','Middle · zone 6'),
+function cqLabel(r){return {S:L('Colocador · zona 1','Setter · zone 1'),OH1:L('Atacante de punta · zona 2','Outside hitter · zone 2'),MB1:L('Central · zona 3','Middle · zone 3'),
+  OPP:L('Atacante opuesto · zona 4','Opposite hitter · zone 4'),OH2:L('Atacante de punta · zona 5','Outside hitter · zone 5'),MB2:L('Central · zona 6','Middle · zone 6'),
   L1:L('Líbero que entra por el central de zona 3','Libero for the zone 3 middle'),L2:L('Líbero que entra por el central de zona 6','Libero for the zone 6 middle')}[r];}
 function cuadroActual(){try{var c=PREF.cuadro,R0=SN_ROS[CFG.brand];if(!c||!R0||!R0[c.cat])return null;var P=R0[c.cat],us={};
-  function ok(k,pos){return !!c[k]&&P[pos].indexOf(c[k])>=0;}
+  function ok(k,pos){return !!c[k]&&snLista(P,pos).indexOf(c[k])>=0;}
   if(!(ok('S','S')&&ok('OPP','OPP')&&ok('OH1','OH')&&ok('OH2','OH')&&ok('MB1','MB')&&ok('MB2','MB')&&ok('L1','L')))return null;
   var six=[c.S,c.OPP,c.OH1,c.OH2,c.MB1,c.MB2];for(var i=0;i<six.length;i++){if(us[six[i]])return null;us[six[i]]=1;}
   return {cat:c.cat,S:c.S,OPP:c.OPP,OH1:c.OH1,OH2:c.OH2,MB1:c.MB1,MB2:c.MB2,L1:c.L1,L2:ok('L2','L')?c.L2:c.L1};}catch(e){return null;}}
 /* un jugador no puede estar en dos puestos (los dos liberos si pueden ser el mismo): lo que quede repetido o vacio se llena solo */
 function cqFix(keep){var P=SN_ROS[CFG.brand][CQ.cat],us={},i,r,lst,j;if(keep&&CQ[keep])us[CQ[keep]]=keep;
-  for(i=0;i<CQ_ROLES.length;i++){r=CQ_ROLES[i][0];if(r===keep)continue;lst=P[CQ_ROLES[i][1]];var v=CQ[r],lib=r==='L1'||r==='L2';
+  for(i=0;i<CQ_ROLES.length;i++){r=CQ_ROLES[i][0];if(r===keep)continue;lst=snLista(P,CQ_ROLES[i][1]);var v=CQ[r],lib=r==='L1'||r==='L2';
     if(!v||lst.indexOf(v)<0||(us[v]&&!(lib&&(us[v]==='L1'||us[v]==='L2')))){v=null;for(j=0;j<lst.length;j++){if(!us[lst[j]]){v=lst[j];break;}}if(!v&&lib)v=CQ.L1||lst[0];CQ[r]=v;}
     if(v&&!us[v])us[v]=r;}}
+/* en la tarjeta, los tres puestos de atacante muestran la misma lista y en el mismo orden (puntas y despues opuestos) */
+function cqLst(P,pos){return (pos==='OH'||pos==='OPP')?snLista(P,'OH'):P[pos];}
 function cuadroCard(){try{var R0=SN_ROS[CFG.brand];if(!R0){menu();return;}var cats=Object.keys(R0),i,h;
   if(!CQ){var cur=cuadroActual()||snLineup(),k;CQ={};for(k in cur)CQ[k]=cur[k];if(!R0[CQ.cat])CQ.cat=cats[0];cqFix(null);}
   var P=R0[CQ.cat];
-  h='<div class="card"><h2>'+L('Mi cuadro','My lineup')+'</h2><p class="sub">'+L('Arma tu R1 con los jugadores de cada posición. El locutor y las etiquetas usan tu cuadro. El líbero entra por el central zaguero cuando este termina de sacar y hay sideout.','Build your R1 with the players of each position. The announcer and the labels use your lineup. The libero comes in for the back-row middle after he serves and there is a side-out.')+'</p>';
+  h='<div class="card"><h2>'+L('Mi cuadro','My lineup')+'</h2><p class="sub">'+L('Arma tu R1 con los jugadores de cada posición. Los puntas y los opuestos son atacantes: cualquiera puede ir de punta o de opuesto. El locutor y las etiquetas usan tu cuadro. El líbero entra por el central zaguero cuando este termina de sacar y hay sideout.','Build your R1 with the players of each position. Outsides and opposites are hitters: any of them can play outside or opposite. The announcer and the labels use your lineup. The libero comes in for the back-row middle after he serves and there is a side-out.')+'</p>';
   if(cats.length>1){h+='<div class="row"><span class="lb">'+L('Categoría','Team')+'</span>';for(i=0;i<cats.length;i++)h+=chip('cqc'+i,CQ.cat===cats[i],cats[i]);h+='</div>';}
-  for(i=0;i<CQ_ROLES.length;i++){var rr=CQ_ROLES[i],lst=P[rr[1]];h+='<div class="row"><span class="lb">'+cqLabel(rr[0])+'</span>';
+  for(i=0;i<CQ_ROLES.length;i++){var rr=CQ_ROLES[i],lst=cqLst(P,rr[1]);h+='<div class="row"><span class="lb">'+cqLabel(rr[0])+'</span>';
     for(var j=0;j<lst.length;j++)h+=chip('cq'+i+'_'+j,CQ[rr[0]]===lst[j],snNomV(lst[j]));h+='</div>';}
   h+='<div style="margin-top:6px"><button class="btn" id="cqG" type="button">'+L('Guardar mi cuadro','Save my lineup')+'</button><button class="btn b2" id="cqA" type="button">'+L('Al azar','Shuffle')+'</button>'+
     (PREF.cuadro?'<button class="btn b2" id="cqB" type="button">'+L('Que roten','Rotate players')+'</button>':'')+'<button class="btn b2" id="cqV" type="button">'+L('Volver','Back')+'</button></div>'+
     '<div class="foot"><span>'+L('Se guarda en este teléfono','Saved on this phone')+'</span><span>VOLEII · by Carlos Torres</span></div></div>';
   ov.innerHTML=h;ov.style.display='flex';try{ov.scrollTop=0;}catch(e0){}
   cats.forEach(function(c,ci){tap($('cqc'+ci),function(){if(CQ.cat===c)return;var nw=snLineup(c),k2;CQ={};for(k2 in nw)CQ[k2]=nw[k2];cuadroCard();});});
-  CQ_ROLES.forEach(function(rr,ri){P[rr[1]].forEach(function(n,nj){tap($('cq'+ri+'_'+nj),function(){CQ[rr[0]]=n;cqFix(rr[0]);cuadroCard();});});});
+  CQ_ROLES.forEach(function(rr,ri){cqLst(P,rr[1]).forEach(function(n,nj){tap($('cq'+ri+'_'+nj),function(){CQ[rr[0]]=n;cqFix(rr[0]);cuadroCard();});});});
   tap($('cqA'),function(){var nw=snLineup(CQ.cat),k2;CQ={};for(k2 in nw)CQ[k2]=nw[k2];cuadroCard();});
   tap($('cqG'),function(){var o={},k2;for(k2 in CQ)o[k2]=CQ[k2];PREF.cuadro=o;savePref();CQ=null;snUI('aceptar',0.7);menu();});
   if(PREF.cuadro)tap($('cqB'),function(){PREF.cuadro=null;savePref();CQ=null;menu();});
@@ -3353,7 +3447,7 @@ var PRMAX=Math.min(window.devicePixelRatio||1,2);PR=PRMAX;qBuild();
 hudStatic();size();requestAnimationFrame(frame);
 cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ();gxStart();mvBuild();apBuild();jfInit();
   try{ipAdd(camera,6,'pq');ipAdd(ball,2.5,'p');ipAdd(ballShadow,2.5,'p');ipAdd(ctrlRing,1.2,'p');for(var qi=0;qi<ALL.length;qi++){ipAdd(ALL[qi].root,1.2,'py');ipAdd(ALL[qi].blob,1.2,'p');}
-    var q0=parseInt(localStorage.getItem('bb6_q'),10);if(q0>0&&q0<=QMAX)qSet(q0);gxLadder();}catch(e){}$('load').style.display='none';
+    var q0=parseInt(localStorage.getItem('bb6_q'),10);if(q0>0&&q0<=QMAX)qSet(q0);gxLadder();}catch(e){}zurMide();$('load').style.display='none';
   G={phase:'menu',tPh:0,serving:0};R={mode:['def','def'],F:null,next:null};setGoals();
   for(var i=0;i<ALL.length;i++){var p=ALL[i];p.x=p.gx;p.z=p.gz;p.fn=0;}
   ball.position.set(0.6,BALL_R,3.2);ready=true;menu();window.BB_READY=true;
@@ -3361,7 +3455,7 @@ cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ()
 },function(e){if(window.console)console.error(e);$('load').textContent=L('No se pudo cargar el juego. Revisa tu conexión y ábrelo otra vez.','Could not load the game. Check your connection and open it again.');});
 
 /* ganchos de prueba (robot que juega solo, para medir rallies y balance) */
-window.BB={version:APP_VERSION,gx:function(){return GX;},gxSet:function(v){gxSet(v);return GX.lv;},gxDbg:function(){return {scene:scene,camera:camera,renderer:renderer,RF:RF,PP:PP,AR:AR,sun:sun,ALL:ALL};},gxInfo:function(){try{return {lv:GX.lv,lv0:GX.lv0,top:GX.top,ui:GX.ui,un:GX.U?GX.U.length:0,U:GX.U,S:GX.S,cur:GX.cur,pr:PR,prmax:PRMAX,wE:GX.wE,qt:qTxt(),rk:RF.k,pf:PP.f,brillo:PP.on,alta:!!GX.alta,madera:!!GX.madera,calls:renderer.info.render.calls,tri:renderer.info.render.triangles,refl:RF.on,rt:RF.rt?[RF.rt.width,RF.rt.height]:null,tex:renderer.info.memory.textures,geo:renderer.info.memory.geometries};}catch(e){return null;}},all:function(){return ALL;},salto:function(){var o={s:SALTO,take:TAKE,blk:BLK_LEAD,tkd:TK_D,bkd:BK_D,clips:{}};try{var L2=[['ataque',0.35],['ataque_corto',0.35],['ataque_corto',0.3],['bloqueo_frente',0.28],['bloqueo_der',0.28],['bloqueo_izq',0.28],['saque_salto',0.32]];for(var i=0;i<L2.length;i++){var J=jfOf(CLIPS[L2[i][0]],L2[i][1]);if(J)o.clips[L2[i][0]+'@'+L2[i][1]]={k:J.k,Fc:J.Fc,Fn:J.Fn,H:J.H,fC:J.fC,tc0:J.fC*J.Fc,tc:J.fC*J.Fn};}}catch(e){}return o;},ap:function(v){if(v===true||v===false)AP_ON=v;return {on:AP_ON,t:AP};},mv:function(){return MV;},dbg:function(v){if(v===true)DBG={ev:[],n:0,cur:null,ct:'',cd:0};else if(v===false)DBG=null;return DBG;},
+window.BB={version:APP_VERSION,zur:function(){return {Z:ZUR,on:ZUR_ON,todos:ZUR_TODOS,es:zurEs,tab:zurTab,pon:zurPon,pone:zurPone,quita:zurQuita,clips:CLIPS,clipPose:clipPose,newPose:newPose,lista:snLista,ros:SN_ROS,dibuja:function(){gxDraw();}};},gx:function(){return GX;},gxSet:function(v){gxSet(v);return GX.lv;},gxDbg:function(){return {scene:scene,camera:camera,renderer:renderer,RF:RF,PP:PP,AR:AR,sun:sun,ALL:ALL};},gxInfo:function(){try{return {lv:GX.lv,lv0:GX.lv0,top:GX.top,ui:GX.ui,un:GX.U?GX.U.length:0,U:GX.U,S:GX.S,cur:GX.cur,pr:PR,prmax:PRMAX,wE:GX.wE,qt:qTxt(),rk:RF.k,pf:PP.f,brillo:PP.on,alta:!!GX.alta,madera:!!GX.madera,calls:renderer.info.render.calls,tri:renderer.info.render.triangles,refl:RF.on,rt:RF.rt?[RF.rt.width,RF.rt.height]:null,tex:renderer.info.memory.textures,geo:renderer.info.memory.geometries};}catch(e){return null;}},all:function(){return ALL;},salto:function(){var o={s:SALTO,take:TAKE,blk:BLK_LEAD,tkd:TK_D,bkd:BK_D,clips:{}};try{var L2=[['ataque',0.35],['ataque_corto',0.35],['ataque_corto',0.3],['bloqueo_frente',0.28],['bloqueo_der',0.28],['bloqueo_izq',0.28],['saque_salto',0.32]];for(var i=0;i<L2.length;i++){var J=jfOf(CLIPS[L2[i][0]],L2[i][1]);if(J)o.clips[L2[i][0]+'@'+L2[i][1]]={k:J.k,Fc:J.Fc,Fn:J.Fn,H:J.H,fC:J.fC,tc0:J.fC*J.Fc,tc:J.fC*J.Fn};}}catch(e){}return o;},ap:function(v){if(v===true||v===false)AP_ON=v;return {on:AP_ON,t:AP};},mv:function(){return MV;},dbg:function(v){if(v===true)DBG={ev:[],n:0,cur:null,ct:'',cd:0};else if(v===false)DBG=null;return DBG;},
   q:function(v){if(v==='lock')QLOCK=true;else if(v==='auto')QLOCK=false;else if(typeof v==='number')qSet(v);return {i:qI,max:QMAX,pr:PR,body:qStep,wait:qWait,lv:QLV};},qfeed:function(ms,n){for(var i=0;i<n;i++)quality(ms);return qI;},
   loop:function(ms){var t=last;for(var i=0;i<ms.length;i++){t+=ms[i];NOREND=true;var raf=window.requestAnimationFrame;window.requestAnimationFrame=function(){};try{frame(t);}finally{window.requestAnimationFrame=raf;}}return {acc:ACC,ip:ipOn,ticks:TKN};},render:function(v){NOREND=!v;},net:NET,nLobby:function(){nLobby();},nCreate:function(c){nCreate(c);},nJoin:function(c){nJoin(c);},cam:function(a){CAMDBG=a||null;},hold:function(v){HOLD=!!v;last=performance.now();},adv:function(sec){ipRestore();bvOut();var n=Math.max(1,Math.round(sec*60));for(var i=0;i<n;i++){var rdt=1/60;freezeT=0;if(TUT.hold){if(TUT.hold==='cho'&&(Math.abs(JX)>0.35||Math.abs(JZ)>0.35))tutRelease();}else tutCheck();if(TUT.hold){hudFrame(rdt);continue;}TS+=(tsGoal-TS)*Math.min(1,rdt*14);step(rdt*TS,rdt);camUpdate(rdt,false);hudFrame(rdt);crowdFrame(rdt);}return ctxNow();},joy:function(x,z){JX=x;JZ=z;},state:function(){return {G:G,R:R,CTRL:CTRL,tG:tG,TS:TS,REP:REP,tAll:tAll};},bot:BOT,press:function(){actionPress();},
   /* 0.14.0: ganchos de prueba de tiempos y cambios */
