@@ -111,9 +111,9 @@ body{position:fixed;inset:0;touch-action:none;-webkit-user-select:none;user-sele
 <script>
 (function(){
 'use strict';
-var APP_VERSION='2.0.0',ASSET_V='2';
+var APP_VERSION='2.0.1',ASSET_V='2';
 /* =====================================================================
-   Long Spike 2.0.0 by VOLEII (15 nov. 2026)
+   Long Spike 2.0.1 by VOLEII (16 nov. 2026)
    La logica es la de 0.5.8 tal cual: misma fisica del balon, mismo
    recorrido del dia (semilla por fecha de Puerto Rico), mismos tiempos de
    carrera, salto y remate, y misma marca en metros, porque los records son
@@ -129,6 +129,8 @@ var APP_VERSION='2.0.0',ASSET_V='2';
    mar), golpe del remate con aro, lineas y balon deformado, tomas que se
    cierran en los momentos grandes, zancada segun la velocidad, salto segun
    su calidad y banderas con la mejor marca de cada companero.
+   2.0.1: el piso de concreto ya no se monta sobre el fondo de la cancha (la
+   franja que parpadeaba al empezar la carrera).
    Un solo archivo para STATION y para Angels: la marca sale del dominio
    (o de ?brand=). ?clasico=1 abre el 2D de 0.5.8 (clasico.html).
    ===================================================================== */
@@ -642,7 +644,8 @@ function mundoBase(){try{
   var bm=new THREE.Mesh(new THREE.PlaneGeometry(6,1.5),new THREE.MeshStandardMaterial({map:bannerTex(CFG.team.toUpperCase(),'VOLEII · LONG SPIKE',CFG.AZUL,CFG.AMA),roughness:0.6,emissive:'#ffffff',emissiveIntensity:0.15,emissiveMap:null}));bm.position.set(-4,5.4,-10.18);WORLD.add(bm);
   var bm2=new THREE.Mesh(new THREE.PlaneGeometry(6,1.5),new THREE.MeshStandardMaterial({map:bannerTex('VOLEII','by Carlos Torres','#0E1116',VOL),roughness:0.6}));bm2.position.set(6,5.4,-10.18);WORLD.add(bm2);
   /* suelos por zona (metros) */
-  suelo(12,50,-40,14,new THREE.MeshStandardMaterial({map:concTex,roughness:0.92}),0);
+  /* 2.0.1: empieza donde termina la cancha (x=14); antes se montaba 2 m sobre ella a la misma altura y esa franja parpadeaba */
+  suelo(14,50,-40,14,new THREE.MeshStandardMaterial({map:concTex,roughness:0.92}),0);
   suelo(50,120,-40,14,new THREE.MeshStandardMaterial({map:asfTex,roughness:0.88}),0);
   var pk=suelo(50,120,-16,-4,new THREE.MeshStandardMaterial({map:parkTex,roughness:0.88,transparent:false}),0.005);
   suelo(120,240,-40,14,new THREE.MeshStandardMaterial({map:calleTex,roughness:0.85}),0);
