@@ -128,7 +128,7 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.4.1';
+var APP_VERSION='0.4.2';
 /* BAREBORU by VOLEII: voleibol 3v3 contra la maquina, a 15 con ventaja de 2.
    Cuerpos y clips de VOLEII Action 3.0 (j3, j5, j7 a mitad de triangulos, repetidos en los dos equipos con uniforme distinto).
    Mundo: X de -4.5 a 4.5 (derecha de la camara positiva), Z = distancia a la malla (nuestro lado positivo), Y arriba.
@@ -180,6 +180,10 @@ var TOKEN=(function(){try{var ok=function(s){return !!s&&/^[A-Za-z0-9]{32,128}$/
 var STAFF=(function(){try{return !TOKEN&&new URLSearchParams(location.search).get('staff')==='1';}catch(e){return false;}})();
 try{if(TOKEN&&window.supabase)SBC=window.supabase.createClient('https://qagvxlenrojmgzjoywzm.supabase.co','sb_publishable_X9_9OKteMkCNcIHj5skkmg_KgptD6V2',{db:{schema:CFG.schema},auth:{persistSession:false,autoRefreshToken:false},realtime:{params:{eventsPerSecond:40}}});
   else if(STAFF&&window.supabase)SBC=window.supabase.createClient('https://qagvxlenrojmgzjoywzm.supabase.co','sb_publishable_X9_9OKteMkCNcIHj5skkmg_KgptD6V2',{db:{schema:CFG.schema},realtime:{params:{eventsPerSecond:40}}});}catch(e){SBC=null;}
+/* Presencia (16 nov. 2026): con el enlace del jugador, avisa cada minuto que sigue en este juego, para el cuadro
+   "Ahora en la app" del staff. Sin enlace (staff, play.bareboru.com, robot) no hace nada. */
+(function(){try{if(!TOKEN||!SBC)return;var late=function(){try{if(document.hidden)return;SBC.rpc('player_ping',{p_token:TOKEN,p_donde:'juego',p_ref:'bareboru'}).then(function(){},function(){});}catch(e){}};
+  late();setInterval(late,60000);document.addEventListener('visibilitychange',function(){try{if(!document.hidden)late();}catch(e){}});}catch(e){}})();
 RECORDS_ON=!!SBC;
 function vqEnvia(score,meta,cb){try{if(!SBC){if(cb)cb(null);return;}var sc=Math.max(0,Math.round(score));(STAFF?SBC.rpc('staff_game_submit',{p_game:GAME_ID,p_score:sc,p_meta:meta}):SBC.rpc('player_game_submit',{p_token:TOKEN,p_game:GAME_ID,p_score:sc,p_meta:meta})).then(function(r){if(cb)cb(r&&!r.error?r.data:null);},function(){if(cb)cb(null);});}catch(e){if(cb)cb(null);}}
 function vqTop(cb){try{if(!SBC){cb(null);return;}(STAFF?SBC.rpc('staff_game_board',{p_game:GAME_ID}):SBC.rpc('player_game_board',{p_token:TOKEN,p_game:GAME_ID,p_scope:'team'})).then(function(r){cb(r&&!r.error?r.data:null);},function(){cb(null);});}catch(e){cb(null);}}

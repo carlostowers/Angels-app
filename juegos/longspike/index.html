@@ -111,7 +111,7 @@ body{position:fixed;inset:0;touch-action:none;-webkit-user-select:none;user-sele
 <script>
 (function(){
 'use strict';
-var APP_VERSION='2.0.1',ASSET_V='2';
+var APP_VERSION='2.0.2',ASSET_V='2';
 /* =====================================================================
    Long Spike 2.0.1 by VOLEII (16 nov. 2026)
    La logica es la de 0.5.8 tal cual: misma fisica del balon, mismo
@@ -153,6 +153,10 @@ var STAFF=(function(){try{return !TOKEN&&new URLSearchParams(location.search).ge
 var BOTQ=qp('bot')==='1';
 var SBC=null;try{if(TOKEN&&window.supabase&&!BOTQ)SBC=window.supabase.createClient('https://qagvxlenrojmgzjoywzm.supabase.co','sb_publishable_X9_9OKteMkCNcIHj5skkmg_KgptD6V2',{db:{schema:CFG.schema},auth:{persistSession:false,autoRefreshToken:false}});
   else if(STAFF&&window.supabase&&!BOTQ)SBC=window.supabase.createClient('https://qagvxlenrojmgzjoywzm.supabase.co','sb_publishable_X9_9OKteMkCNcIHj5skkmg_KgptD6V2',{db:{schema:CFG.schema}});}catch(e){SBC=null;}
+/* Presencia (16 nov. 2026): con el enlace del jugador, avisa cada minuto que sigue en este juego, para el cuadro
+   "Ahora en la app" del staff. Sin enlace (staff, play.bareboru.com, robot) no hace nada. */
+(function(){try{if(!TOKEN||!SBC)return;var late=function(){try{if(document.hidden)return;SBC.rpc('player_ping',{p_token:TOKEN,p_donde:'juego',p_ref:'longspike'}).then(function(){},function(){});}catch(e){}};
+  late();setInterval(late,60000);document.addEventListener('visibilitychange',function(){try{if(!document.hidden)late();}catch(e){}});}catch(e){}})();
 function vqEnvia(game,score,meta,cb){try{if(!SBC){if(cb)cb(null);return;}var sc=Math.max(0,Math.round(score));(STAFF?SBC.rpc('staff_game_submit',{p_game:game,p_score:sc,p_meta:meta}):SBC.rpc('player_game_submit',{p_token:TOKEN,p_game:game,p_score:sc,p_meta:meta})).then(function(r){if(cb)cb(r&&!r.error?r.data:null);},function(){if(cb)cb(null);});}catch(e){if(cb)cb(null);}}
 function vqTop(game,cb){try{if(!SBC){cb(null);return;}(STAFF?SBC.rpc('staff_game_board',{p_game:game}):SBC.rpc('player_game_board',{p_token:TOKEN,p_game:game,p_scope:'team'})).then(function(r){cb(r&&!r.error?r.data:null);},function(){cb(null);});}catch(e){cb(null);}}
 function vqEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
