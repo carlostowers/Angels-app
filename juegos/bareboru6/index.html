@@ -186,7 +186,7 @@ try{if(!(window.VOLEII&&window.VOLEII.T3)){window.BB6_MOTOR=false;document.write
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.16.1',ASSET_V='2';
+var APP_VERSION='0.17.0',ASSET_V='2';
 /* BAREBORU by VOLEII 6x6: voleibol seis contra seis contra la maquina, a 15 con ventaja de 2.
    Sistema 5-1 con libero y las seis rotaciones del Playbook de Vaqueros (formaciones de recepcion, target, defensa Middle/Middle y cobertura).
    Sale del motor del 3x3 (juegos/bareboru): mismos cuerpos, clips y controles. Controlas al jugador que le toca jugar el balon; los demas van solos.
@@ -234,6 +234,21 @@ var CFG={team:'Vaqueros',rival:'Rival',acc:'#FFCF27',azul:'#023B9F',
   court:{inn:'#2f63b8',out:'#1a2f57'},ball:['#FCCC24','#00389C','#F2EFE8'],ls:'vq_bareboru6_cfg_v1',app:'STATION',schema:'station',brand:'vaqueros'};
 /* marca segun el sitio: el mismo archivo sirve a STATION (Vaqueros) y a la app de Angels */
 var BRAND='vaqueros';try{var bh=(location.hostname||'').toLowerCase(),bq=new URLSearchParams(location.search).get('brand');if(bh.indexOf('angels')>=0||bq==='angels')BRAND='angels';if(bq==='vaqueros')BRAND='vaqueros';}catch(e){}
+
+/* ---------- PLAY: el mismo archivo en play.bareboru.com (sitio propio de BAREBORU, solo Vaqueros) ----------
+   Fuera de bareboru.com no cambia nada. ?play=1 lo prende en una vista previa para probar.
+   En PLAY: marca Vaqueros fija, el apodo del invitado en vez del enlace de STATION (token en el telefono),
+   funciones public.play_* (esquema play, aparte de station y angels), volver al sitio y un aviso cada 30 s
+   para saber cuantas personas estan dentro (sin datos personales). */
+var PLAY=false;try{var _ph=(location.hostname||'').toLowerCase();PLAY=/(^|\.)bareboru\.com$/.test(_ph)||new URLSearchParams(location.search).get('play')==='1';}catch(e){PLAY=false;}
+if(PLAY)BRAND='vaqueros';
+function PN(n){return PLAY?('play_'+String(n).replace(/^player_/,'')):n;}
+function playTok(){try{var t=localStorage.getItem('bareboru_play_token');return t&&/^[A-Za-z0-9]{48}$/.test(t)?t:null;}catch(e){return null;}}
+function playSid(){try{var s=localStorage.getItem('bareboru_sid');if(!s||!/^[A-Za-z0-9]{16,64}$/.test(s)){s='';var c='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',a=new Uint32Array(24);crypto.getRandomValues(a);for(var i=0;i<24;i++)s+=c.charAt(a[i]%62);localStorage.setItem('bareboru_sid',s);}return s;}catch(e){return null;}}
+var PLAY_PLACE=function(){return 'juego';};
+function playPing(){try{if(!PLAY||document.hidden)return;var s=playSid();if(!s)return;fetch('https://qagvxlenrojmgzjoywzm.supabase.co/rest/v1/rpc/play_ping',{method:'POST',keepalive:true,headers:{'apikey':'sb_publishable_X9_9OKteMkCNcIHj5skkmg_KgptD6V2','Content-Type':'application/json'},body:JSON.stringify({p_sid:s,p_place:String(PLAY_PLACE()).slice(0,24)})}).catch(function(){});}catch(e){}}
+if(PLAY){try{setTimeout(playPing,1500);setInterval(playPing,30000);document.addEventListener('visibilitychange',function(){if(!document.hidden)playPing();});}catch(e){}}
+function playApodo(){try{location.href='/?apodo=1&volver='+encodeURIComponent(location.pathname);}catch(e){}}
 if(BRAND==='angels'){CFG.team='Angels';CFG.acc='#51B7E4';CFG.azul='#1B2A6B';CFG.kitUs={jersey:'#51B7E4',shorts:'#1B2A6B',trim:'#EB448F'};CFG.court={inn:'#2f7fb5',out:'#1B2A6B'};CFG.ball=['#51B7E4','#1B2A6B','#F2EFE8'];CFG.ls='ang_bareboru6_cfg_v1';CFG.app='Angels';CFG.schema='angels';CFG.brand='angels';}
 try{document.documentElement.style.setProperty('--acc',CFG.acc);}catch(e){}
 var RIVALS=[
@@ -273,17 +288,19 @@ function L(es,en){return LANG==='en'?en:es;}
 var RECORDS_ON=false;
 var TOKEN=(function(){try{var ok=function(s){return !!s&&/^[A-Za-z0-9]{32,128}$/.test(s);};var q=null;try{q=new URLSearchParams(location.search).get('t');}catch(e){}var h=(location.hash||'').replace(/^#/,'');return ok(q)?q:(ok(h)?h:null);}catch(e){return null;}})();
 var STAFF=(function(){try{return !TOKEN&&new URLSearchParams(location.search).get('staff')==='1';}catch(e){return false;}})();
+if(PLAY){TOKEN=playTok();STAFF=false;CFG.app='BAREBORU';}
 try{if(TOKEN&&window.supabase)SBC=window.supabase.createClient('https://qagvxlenrojmgzjoywzm.supabase.co','sb_publishable_X9_9OKteMkCNcIHj5skkmg_KgptD6V2',{db:{schema:CFG.schema},auth:{persistSession:false,autoRefreshToken:false},realtime:{params:{eventsPerSecond:40}}});
   else if(STAFF&&window.supabase)SBC=window.supabase.createClient('https://qagvxlenrojmgzjoywzm.supabase.co','sb_publishable_X9_9OKteMkCNcIHj5skkmg_KgptD6V2',{db:{schema:CFG.schema},realtime:{params:{eventsPerSecond:40}}});}catch(e){SBC=null;}
 /* Presencia (16 nov. 2026): con el enlace del jugador, avisa cada minuto que sigue en este juego, para el cuadro
    "Ahora en la app" del staff. Sin enlace (staff, play.bareboru.com, robot) no hace nada. */
-(function(){try{if(!TOKEN||!SBC)return;var late=function(){try{if(document.hidden)return;SBC.rpc('player_ping',{p_token:TOKEN,p_donde:'juego',p_ref:'bareboru6'}).then(function(){},function(){});}catch(e){}};
+(function(){try{if(!TOKEN||!SBC||PLAY)return;var late=function(){try{if(document.hidden)return;SBC.rpc('player_ping',{p_token:TOKEN,p_donde:'juego',p_ref:'bareboru6'}).then(function(){},function(){});}catch(e){}};
   late();setInterval(late,60000);document.addEventListener('visibilitychange',function(){try{if(!document.hidden)late();}catch(e){}});}catch(e){}})();
+if(PLAY&&SBC){try{var _rpc=SBC.rpc.bind(SBC);SBC.rpc=function(n,a,o){return _rpc(PN(n),a,o);};}catch(e){}}
 RECORDS_ON=!!SBC;
 function vqEnvia(score,meta,cb){try{if(!SBC){if(cb)cb(null);return;}var sc=Math.max(0,Math.round(score));(STAFF?SBC.rpc('staff_game_submit',{p_game:GAME_ID,p_score:sc,p_meta:meta}):SBC.rpc('player_game_submit',{p_token:TOKEN,p_game:GAME_ID,p_score:sc,p_meta:meta})).then(function(r){if(cb)cb(r&&!r.error?r.data:null);},function(){if(cb)cb(null);});}catch(e){if(cb)cb(null);}}
 function vqTop(cb){try{if(!SBC){cb(null);return;}(STAFF?SBC.rpc('staff_game_board',{p_game:GAME_ID}):SBC.rpc('player_game_board',{p_token:TOKEN,p_game:GAME_ID,p_scope:'team'})).then(function(r){cb(r&&!r.error?r.data:null);},function(){cb(null);});}catch(e){cb(null);}}
 function vqLog(meta){try{if(!SBC)return;(STAFF?SBC.rpc('staff_game_log',{p_game:GAME_ID,p_meta:meta}):SBC.rpc('player_game_log',{p_token:TOKEN,p_game:GAME_ID,p_meta:meta})).then(function(){},function(){});}catch(e){}}
-function backHref(){return TOKEN?('/?t='+TOKEN+'&go=juegos'):(STAFF?'/?go=juegos':'/');}
+function backHref(){if(PLAY)return '/';return TOKEN?('/?t='+TOKEN+'&go=juegos'):(STAFF?'/?go=juegos':'/');}
 
 /* ---------- utilidades ---------- */
 function clamp(v,a,b){return v<a?a:v>b?b:v;}
@@ -2772,7 +2789,7 @@ function nNum(v){return typeof v==='number'&&isFinite(v)&&Math.abs(v)<1000;}
 function nHex(s){return typeof s==='string'&&/^#[0-9A-Fa-f]{6}$/.test(s);}
 function nKitOk(k){return !!k&&nHex(k.jersey)&&nHex(k.shorts)&&nHex(k.trim);}
 function nClean(s,n){return String(s==null?'':s).replace(/[^A-Za-z0-9À-ſ #]/g,'').slice(0,n||14);}
-function nLabel(o){if(!o)return 'Rival';if(o.club==='coach')return 'Coach';var num=nClean(o.num,3),nm=nClean(o.name,10);return (num?'#'+num+' ':'')+(nm||'Rival');}
+function nLabel(o){if(!o)return 'Rival';if(o.club==='coach')return 'Coach';var num=nClean(o.num,o.club==='play'?4:3),nm=nClean(o.name,10);return (num?'#'+num+' ':'')+(nm||'Rival');}
 function nClub(o){return !o?'':(o.club==='angels'?'Angels':(o.club==='vaqueros'?'Vaqueros':(o.club==='coach'?'Coach':'')));}
 function nSend(t,d){try{if(NET.tx){NET.tx({t:t,d:d||{}});if(NET.log&&t!=='pos'&&t!=='act'&&t!=='ping'&&t!=='pong')NET.log.push(Math.round(tG*100)/100+' '+t+(d&&d.ty?':'+d.ty:'')+(d&&d.F?' k='+d.F.k+' land='+Math.round((d.F.p[2]+d.F.v[2]*1)*10)/10:'')+(d&&d.to!=null?' to'+d.to:'')+(d&&d.ask?' ask':''));}}catch(e){}}
 function nPackF(F){return {k:F.kind,p:[F.p0.x,F.p0.y,F.p0.z],v:[F.v.x,F.v.y,F.v.z],g:F.g,T:F.T,pc:F.pace||0,sp:F.special?1:0,ht:F.hot?1:0};}
@@ -2871,24 +2888,63 @@ function nEnd(){var us=G.sc[0],th=G.sc[1],won=us>th,code=NET.code,opp=nLabel(NET
   var test=NET.test;NET.on=false;setTimeout(function(){nLeave(true);},1500);
   ov.innerHTML='<div class="card" style="max-width:460px;text-align:center"><h2 style="color:'+(won?CFG.acc:HUESO)+'">'+(won?L('Ganaste','You won'):L('Perdiste','You lost'))+' · '+us+' : '+th+'</h2><p class="sub">'+L('En línea contra ','Online against ')+opp+(club?' · '+club:'')+'</p>'+
     '<p style="margin-top:8px"><b style="color:'+CFG.acc+'">+'+gain+' XP</b></p><p class="sub" id="nrec">'+L('Guardando el resultado…','Saving the result…')+'</p>'+
-    '<button class="btn" id="neA" type="button">'+L('Otra sala','New room')+'</button><button class="btn b2" id="neM" type="button">'+L('Menú','Menu')+'</button><div class="foot"><a href="'+backHref()+'">'+L('Volver a ','Back to ')+CFG.app+'</a><span>VOLEII · by Carlos Torres</span></div></div>';ov.style.display='flex';
-  tap($('neA'),function(){nLobby();});tap($('neM'),function(){menu();});
+    '<button class="btn" id="neA" type="button">'+L('Otra sala','New room')+'</button><button class="btn b2" id="neM" type="button">'+L('Menú','Menu')+'</button>'+(PLAY&&PLAY_ROOM?'<button class="btn b2" id="neR" type="button">'+L('Reportar el apodo del rival','Report the opponent nickname')+'</button>':'')+'<div class="foot"><a href="'+backHref()+'">'+L('Volver a ','Back to ')+CFG.app+'</a><span>VOLEII · by Carlos Torres</span></div></div>';ov.style.display='flex';
+  tap($('neA'),function(){nLobby();});try{if($('neR'))tap($('neR'),function(){playReport();});}catch(e){}tap($('neM'),function(){menu();});
   function show(r){try{var e=$('nrec');if(!e)return;if(!r){e.textContent=L('No se pudo guardar el resultado.','Could not save the result.');return;}NET.rec={w:r.w|0,l:r.l|0};
     e.textContent=(r.counted?'':L('Esperando el reporte de tu rival. ','Waiting for your opponent\'s report. '))+L('Tu récord en línea: ','Your online record: ')+(r.w|0)+L(' ganados · ',' won · ')+(r.l|0)+L(' perdidos',' lost');}catch(e2){}}
   if(test||!SBC){show({w:won?1:0,l:won?0:1,counted:true});return;}
   var tries=0;(function go(){tries++;nRpc('bb6_room_result',{p_token:TOKEN,p_code:code,p_us:us,p_them:th},function(r){if(r&&!r.counted&&tries<4){show(r);setTimeout(go,2500);}else show(r);});})();}
-function nRpc(fn,args,cb){try{if(!SBC){cb(null,'x');return;}SBC.schema('station').rpc(fn,args).then(function(r){if(r&&!r.error)cb(r.data,null);else cb(null,(r&&r.error&&r.error.message)||'error');},function(){cb(null,'red');});}catch(e){cb(null,'error');}}
+function nRpc(fn,args,cb){try{if(!SBC){cb(null,'x');return;}SBC.schema(PLAY?'public':'station').rpc(PN(fn),args).then(function(r){if(r&&!r.error)cb(r.data,null);else cb(null,(r&&r.error&&r.error.message)||'error');},function(){cb(null,'red');});}catch(e){cb(null,'error');}}
+/* ---------- PLAY: conexion directa entre los dos telefonos (WebRTC) ----------
+   Supabase solo junta a los dos telefonos: por el canal de la sala viajan la oferta y la respuesta (unos 4 mensajes).
+   Despues el partido va de telefono a telefono: un canal sin reintentos para la posicion y el ping, y uno confiable
+   para todo lo demas. Si no conecta o se cae, el partido sigue por Supabase Realtime como siempre, sin hacer nada.
+   Prendida en PLAY; en STATION y Angels solo con ?p2p=1. ?p2p=0 la apaga. No toca fisica, reglas ni balance. */
+var P2P={on:false,pc:null,u:null,r:null,ok:false,base:null,baseClose:null,t:null,armedFor:null,rx:0,tx:0};
+try{if(NET.test)window.__P2P=P2P;}catch(e){}
+try{var _q2=new URLSearchParams(location.search);P2P.on=(PLAY||_q2.get('p2p')==='1')&&_q2.get('p2p')!=='0'&&!!window.RTCPeerConnection;}catch(e){P2P.on=false;}
+function p2pReset(){try{if(P2P.pc)P2P.pc.close();}catch(e){}P2P.pc=null;P2P.u=null;P2P.r=null;P2P.ok=false;P2P.armedFor=null;if(P2P.t){clearInterval(P2P.t);P2P.t=null;}try{NET.dbg.p2p=0;}catch(e){}}
+function p2pBase(m){try{if(P2P.base)P2P.base(m);}catch(e){}}
+function p2pArm(){try{if(!P2P.on)return;p2pReset();P2P.base=NET.tx;P2P.baseClose=NET.close;
+  NET.tx=function(m){try{if(P2P.ok){var ch=(m&&(m.t==='pos'||m.t==='ping'||m.t==='pong'))?P2P.u:P2P.r;if(ch&&ch.readyState==='open'){ch.send(JSON.stringify(m));P2P.tx++;return;}}}catch(e){}p2pBase(m);};
+  NET.close=function(){var bc=P2P.baseClose;p2pReset();P2P.base=null;P2P.baseClose=null;try{if(bc)bc();}catch(e){}};
+  if(NET.role==='guest'){var n=0;var hi=function(){n++;if(P2P.pc||n>8){if(P2P.t){clearInterval(P2P.t);P2P.t=null;}return;}p2pBase({t:'rtc',d:{k:'here'}});};hi();P2P.t=setInterval(hi,1000);}}catch(e){}}
+function p2pPC(){var pc=new RTCPeerConnection({iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun.cloudflare.com:3478']}]});P2P.pc=pc;
+  pc.onconnectionstatechange=function(){try{var s=pc.connectionState;if(s==='failed'||s==='closed'||s==='disconnected'){P2P.ok=false;NET.dbg.p2p=0;}}catch(e){}};
+  pc.ondatachannel=function(ev){p2pDC(ev.channel);};return pc;}
+function p2pDC(ch){try{if(ch.label==='u')P2P.u=ch;else P2P.r=ch;
+  ch.onmessage=function(ev){try{if(typeof ev.data!=='string'||ev.data.length>60000)return;var m=JSON.parse(ev.data);if(m&&m.t&&m.t!=='rtc'){P2P.rx++;nRx(m);}}catch(e){}};
+  ch.onopen=function(){try{if(P2P.u&&P2P.r&&P2P.u.readyState==='open'&&P2P.r.readyState==='open'){P2P.ok=true;NET.dbg.p2p=1;}}catch(e){}};
+  ch.onclose=function(){P2P.ok=false;try{NET.dbg.p2p=0;}catch(e){}};}catch(e){}}
+function p2pGather(pc,cb){var done=false;function f(){if(done)return;done=true;cb(pc.localDescription);}if(pc.iceGatheringState==='complete'){f();return;}pc.onicegatheringstatechange=function(){if(pc.iceGatheringState==='complete')f();};setTimeout(f,2500);}
+function p2pSig(d){try{if(!P2P.on||!d||typeof d!=='object')return;
+  if(d.k==='here'&&NET.role==='host'&&!P2P.pc){var pc=p2pPC();p2pDC(pc.createDataChannel('u',{ordered:false,maxRetransmits:0}));p2pDC(pc.createDataChannel('r'));
+    pc.createOffer().then(function(o){return pc.setLocalDescription(o);}).then(function(){p2pGather(pc,function(ld){if(ld)p2pBase({t:'rtc',d:{k:'offer',sdp:ld.sdp}});});}).catch(function(){p2pReset();});return;}
+  if(d.k==='offer'&&NET.role==='guest'&&!P2P.pc&&typeof d.sdp==='string'&&d.sdp.length<20000){var pc2=p2pPC();
+    pc2.setRemoteDescription({type:'offer',sdp:d.sdp}).then(function(){return pc2.createAnswer();}).then(function(a){return pc2.setLocalDescription(a);}).then(function(){p2pGather(pc2,function(ld){if(ld)p2pBase({t:'rtc',d:{k:'answer',sdp:ld.sdp}});});}).catch(function(){p2pReset();});return;}
+  if(d.k==='answer'&&NET.role==='host'&&P2P.pc&&!P2P.pc.currentRemoteDescription&&typeof d.sdp==='string'&&d.sdp.length<20000){P2P.pc.setRemoteDescription({type:'answer',sdp:d.sdp}).catch(function(){p2pReset();});}
+}catch(e){}}
+/* PLAY: compartir la sala por enlace, entrar directo con ?sala=1234 y reportar el apodo del rival */
+var PLAY_ROOM=null;
+function playShare(code){try{if(!PLAY)return;PLAY_ROOM=code;var el=$('ncode');if(!el||$('nshare'))return;var b=document.createElement('button');b.className='btn b2';b.id='nshare';b.type='button';b.textContent=L('Compartir enlace','Share link');
+  b.addEventListener('click',function(){try{var link=location.origin+location.pathname+'?sala='+code,txt=L('Juega conmigo en BAREBORU. Sala ','Play me on BAREBORU. Room ')+code;
+    if(navigator.share)navigator.share({title:'BAREBORU',text:txt,url:link}).catch(function(){});else if(navigator.clipboard){navigator.clipboard.writeText(link).then(function(){b.textContent=L('Enlace copiado','Link copied');},function(){});}}catch(e){}});
+  el.parentNode.insertBefore(b,el.nextSibling);}catch(e){}}
+function playReport(){try{if(!PLAY||!PLAY_ROOM||!SBC)return;var b=$('neR');SBC.schema('public').rpc('play_report',{p_token:TOKEN,p_game:PLAY_GAME,p_code:PLAY_ROOM}).then(function(r){try{if(b){b.disabled=true;b.textContent=(r&&!r.error)?L('Reporte enviado. Gracias.','Report sent. Thanks.'):L('No se pudo enviar','Could not send');}}catch(e){}},function(){});}catch(e){}}
+if(PLAY){try{var _sala=new URLSearchParams(location.search).get('sala');if(_sala&&/^[0-9]{4}$/.test(_sala)){var _sn=0,_st=setInterval(function(){_sn++;try{if(_sn>80){clearInterval(_st);return;}if(G&&G.phase==='menu'&&!NET.busy&&!NET.on){clearInterval(_st);if(!TOKEN){playApodo();return;}nLobby();setTimeout(function(){try{NET.pad=_sala;nJoin(_sala);}catch(e){}},200);}}catch(e){}},500);}}catch(e){}}
+var PLAY_GAME='bb6';
+PLAY_PLACE=function(){try{return 'bareboru6'+(NET.on?(P2P.ok?':p2p':':rt'):'');}catch(e){return 'bareboru6';}};
 function nOpen(chan,cb){try{var done=false;function fin(ok){if(done)return;done=true;cb(ok);}
   var RT=NET.rt||SBC;
-  if(NET.test&&!NET.rt){var bc=new BroadcastChannel(chan);bc.onmessage=function(e){nRx(e.data);};NET.tx=function(m){if(NET.tdelay)setTimeout(function(){try{bc.postMessage(m);}catch(e){}},NET.tdelay);else bc.postMessage(m);};NET.close=function(){try{bc.close();}catch(e){}};setTimeout(function(){fin(true);},30);return;}
-  var c=RT.channel(chan,{config:{broadcast:{self:false,ack:false}}});c.on('broadcast',{event:'m'},function(p){nRx(p&&p.payload);});
+  if(NET.test&&!NET.rt){var bc=new BroadcastChannel(chan);bc.onmessage=function(e){var _m=e.data;if(_m&&_m.t==='rtc'){p2pSig(_m.d);return;}nRx(_m);};NET.tx=function(m){if(NET.tdelay)setTimeout(function(){try{bc.postMessage(m);}catch(e){}},NET.tdelay);else bc.postMessage(m);};NET.close=function(){try{bc.close();}catch(e){}};setTimeout(function(){if(P2P.armedFor!==bc){p2pArm();P2P.armedFor=bc;}fin(true);},30);return;}
+  var c=RT.channel(chan,{config:{broadcast:{self:false,ack:false}}});c.on('broadcast',{event:'m'},function(p){var _m=p&&p.payload;if(_m&&_m.t==='rtc'){p2pSig(_m.d);return;}nRx(_m);});
   NET.tx=function(m){try{c.send({type:'broadcast',event:'m',payload:m});}catch(e){}};NET.close=function(){try{RT.removeChannel(c);}catch(e){}};
-  c.subscribe(function(st){if(st==='SUBSCRIBED')fin(true);else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT')fin(false);});setTimeout(function(){fin(false);},12000);}catch(e){cb(false);}}
+  c.subscribe(function(st){if(st==='SUBSCRIBED'){if(P2P.armedFor!==c){p2pArm();P2P.armedFor=c;}fin(true);}else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT')fin(false);});setTimeout(function(){fin(false);},12000);}catch(e){cb(false);}}
 /* ---------- sala ---------- */
-function nErr(s){s=String(s||'');if(/llena/i.test(s))return L('La sala ya está llena.','The room is full.');if(/No existe/i.test(s))return L('No existe esa sala. Revisa el código.','That room does not exist. Check the code.');if(/Demasiadas/i.test(s))return L('Demasiadas salas en una hora. Espera un rato.','Too many rooms in one hour. Wait a bit.');if(/Enlace/i.test(s))return L('Abre el juego desde tu enlace de '+CFG.app+'.','Open the game from your '+CFG.app+' link.');return L('No se pudo conectar. Revisa tu conexión.','Could not connect. Check your connection.');}
+function nErr(s){s=String(s||'');if(PLAY&&/apodo|bloquead|cerrado/i.test(s)&&s.length<90)return s;if(/llena/i.test(s))return L('La sala ya está llena.','The room is full.');if(/No existe/i.test(s))return L('No existe esa sala. Revisa el código.','That room does not exist. Check the code.');if(/Demasiadas/i.test(s))return L('Demasiadas salas en una hora. Espera un rato.','Too many rooms in one hour. Wait a bit.');if(/Enlace/i.test(s))return L('Abre el juego desde tu enlace de '+CFG.app+'.','Open the game from your '+CFG.app+' link.');return L('No se pudo conectar. Revisa tu conexión.','Could not connect. Check your connection.');}
 function nLobbyMsg(t){try{var e=$('nmsg');if(e)e.textContent=t||'';}catch(e2){}}
 function nLobby(){nLeave(true);if(G&&G.phase!=='menu')menu();NET.pad='';NET.lobby='home';setupTeams();
-  var h='<div class="card" style="max-width:560px;text-align:center"><h2>'+L('6 contra 6 en línea','6 on 6 online')+'</h2><p class="sub" id="nme">'+L('Juega contra otro jugador de Vaqueros o de Angels. Cada uno maneja su sexteto. A 15 con ventaja de 2.','Play another Vaqueros or Angels player. Each one runs a full six. To 15, win by 2.')+'</p>'+
+  var h='<div class="card" style="max-width:560px;text-align:center"><h2>'+L('6 contra 6 en línea','6 on 6 online')+'</h2><p class="sub" id="nme">'+L((PLAY?'Juega contra quien tú invites: crea la sala y pásale el código o el enlace.':'Juega contra otro jugador de Vaqueros o de Angels.')+' Cada uno maneja su sexteto. A 15 con ventaja de 2.',(PLAY?'Play whoever you invite: create the room and send the code or the link.':'Play another Vaqueros or Angels player.')+' Each one runs a full six. To 15, win by 2.')+'</p>'+
     '<div class="cols" style="margin-top:8px"><div><div class="lb">'+L('Crea una sala y dile el código a tu rival','Create a room and tell your opponent the code')+'</div><button class="btn" id="nCrear" type="button">'+L('Crear sala','Create room')+'</button><div id="ncode" style="font-size:44px;font-weight:800;letter-spacing:6px;margin-top:6px;color:'+CFG.acc+'"></div></div>'+
     '<div><div class="lb">'+L('O entra con el código de tu rival','Or join with your opponent\'s code')+'</div><div id="npad" style="font-size:30px;font-weight:800;letter-spacing:8px;min-height:38px;margin:4px 0">····</div><div id="nkeys" style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;max-width:300px;margin:0 auto">';
   for(var i=0;i<10;i++)h+='<button type="button" class="opt" id="nk'+i+'" style="padding:9px 0;font-size:16px">'+i+'</button>';
@@ -2904,12 +2960,12 @@ function nLobby(){nLeave(true);if(G&&G.phase!=='menu')menu();NET.pad='';NET.lobb
   tap($('nBack'),function(){nLeave(false);menu();});
   if(SBC&&!NET.test)nRpc('bb6_record',{p_token:TOKEN},function(r){try{if(r){NET.me=r;NET.rec={w:r.w|0,l:r.l|0};var e=$('nme');if(e)e.textContent=nLabel(r)+' · '+L('récord en línea: ','online record: ')+(r.w|0)+L(' ganados · ',' won · ')+(r.l|0)+L(' perdidos',' lost');}}catch(e2){}});}
 function nCreate(code){NET.busy=true;nLobbyMsg(L('Creando la sala…','Creating the room…'));
-  function ready(r){NET.role='host';NET.code=r.code;NET.chan=r.chan;NET.me=r.me||NET.me;nOpen(r.chan,function(ok){NET.busy=false;if(!ok){nLeave(true);nLobbyMsg(nErr(''));return;}NET.lobby='wait';try{$('ncode').textContent=r.code;}catch(e){}nLobbyMsg(L('Sala lista. Esperando a tu rival…','Room ready. Waiting for your opponent…'));});}
+  function ready(r){NET.role='host';NET.code=r.code;NET.chan=r.chan;NET.me=r.me||NET.me;nOpen(r.chan,function(ok){NET.busy=false;if(!ok){nLeave(true);nLobbyMsg(nErr(''));return;}NET.lobby='wait';try{$('ncode').textContent=r.code;}catch(e){}playShare(r.code);nLobbyMsg(L('Sala lista. Esperando a tu rival…','Room ready. Waiting for your opponent…'));});}
   if(NET.test){ready({code:code||'0000',chan:'bb6test-'+(code||'0000'),me:{club:'vaqueros',num:'1',name:'Host'}});return;}
   nRpc('bb6_room_create',{p_token:TOKEN},function(r,err){if(!r){NET.busy=false;nLobbyMsg(nErr(err));return;}ready(r);});}
 function nJoin(code){NET.busy=true;nLobbyMsg(L('Entrando a la sala…','Joining the room…'));
   function ready(r){if(r.role==='host'){NET.busy=false;nLobbyMsg(L('Esa es tu propia sala. Tu rival es quien entra con el código.','That is your own room. Your opponent joins with the code.'));return;}
-    NET.role='guest';NET.code=r.code;NET.chan=r.chan;NET.opp=r.host;nOpen(r.chan,function(ok){NET.busy=false;if(!ok){nLeave(true);nLobbyMsg(nErr(''));return;}NET.lobby='joined';nLobbyMsg(L('Conectado con ','Connected to ')+nLabel(r.host)+L('. Empezando…','. Starting…'));
+    NET.role='guest';NET.code=r.code;PLAY_ROOM=r.code;NET.chan=r.chan;NET.opp=r.host;nOpen(r.chan,function(ok){NET.busy=false;if(!ok){nLeave(true);nLobbyMsg(nErr(''));return;}NET.lobby='joined';nLobbyMsg(L('Conectado con ','Connected to ')+nLabel(r.host)+L('. Empezando…','. Starting…'));
       var n=0;function hi(){n++;if(NET.on||NET.lobby!=='joined'){clearInterval(NET.helloT);NET.helloT=null;return;}if(n>25){clearInterval(NET.helloT);NET.helloT=null;nLeave(false);nLobbyMsg(L('Tu rival no respondió. Pídele que cree la sala otra vez.','Your opponent did not answer. Ask for a new room.'));return;}nSend('hello',{kit:MYKIT,v:APP_VERSION});}
       hi();NET.helloT=setInterval(hi,1000);});}
   if(NET.test){ready({code:code,chan:'bb6test-'+code,role:'guest',host:{club:'vaqueros',num:'1',name:'Host'}});return;}
@@ -3087,7 +3143,7 @@ function menu(){MODO=null;if(NET.on||NET.tx)nLeave(false);tcCierra();REP.on=fals
   '<div class="row" style="margin-top:10px"><span class="lb">'+L('Retos de hoy','Today\'s challenges')+'</span></div>';
   for(i=0;i<3;i++)h+='<div class="reto"><div>'+L(rt[i].es,rt[i].en)+'</div>'+(PREF.day.done[rt[i].id]?'<b>'+L('Hecho','Done')+'</b>':'<span>+80 XP</span>')+'</div>';
   if(RECORDS_ON)h+='<div class="row" style="margin-top:10px"><span class="lb">'+L('Top del equipo','Team top')+'</span></div><div class="topl" id="topm"><div class="sub">…</div></div>';
-  h+='<div style="margin-top:12px"><button class="btn" id="jugar" type="button" style="margin-top:0">'+L('Jugar','Play')+'</button><button class="btn b2" id="tuto" type="button">'+L('Tutorial','Tutorial')+'</button>'+(NET.can?'<button class="btn b2" id="onl" type="button">'+L('En línea','Online')+'</button>':'')+'</div>'+
+  h+='<div style="margin-top:12px"><button class="btn" id="jugar" type="button" style="margin-top:0">'+L('Jugar','Play')+'</button><button class="btn b2" id="tuto" type="button">'+L('Tutorial','Tutorial')+'</button>'+((NET.can||PLAY)?'<button class="btn b2" id="onl" type="button">'+L('En línea','Online')+'</button>':'')+'</div>'+
   '<div><button class="btn b2" id="mCq" type="button" style="margin-left:0">'+L('Mi cuadro','My lineup')+'</button><button class="btn b2" id="mCopa" type="button">'+L('Torneo','Tournament')+'</button><button class="btn b2" id="mTemp" type="button">'+L('Temporada','Season')+'</button></div>'+
   (function(){var t=PREF.trofeos||{},n=(t.bronce||0)+(t.plata||0)+(t.oro||0);return n?'<p class="sub" style="margin-top:6px">'+L('Trofeos: ','Trophies: ')+COPAS.map(function(c){return L(c.es,c.en)+' '+(t[c.id]||0);}).join(' · ')+'</p>':'';})()+'</div><div>'+
   '<div class="row" style="margin-top:0"><span class="lb">'+L('Rival','Rival')+' · '+L(RV.es,RV.en)+'</span>';
@@ -3114,7 +3170,7 @@ function menu(){MODO=null;if(NET.on||NET.tx)nLeave(false);tcCierra();REP.on=fals
   function go(t){try{ov.style.display='none';audio();ambStart();musStart();if(!sndGo())sWhistle(false);newMatch(t);if(!t)entStart();}catch(er){if(window.console)console.error(er);}}
   tap($('jugar'),function(ev){if(!PREF.tut){PREF.tut=true;savePref();go(true);}else go(false);});
   tap($('tuto'),function(ev){go(true);});
-  tap($('onl'),function(ev){audio();nLobby();});
+  tap($('onl'),function(ev){if(PLAY&&!TOKEN){playApodo();return;}audio();nLobby();});
   tap($('mCq'),function(){CQ=null;cuadroCard();});tap($('mCopa'),function(){copaCard();});tap($('mTemp'),function(){tempCard();});
   if(RECORDS_ON)vqTop(function(d){try{var e=$('topm');if(e)e.innerHTML=topHTML(d);}catch(e2){}});}
 /* 0.14.1: tarjeta de volumen (musica, efectos y voces). Sin conexion pausa el partido; en linea el partido sigue */

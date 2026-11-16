@@ -101,7 +101,7 @@ body{position:fixed;inset:0;touch-action:none;-webkit-user-select:none;user-sele
 <script>
 (function(){
 'use strict';
-var APP_VERSION='2.0.1',ASSET_V='2';
+var APP_VERSION='2.1.0',ASSET_V='2';
 /* =====================================================================
    Keep It Up 2.0.0 by VOLEII (15 nov. 2026)
    Fisica nueva hecha para 3D (ver LOGICA): el jugador acelera y frena como
@@ -120,6 +120,21 @@ function $(id){return document.getElementById(id);}
 var QS=null;try{QS=new URLSearchParams(location.search);}catch(e){QS=null;}
 function qp(k){try{return QS?QS.get(k):null;}catch(e){return null;}}
 var BRAND='vaqueros';try{var bh=(location.hostname||'').toLowerCase();if(bh.indexOf('angels')>=0||qp('brand')==='angels')BRAND='angels';if(qp('brand')==='vaqueros')BRAND='vaqueros';}catch(e){}
+
+/* ---------- PLAY: el mismo archivo en play.bareboru.com (sitio propio de BAREBORU, solo Vaqueros) ----------
+   Fuera de bareboru.com no cambia nada. ?play=1 lo prende en una vista previa para probar.
+   En PLAY: marca Vaqueros fija, el apodo del invitado en vez del enlace de STATION (token en el telefono),
+   funciones public.play_* (esquema play, aparte de station y angels), volver al sitio y un aviso cada 30 s
+   para saber cuantas personas estan dentro (sin datos personales). */
+var PLAY=false;try{var _ph=(location.hostname||'').toLowerCase();PLAY=/(^|\.)bareboru\.com$/.test(_ph)||new URLSearchParams(location.search).get('play')==='1';}catch(e){PLAY=false;}
+if(PLAY)BRAND='vaqueros';
+function PN(n){return PLAY?('play_'+String(n).replace(/^player_/,'')):n;}
+function playTok(){try{var t=localStorage.getItem('bareboru_play_token');return t&&/^[A-Za-z0-9]{48}$/.test(t)?t:null;}catch(e){return null;}}
+function playSid(){try{var s=localStorage.getItem('bareboru_sid');if(!s||!/^[A-Za-z0-9]{16,64}$/.test(s)){s='';var c='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',a=new Uint32Array(24);crypto.getRandomValues(a);for(var i=0;i<24;i++)s+=c.charAt(a[i]%62);localStorage.setItem('bareboru_sid',s);}return s;}catch(e){return null;}}
+var PLAY_PLACE=function(){return 'keepup';};
+function playPing(){try{if(!PLAY||document.hidden)return;var s=playSid();if(!s)return;fetch('https://qagvxlenrojmgzjoywzm.supabase.co/rest/v1/rpc/play_ping',{method:'POST',keepalive:true,headers:{'apikey':'sb_publishable_X9_9OKteMkCNcIHj5skkmg_KgptD6V2','Content-Type':'application/json'},body:JSON.stringify({p_sid:s,p_place:String(PLAY_PLACE()).slice(0,24)})}).catch(function(){});}catch(e){}}
+if(PLAY){try{setTimeout(playPing,1500);setInterval(playPing,30000);document.addEventListener('visibilitychange',function(){if(!document.hidden)playPing();});}catch(e){}}
+function playApodo(){try{location.href='/?apodo=1&volver='+encodeURIComponent(location.pathname);}catch(e){}}
 var CFG=BRAND==='angels'?{team:'Angels',app:'Angels',schema:'angels',ls:'angels_keepup_rec_v5',ls2:'angels_keepup2_rec_v1',AZUL:'#1B2A6B',AMA:'#EB448F',pad:'#26398a',padHi:'#3a52b8',kit:{jersey:'#51B7E4',shorts:'#1B2A6B',trim:'#EB448F'},ball:['#51B7E4','#1B2A6B','#F2EFE8'],accRGB:'235,68,143'}
   :{team:'Vaqueros',app:'STATION',schema:'station',ls:'vq_keepup_rec_v5',ls2:'vq_keepup2_rec_v1',AZUL:'#023B9F',AMA:'#FFCF27',pad:'#1546b8',padHi:'#2a63d8',kit:{jersey:'#00389C',shorts:'#F1F3F6',trim:'#FCCC24'},ball:['#FCCC24','#00389C','#F2EFE8'],accRGB:'255,207,39'};
 try{document.documentElement.style.setProperty('--acc',CFG.AMA);document.documentElement.style.setProperty('--azul',CFG.AZUL);document.title='Keep It Up · '+CFG.team;}catch(e){}
@@ -134,12 +149,14 @@ var T3=window.VOLEII.T3J,THREE=T3.THREE,V3=THREE.Vector3,Q4=THREE.Quaternion;
 var TOKEN=(function(){try{var ok=function(s){return !!s&&/^[A-Za-z0-9]{32,128}$/.test(s);};var q=null;try{q=new URLSearchParams(location.search).get('t');}catch(e){}var h=(location.hash||'').replace(/^#/,'');return ok(q)?q:(ok(h)?h:null);}catch(e){return null;}})();
 var STAFF=(function(){try{return !TOKEN&&new URLSearchParams(location.search).get('staff')==='1';}catch(e){return false;}})();
 var BOTQ=qp('bot')==='1';
+if(PLAY){TOKEN=playTok();STAFF=false;CFG.app='BAREBORU';CFG.team='BAREBORU';CFG.schema='public';}
 var SBC=null;try{if(TOKEN&&window.supabase&&!BOTQ)SBC=window.supabase.createClient('https://qagvxlenrojmgzjoywzm.supabase.co','sb_publishable_X9_9OKteMkCNcIHj5skkmg_KgptD6V2',{db:{schema:CFG.schema},auth:{persistSession:false,autoRefreshToken:false}});
   else if(STAFF&&window.supabase&&!BOTQ)SBC=window.supabase.createClient('https://qagvxlenrojmgzjoywzm.supabase.co','sb_publishable_X9_9OKteMkCNcIHj5skkmg_KgptD6V2',{db:{schema:CFG.schema}});}catch(e){SBC=null;}
 /* Presencia (16 nov. 2026): con el enlace del jugador, avisa cada minuto que sigue en este juego, para el cuadro
    "Ahora en la app" del staff. Sin enlace (staff, play.bareboru.com, robot) no hace nada. */
-(function(){try{if(!TOKEN||!SBC)return;var late=function(){try{if(document.hidden)return;SBC.rpc('player_ping',{p_token:TOKEN,p_donde:'juego',p_ref:'keepup2'}).then(function(){},function(){});}catch(e){}};
+(function(){try{if(!TOKEN||!SBC||PLAY)return;var late=function(){try{if(document.hidden)return;SBC.rpc('player_ping',{p_token:TOKEN,p_donde:'juego',p_ref:'keepup2'}).then(function(){},function(){});}catch(e){}};
   late();setInterval(late,60000);document.addEventListener('visibilitychange',function(){try{if(!document.hidden)late();}catch(e){}});}catch(e){}})();
+if(PLAY&&SBC){try{var _rpc=SBC.rpc.bind(SBC);SBC.rpc=function(n,a,o){return _rpc(PN(n),a,o);};}catch(e){}}
 function vqEnvia(game,score,meta,cb){try{if(!SBC){if(cb)cb(null);return;}var sc=Math.max(0,Math.round(score));(STAFF?SBC.rpc('staff_game_submit',{p_game:game,p_score:sc,p_meta:meta}):SBC.rpc('player_game_submit',{p_token:TOKEN,p_game:game,p_score:sc,p_meta:meta})).then(function(r){if(cb)cb(r&&!r.error?r.data:null);},function(){if(cb)cb(null);});}catch(e){if(cb)cb(null);}}
 function vqTop(game,cb){try{if(!SBC){cb(null);return;}(STAFF?SBC.rpc('staff_game_board',{p_game:game}):SBC.rpc('player_game_board',{p_token:TOKEN,p_game:game,p_scope:'team'})).then(function(r){cb(r&&!r.error?r.data:null);},function(){cb(null);});}catch(e){cb(null);}}
 function vqEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -151,6 +168,7 @@ function vqTopHTML(d,unit){try{var tn=CFG.team+(BRAND==='vaqueros'&&d&&d.team?' 
   return h+'</div></div>';}catch(e){return '';}}
 function vqPinta(id,game,unit){try{vqTop(game,function(d){var el=document.getElementById(id);if(el&&d)el.innerHTML=vqTopHTML(d,unit);});}catch(e){}}
 var BACK_HREF=null;try{if(TOKEN)BACK_HREF='/?t='+TOKEN+'&go=juegos';else if(STAFF)BACK_HREF='/?go=juegos';}catch(e){}
+if(PLAY)BACK_HREF='/';
 
 /* ---------- preferencias (compartidas con Long Spike) ---------- */
 var PREF={snd:true,mus:true,vib:true};
@@ -929,7 +947,7 @@ function inicio(){try{DEMO=true;demoReinicia();
     '<button class="btn" id="jugar" type="button">Play</button>'+
     '<div class="panel"><h3>How to play</h3><div class="steps"><b>Move</b> your finger and your player runs there. He needs a moment to get there, so read the mark on the floor early.<br><b>Stop under the ball:</b> a still platform right under it is a perfect pass (+5). The mark turns green when you are set.<br><b>Aim:</b> the edge of your forearms sends the ball to that side.<br><b>Dive:</b> if the ball is too far, keep running at it and he dives (+10). He needs a moment to get back up.<br><b>Clear</b> every coin and box to level up. Every 10 touches a new ball drops in. You lose a life when your last ball hits the floor.<br><b>Bank shots</b> off the side towers and the top bars score x1.5.</div>'+
     '<div class="vals"><span><img src="/juegos/keepup/assets/moneda.webp" alt="">10 / 25</span><span><img src="/juegos/keepup/assets/mv_bloque.webp" alt="">75</span><span><img src="/juegos/keepup/assets/mv_rayo.webp" alt="">100</span><span><img src="/juegos/keepup/assets/botella.webp" alt="">+1 life</span></div></div>'+
-    '<div id="top0"></div>'+prefBotones()+'<div style="margin-top:6px">'+backBtn()+' <a class="btn2" href="/juegos/keepup/clasico.html'+vqEsc(location.search)+vqEsc(location.hash)+'">Classic 2D</a></div><div class="credm">VOLEII · by Carlos Torres · v'+APP_VERSION+'</div></div>';
+    '<div id="top0"></div>'+prefBotones()+'<div style="margin-top:6px">'+backBtn()+(PLAY?'':' <a class="btn2" href="/juegos/keepup/clasico.html'+vqEsc(location.search)+vqEsc(location.hash)+'">Classic 2D</a>')+'</div><div class="credm">VOLEII · by Carlos Torres · v'+APP_VERSION+'</div></div>';
   ov.className='on';vqPinta('top0','keepup2','');prefWire();
   $('jugar').addEventListener('click',function(e){e.stopPropagation();uiClick();arranca();});musica('mus_menu');}catch(e){}}
 function arranca(){try{actx();DEMO=false;BOT.on=BOTQ;PAUSA=false;var tg=S.target;limpiaVis();nuevo();S.target=tg||CX;S.px=S.target;ACUM=0;PL.dv=null;PL.hit=null;ov.className='';ov.innerHTML='';musica('mus_rally');}catch(e){}}
