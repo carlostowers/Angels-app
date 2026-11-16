@@ -178,11 +178,15 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
 <div id="ent"><img alt="BAREBORU" src="/juegos/bareboru6/assets/bareboru_logo.svg?v=2"><div class="vs"></div><div class="sk"></div></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/juegos/bareboru/3d/voleii-three.min.js?v=1"></script>
+<script>/* 0.15.0: el 6x6 trae su propio three.js (r187, con luz HDR y post-procesado). ?motor=0 carga el de la 0.14.1. */
+(function(){var m=true;try{if(new URLSearchParams(location.search).get('motor')==='0')m=false;}catch(e){}window.BB6_MOTOR=m;
+try{document.write('<scr'+'ipt src="'+(m?'/juegos/bareboru6/3d/voleii-three-6x6.min.js?v=187.1':'/juegos/bareboru/3d/voleii-three.min.js?v=1')+'"></scr'+'ipt>');}catch(e){}})();</script>
+<script>/* si el paquete nuevo no llega, entra el de antes y el motor grafico queda apagado */
+try{if(!(window.VOLEII&&window.VOLEII.T3)){window.BB6_MOTOR=false;document.write('<scr'+'ipt src="/juegos/bareboru/3d/voleii-three.min.js?v=1"></scr'+'ipt>');}}catch(e){}</script>
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.14.1',ASSET_V='2';
+var APP_VERSION='0.15.2',ASSET_V='2';
 /* BAREBORU by VOLEII 6x6: voleibol seis contra seis contra la maquina, a 15 con ventaja de 2.
    Sistema 5-1 con libero y las seis rotaciones del Playbook de Vaqueros (formaciones de recepcion, target, defensa Middle/Middle y cobertura).
    Sale del motor del 3x3 (juegos/bareboru): mismos cuerpos, clips y controles. Controlas al jugador que le toca jugar el balon; los demas van solos.
@@ -683,6 +687,136 @@ if(LUZ){if(envMake()){sun.position.set(-3.2,18,5.5);try{sun.shadow.radius=2.6;}c
 sun.shadow.mapSize.set(1024,1024);var shc=sun.shadow.camera;shc.left=-9;shc.right=9;shc.top=14;shc.bottom=-14;shc.near=1;shc.far=50;sun.shadow.bias=-0.0006;sun.shadow.normalBias=0.02;
 sun.target.position.set(0,0,0);scene.add(sun);scene.add(sun.target);
 
+/* ======================= MOTOR GRAFICO (0.15.0) =======================
+   three.js r187 propio del 6x6 (pruebas/bb6/three/) y niveles graficos por telefono. Todo lo de aqui solo dibuja: no usa
+   Math.random ni toca la jugada, asi que el robot sembrado da los mismos partidos.
+   Nivel (GX.lv, guardado en bb6_g): 4 gama alta completa; 3 sin brillo; 2 sin brillo ni reflejo; 1 gama media (luz del HDRI);
+   0 como la 0.14.1. El telefono empieza en el nivel que le toca y baja solo si no aguanta 60 cuadros.
+   Interruptores: ?motor=0 (el three y el render de la 0.14.1), ?hdri=0 (la luz pintada de antes) y ?g=0..4 (fija el nivel). */
+var GX_V='1',GX={motor:false,lv:0,lv0:0,top:0,lock:false,robot:false,hdri:true,refl:true,piso:true,brillo:true,completa:true,okT:0,env0:null,envH:null,K:0.44};
+function gxQ(k){try{return new URLSearchParams(location.search).get(k);}catch(e){return null;}}
+/* nivel de partida de un telefono que abre por primera vez. Los jugadores tienen iPhone 14 o mas nuevo y Samsung de gama alta
+   (Carlos, 15 nov.); lo demas empieza en gama media. Si en la version anterior el telefono ya tuvo que bajar la resolucion, no sube. */
+function gxGuess(){try{var n=navigator,ua=n.userAgent||'',dpr=window.devicePixelRatio||1,dm=n.deviceMemory||0,hc=n.hardwareConcurrency||0;
+  var ios=/iPhone|iPad|iPod/.test(ua)||(n.platform==='MacIntel'&&n.maxTouchPoints>1),tactil=(n.maxTouchPoints||0)>0,q0=0;
+  try{q0=parseInt(localStorage.getItem('bb6_q'),10)||0;}catch(e1){}
+  if(q0>=2)return q0>=4?0:1;
+  /* sin tarjeta grafica (dibujo por software, como Chrome sin pantalla en las pruebas): como la 0.14.1 */
+  try{var gl=renderer.getContext(),dx=gl.getExtension('WEBGL_debug_renderer_info'),rn=dx?String(gl.getParameter(dx.UNMASKED_RENDERER_WEBGL)):'';if(/swiftshader|llvmpipe|software/i.test(rn))return 0;}catch(e2){}
+  if(ios)return dpr>=3?4:1;
+  if(!tactil)return 4;
+  if(dm>=6&&hc>=8)return 4;
+  return (dm>=4||hc>=6)?1:0;}catch(e){return 1;}}
+(function(){try{GX.motor=!!(window.BB6_MOTOR&&T3&&T3.HDRLoader&&T3.EffectComposer&&renderer.capabilities.isWebGL2);GX.robot=gxQ('robot')==='1';
+  var g=parseInt(gxQ('g'),10),sv=NaN;try{sv=parseInt(localStorage.getItem('bb6_g'),10);}catch(e1){}
+  var ga=parseInt(gxQ('gauto'),10);
+  if(!GX.motor)GX.lv=0;else if(!isNaN(g)){GX.lv=clamp(g,0,4);GX.lock=true;}else if(!isNaN(ga))GX.lv=clamp(ga,0,4);else if(GX.robot)GX.lv=0;else if(!isNaN(sv))GX.lv=clamp(sv,0,4);else GX.lv=gxGuess();
+  if(gxQ('hdri')==='0')GX.hdri=false;if(gxQ('reflejo')==='0')GX.refl=false;if(gxQ('madera')==='0')GX.piso=false;if(gxQ('brillo')==='0')GX.brillo=false;if(gxQ('completa')==='0')GX.completa=false;
+  /* tope: hasta donde puede volver a subir este telefono si recupera margen (un telefono de gama alta, hasta el 4) */
+  GX.lv0=GX.lv;GX.top=GX.lock?GX.lv:(GX.lv>=2?4:GX.lv);}catch(e){GX.motor=false;GX.lv=0;GX.lv0=0;GX.top=0;}})();
+/* luz de entorno: el HDRI de la sesion de activos (Squash Court de Poly Haven, CC0), bajado a 512, con la forma de un coliseo de
+   noche (alumbra desde el techo) y con el tono medio y el brillo medio de la luz pintada, para que los uniformes y la piel no cambien
+   de color (pruebas/bb6/motor_herramientas/hdri.py). Lo nuevo son los focos de verdad en los reflejos. Si no carga, queda la pintada. */
+function gxEnvApply(){try{var on=!!(GX.envH&&GX.lv>=1&&GX.hdri);if(!GX.env0)return;scene.environment=on?GX.envH:GX.env0;scene.environmentIntensity=on?GX.K:0.6;}catch(e){}}
+function gxEnvLoad(){return new Promise(function(res){try{if(!GX.motor||GX.lv<1||!GX.hdri||!scene.environment){res(false);return;}
+  new T3.HDRLoader().load(B6+'luz/coliseo_512.hdr?v='+GX_V,function(t){try{t.mapping=THREE.EquirectangularReflectionMapping;GX.env0=scene.environment;GX.envH=t;gxEnvApply();res(true);}catch(e){res(false);}},undefined,function(){res(false);});}catch(e){res(false);}});}
+function gxFps(){try{return ' · '+(GX.motor?'g'+GX.lv+(PP.on?L(' brillo',' bloom'):'')+(RF.on?L(' reflejo',' reflection'):'')+(GX.alta?L(' arena completa',' full arena'):''):L('motor de antes','old engine'));}catch(e){return '';}}
+function gxSave(v){try{if(!GX.lock&&!GX.robot)localStorage.setItem('bb6_g',String(v));}catch(e){}}
+/* ---- 0.15.1: piso de madera con color, normal y rugosidad (desde el nivel 2) y reflejo del piso (desde el 3) ----
+   Madera: Wooden Floor 01 de Poly Haven (CC0), a 1K: un mosaico cubre 3 m y la madera solo se ve fuera de la zona libre, lejos de la
+   camara; a 2K no se nota la diferencia y pesa 1.1 MB mas (pruebas/bb6/motor_herramientas/madera.py). ?madera=0 deja la del archivo.
+   Reflejo: la escena se dibuja otra vez desde una camara espejo bajo el piso, a media resolucion y solo con lo que vale la pena ver
+   reflejado (jugadores, balon, postes y tableros LED; ni la malla, ni el publico, ni las gradas). Los focos y las luces del techo
+   tampoco van: en el archivo emiten 30 y 60 veces mas que una pantalla y se verian como cuadros blancos; su brillo en el piso lo pone el HDRI. El piso lo suma
+   con desenfoque (mas borroso donde la madera es mas rugosa), mas fuerte a ras de piso y ondulado por el relieve de la madera, para
+   que brille como un piso barnizado y no como un espejo. Se vuelve a dibujar un cuadro si y uno no (30 veces por segundo): el piso lo
+   busca con la matriz del cuadro en que se dibujo, asi que no se corre al mover la camara. ?reflejo=0 lo apaga. */
+var RF={ok:false,on:false,rt:null,cam:null,u:null,n:0,s:0.5,f:0,hecho:false};
+function gxTex(u,color){return new Promise(function(res){try{new THREE.TextureLoader().load(B6+u+'?v='+GX_V,function(t){try{t.flipY=false;t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.RepeatWrapping;
+  t.colorSpace=color?THREE.SRGBColorSpace:THREE.NoColorSpace;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());}catch(e){}res(t);},undefined,function(){res(null);});}catch(e){res(null);}});}
+function gxPisoLoad(){try{if(!GX.motor||GX.lv<2||!GX.piso)return Promise.resolve(null);
+  return Promise.all([gxTex('piso/madera_color_1k.webp',true),gxTex('piso/madera_normal_1k.webp',false),gxTex('piso/madera_rug_1k.webp',false)]).then(function(r){return (r[0]&&r[1]&&r[2])?{c:r[0],n:r[1],r:r[2]}:null;},function(){return null;});}catch(e){return Promise.resolve(null);}}
+function gxPisoMat(mm,nm,wd){try{if(nm==='piso_madera'&&wd){GX.madera=true;mm.map=wd.c;mm.normalMap=wd.n;mm.roughnessMap=wd.r;mm.roughness=1.3;mm.needsUpdate=true;}
+  if(!GX.motor||GX.top<3||!GX.refl)return;
+  if(!RF.u)RF.u={tGx:{value:null},uGxM:{value:new THREE.Matrix4()},uGxK:{value:0},uGxB:{value:0.6}};
+  var kk=nm==='piso_cancha'?'1.00':'1.00';
+  mm.onBeforeCompile=function(sh){try{sh.uniforms.tGx=RF.u.tGx;sh.uniforms.uGxM=RF.u.uGxM;sh.uniforms.uGxK=RF.u.uGxK;sh.uniforms.uGxB=RF.u.uGxB;
+    sh.vertexShader='uniform mat4 uGxM;\nvarying vec4 vGxR;\n'+sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\n\tvGxR=uGxM*(modelMatrix*vec4(transformed,1.0));');
+    sh.fragmentShader='uniform sampler2D tGx;\nuniform float uGxK;\nuniform float uGxB;\nvarying vec4 vGxR;\n'+sh.fragmentShader.replace('#include <opaque_fragment>',
+      '{vec2 gxUv=vGxR.xy/vGxR.w+(normal.xy-normalize(vNormal).xy*faceDirection)*0.05;\n\tfloat gxF=mix(0.16,1.0,pow(1.0-saturate(dot(normal,normalize(vViewPosition))),3.0));\n\tfloat gxG=1.0-roughnessFactor;\n'+
+      '\tvec3 gxC=texture2D(tGx,gxUv,uGxB+roughnessFactor*3.0).rgb;\n\toutgoingLight+=min(gxC,vec3(8.0))*(gxF*gxG*uGxK*'+kk+');}\n\t#include <opaque_fragment>');}catch(e){}};
+  mm.customProgramCacheKey=function(){return 'gx_'+nm;};mm.needsUpdate=true;RF.n++;}catch(e){}}
+function gxLay(o){try{o.layers.enable(1);}catch(e){}}
+/* arena completa (nivel 2 o mas): la misma arena v3 con las texturas a su tamano (tableros LED, banderolas y publico al doble),
+   comprimida con gltf-transform (pruebas/bb6/motor_herramientas/arena_alta.mjs). La liviana sigue en los demas niveles, en el robot
+   y en los minijuegos. ?completa=0 deja la liviana. */
+function gxArena(){var liv=function(){return loadGLB(B6+'arena/arena_'+CFG.brand+'.glb');};
+  try{if(!GX.motor||GX.lv<2||!GX.completa)return liv();
+    return new Promise(function(res,rej){try{var g=new T3.GLTFLoader();g.setMeshoptDecoder(T3.MeshoptDecoder);g.load(B6+'arena/arena_'+CFG.brand+'_alta.glb?v='+GX_V,function(r){GX.alta=true;res(r);},undefined,function(){liv().then(res,rej);});}catch(e){liv().then(res,rej);}});}catch(e){return liv();}}
+function gxReflLayers(){try{var i,j,k;scene.traverse(function(o){if(o.isLight)gxLay(o);});
+  for(i=0;i<scene.children.length;i++){var o=scene.children[i];if(o.isMesh&&o.geometry&&o.geometry.type==='CylinderGeometry')gxLay(o);}
+  gxLay(ball);
+  for(i=0;i<ALL.length;i++)for(k in ALL[i].v){var ms=ALL[i].v[k].meshes;for(j=0;j<ms.length;j++)gxLay(ms[j]);}
+  if(AR&&AR.g)AR.g.children.forEach(function(m){var n=m.name||'';if(n.indexOf('ar_led_')===0||n==='ar_caja_led'||(m.material&&AR_SCRT&&m.material.map===AR_SCRT))gxLay(m);});}catch(e){}}
+function gxReflInit(){try{if(!GX.motor||GX.top<3||!GX.refl||!AR||RF.n<1||RF.rt)return;
+  var hf=false;try{hf=renderer.extensions.has('EXT_color_buffer_half_float')||renderer.extensions.has('EXT_color_buffer_float');}catch(e1){}
+  RF.rt=new THREE.WebGLRenderTarget(64,64,{type:hf?THREE.HalfFloatType:THREE.UnsignedByteType,generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter,magFilter:THREE.LinearFilter,depthBuffer:true});
+  RF.cam=new THREE.PerspectiveCamera();RF.cam.matrixAutoUpdate=false;RF.cam.matrixWorldAutoUpdate=false;RF.cam.layers.set(1);
+  RF.u.tGx.value=RF.rt.texture;gxReflLayers();RF.ok=true;}catch(e){RF.ok=false;}}
+/* camara espejo: la de juego reflejada en el plano del piso (y=0). Se le da vuelta tambien al eje X de la camara para que siga
+   siendo una rotacion y las caras no queden al reves; el piso busca cada punto con la matriz uGxM. */
+function gxReflDraw(){try{if(!RF.on||!RF.ok)return;RF.f=1-RF.f;if(RF.f===0&&RF.hecho&&!HOLD)return;RF.hecho=true;var w=Math.max(64,Math.round(appW*PR*RF.s)),h=Math.max(64,Math.round(appH*PR*RF.s));if(w!==RF.rt.width||h!==RF.rt.height)RF.rt.setSize(w,h);
+  camera.updateMatrixWorld();var c=RF.cam,e=c.matrixWorld.copy(camera.matrixWorld).elements;
+  e[1]=-e[1];e[5]=-e[5];e[9]=-e[9];e[13]=-e[13];e[0]=-e[0];e[1]=-e[1];e[2]=-e[2];
+  c.matrixWorldInverse.copy(c.matrixWorld).invert();c.projectionMatrix.copy(camera.projectionMatrix);c.projectionMatrixInverse.copy(camera.projectionMatrixInverse);
+  RF.u.uGxM.value.set(0.5,0,0,0.5,0,0.5,0,0.5,0,0,0.5,0.5,0,0,0,1).multiply(c.projectionMatrix).multiply(c.matrixWorldInverse);
+  var bg=scene.background,rt0=renderer.getRenderTarget(),au=renderer.shadowMap.autoUpdate;scene.background=null;renderer.shadowMap.autoUpdate=false;
+  try{renderer.setRenderTarget(RF.rt);renderer.render(scene,c);}finally{renderer.setRenderTarget(rt0);renderer.shadowMap.autoUpdate=au;scene.background=bg;}}catch(e){}}
+/* ---- 0.15.2: brillo de las luces (bloom) con antialias propio, y arena completa ----
+   En el nivel 4 la escena se dibuja en un lienzo de alto rango con 4 muestras por pixel (el antialias del canvas no llega al
+   post-procesado), se le suma el brillo de lo que pasa del umbral y al final van el mapa de tonos de siempre y la salida a sRGB.
+   El umbral queda por encima de todo lo que alumbran las luces (uniformes, piel, lineas y marcador no brillan): solo lo pasan los
+   focos, las luces del techo (que en el archivo emiten 60 y 30, y con el brillo prendido bajan a 5 para que el halo no lo tape todo)
+   y lo mas claro de los tableros LED, que emiten un poco mas mientras el brillo esta prendido.
+   Si el telefono no puede dibujar con muestras en alto rango, el brillo no se prende y el tope queda en el nivel 3. ?brillo=0 lo apaga. */
+var PP={ok:false,on:false,comp:null,bloom:null,w:0,h:0,em:[],T:1.6,S:0.36,R:0.2,EF:5,KL:1.25,KH:0.1};
+function gxMsaaOk(){try{var gl=renderer.getContext();if(gl.getParameter(gl.MAX_SAMPLES)<4)return false;gl.getError();
+  var rb=gl.createRenderbuffer(),fb=gl.createFramebuffer(),ok=false;gl.bindRenderbuffer(gl.RENDERBUFFER,rb);gl.renderbufferStorageMultisample(gl.RENDERBUFFER,4,gl.RGBA16F,16,16);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,fb);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.RENDERBUFFER,rb);
+  ok=gl.checkFramebufferStatus(gl.FRAMEBUFFER)===gl.FRAMEBUFFER_COMPLETE&&gl.getError()===gl.NO_ERROR;
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.bindRenderbuffer(gl.RENDERBUFFER,null);gl.deleteFramebuffer(fb);gl.deleteRenderbuffer(rb);renderer.resetState();return ok;}catch(e){try{renderer.resetState();}catch(e2){}return false;}}
+function gxPostInit(){try{if(!GX.motor||GX.top<4||!GX.brillo||PP.comp)return;
+  if(!gxMsaaOk()){GX.top=Math.min(GX.top,3);if(GX.lv>3)GX.lv=3;return;}
+  var w=Math.max(2,Math.round(appW*PR)),h=Math.max(2,Math.round(appH*PR));
+  PP.comp=new T3.EffectComposer(renderer,new THREE.WebGLRenderTarget(w,h,{type:THREE.HalfFloatType,samples:4,depthBuffer:true}));
+  PP.comp.setPixelRatio(1);
+  PP.comp.addPass(new T3.RenderPass(scene,camera));PP.bloom=new T3.UnrealBloomPass(new THREE.Vector2(w/2,h/2),PP.S,PP.R,PP.T);PP.comp.addPass(PP.bloom);PP.comp.addPass(new T3.OutputPass());PP.w=w;PP.h=h;
+  if(AR&&AR.g)AR.g.children.forEach(function(m){try{var n=m.name||'',mt=m.material;if(!mt||mt.emissiveIntensity===undefined)return;
+    if(n==='ar_foco'||n==='ar_luz_techo')PP.em.push({m:mt,e0:mt.emissiveIntensity,k:PP.EF/Math.max(1,mt.emissiveIntensity)});
+    else if(n.indexOf('ar_led_')===0||(AR_SCRT&&mt.map===AR_SCRT))PP.em.push({m:mt,e0:mt.emissiveIntensity,k:PP.KL});}catch(e1){}});
+  PP.ok=true;}catch(e){PP.ok=false;}}
+/* aplica un nivel: prende o apaga lo que le toca y lo guarda para la proxima vez que se abra el juego */
+function gxSet(lv){try{lv=clamp(lv,0,GX.lock?4:Math.max(GX.top,GX.lv0));GX.lv=lv;RF.on=!!(RF.ok&&lv>=3&&GX.refl);if(RF.u)RF.u.uGxK.value=RF.on?1:0;
+  PP.on=!!(PP.ok&&lv>=4&&GX.brillo);for(var i=0;i<PP.em.length;i++)PP.em[i].m.emissiveIntensity=PP.em[i].e0*(PP.on?PP.em[i].k:1);
+  /* los haces de luz se suman en luz lineal cuando hay post-procesado y saldrian mas fuertes: se les baja la opacidad */
+  GX.hz=PP.on?PP.KH:1;
+  gxEnvApply();gxSave(lv);}catch(e){}}
+function gxStart(){try{if(!GX.motor)return;try{renderer.info.autoReset=false;}catch(e1){}gxReflInit();gxPostInit();gxSet(GX.lv);}catch(e){}}
+/* escalones graficos, por encima de los de siempre: si el telefono no aguanta 60 cuadros se apaga primero el brillo (4 a 3), despues
+   el reflejo (3 a 2) y, si ni asi, la proxima vez abre en gama media con la arena liviana; luego siguen los escalones de la 0.4.0. */
+function gxDown(){try{if(!GX.motor||GX.lock)return false;if(GX.lv>=3){gxSet(GX.lv-1);return true;}
+  if(GX.lv===2&&GX.lv0>=2&&!GX.cayo){GX.cayo=true;gxSave(1);try{if(!GX.robot)localStorage.setItem('bb6_gf',String((parseInt(localStorage.getItem('bb6_gf'),10)||0)+1));}catch(e1){}}return false;}catch(e){return false;}}
+function gxUp(){try{if(!GX.motor||GX.lock||GX.lv<2||GX.lv>=GX.top)return false;gxSet(GX.lv+1);return true;}catch(e){return false;}}
+/* los cuadros de 50 ms o mas no entran al promedio de la calidad (son tirones). Pero un telefono que con lo nuevo queda siempre por
+   debajo de 20 cuadros nunca bajaria: si se juntan 30 cuadros asi sin que los buenos los compensen, se baja un escalon grafico. */
+function gxLento(){try{if(!GX.motor||GX.lock||GX.lv<2)return;GX.sl=(GX.sl||0)+1;if(GX.sl>=30){GX.sl=0;gxDown();}}catch(e){}}
+/* un telefono que abrio en gama media y lleva 40 s a 60 cuadros prueba la gama alta la proxima vez que abra. Si la gama alta ya le
+   fallo dos veces (bb6_gf), no vuelve a subir solo: asi un mal rato de un telefono bueno no lo deja en gama media para siempre. */
+function gxPromo(avg){try{if(!GX.motor||GX.lock||GX.robot||GX.lv!==1||GX.okT<0)return;GX.okT+=avg*0.06;if(GX.okT>=40){GX.okT=-1;var f=0;try{f=parseInt(localStorage.getItem('bb6_gf'),10)||0;}catch(e1){}if(f<2)gxSave(4);}}catch(e){}}
+function gxDraw(){try{renderer.info.reset();}catch(e){}gxReflDraw();
+  if(PP.on){var w=Math.max(2,Math.round(appW*PR)),h=Math.max(2,Math.round(appH*PR));if(w!==PP.w||h!==PP.h){PP.comp.setSize(w,h);PP.w=w;PP.h=h;}PP.comp.render();}
+  else renderer.render(scene,camera);}
+
 function canvasTex(w,h,draw,color){var c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);var t=new THREE.CanvasTexture(c);t.colorSpace=color===false?THREE.NoColorSpace:THREE.SRGBColorSpace;t.anisotropy=8;return t;}
 
 var BEAMS=[],TIERS=[],ledTex=null,scoreCv=null,scoreTex=null,HYPE=0,cheerT=0,PROC0=scene.children.length,PROC=[];
@@ -780,7 +914,7 @@ function arMerge(list,mat){
   geo.setIndex(new BATTR(I,1));geo.computeBoundingSphere();
   var m=new THREE.Mesh(geo,mat);m.matrixAutoUpdate=false;m.updateMatrix();return m;}
 /* el archivo trae el largo de la cancha en X; en el juego el largo va en Z (nuestro lado en Z positivo): se gira 90 grados */
-function arenaBuild(g,ct){try{if(!BATTR)return false;
+function arenaBuild(g,ct,wd){try{if(!BATTR)return false;
   var root=g.scene;root.rotation.y=Math.PI/2;root.updateMatrixWorld(true);
   var grp=new THREE.Group(),by={},keys=[],rows=[],haz=[],scr=[],pos={},i,b,mm,nm,mesh;
   root.traverse(function(o){var n=o.name||'';
@@ -791,6 +925,7 @@ function arenaBuild(g,ct){try{if(!BATTR)return false;
   for(i=0;i<keys.length;i++){b=by[keys[i]];mm=b.m;nm=mm.name||'';
     if(nm==='piso_cancha'&&ct){ct.flipY=false;ct.colorSpace=THREE.SRGBColorSpace;ct.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());ct.needsUpdate=true;mm.map=ct;mm.needsUpdate=true;}
     if(nm==='piso_cancha')mm.roughness=0.42;if(nm==='piso_madera')mm.roughness=0.34;
+    if(nm==='piso_cancha'||nm==='piso_madera')gxPisoMat(mm,nm,wd);
     if(nm.indexOf('led_')===0)[mm.map,mm.emissiveMap].forEach(function(t){if(t&&AR_LED.indexOf(t)<0){t.wrapS=THREE.RepeatWrapping;t.needsUpdate=true;AR_LED.push(t);}});
     mesh=arMerge(b.l,mm);mesh.name='ar_'+nm;if(nm==='piso_cancha'||nm==='piso_madera')mesh.receiveShadow=true;grp.add(mesh);}
   /* publico: una malla por fila, con el mismo brinco que las gradas de antes (fase y ritmo fijos por fila, sin azar) */
@@ -2253,7 +2388,7 @@ function crowdFrame(rdt){var tgt=G&&G.phase==='live'&&R?clamp((R.contacts-2)/7,0
   var amp=0.015+0.05*HYPE+(cheerT>0?0.13:0);for(var i=0;i<TIERS.length;i++){var t=TIERS[i];t.m.position.y=t.y0+Math.abs(Math.sin(tAll*t.sp+t.ph))*amp;}
   if(ledTex)ledTex.offset.x=(ledTex.offset.x+rdt*0.035)%1;
   for(var li=0;li<AR_LED.length;li++)AR_LED[li].offset.x=(AR_LED[li].offset.x+rdt*0.03)%1;
-  if(AR_HAZ)AR_HAZ.material.opacity=0.22+0.1*HYPE+(cheerT>0?0.12:0)+0.03*Math.sin(tAll*0.7);
+  if(AR_HAZ)AR_HAZ.material.opacity=(0.22+0.1*HYPE+(cheerT>0?0.12:0)+0.03*Math.sin(tAll*0.7))*(GX.hz||1);
   if(++ambN%12===0)ambSet(0.012+0.05*HYPE+(cheerT>0?0.05:0));}
 
 function step(dt,rdt){if(REP.on){tAll+=rdt;repStep(rdt);return;}
@@ -3082,13 +3217,14 @@ function qBuild(){try{QLV=[];var lo=Math.min(1,PRMAX);for(var i=0;i<QL.length;i+
 function qSet(i){try{if(!QLV)qBuild();i=clamp(i,0,QMAX);if(i===qI)return;qI=i;var l=QLV[i];if(l.b!==qStep){qStep=l.b;applyQ();}
   if(l.pr!==PR){PR=l.pr;renderer.setPixelRatio(PR);renderer.setSize(appW,appH,true);}try{localStorage.setItem('bb6_q',String(qI));}catch(e2){}}catch(e){}}
 function quality(ms){fAcc+=ms;fN++;if(ms<fMin)fMin=ms;if(fN<60)return;var avg=fAcc/fN,mn=fMin;fAcc=0;fN=0;fMin=99;fpsV=Math.round(1000/avg);if(!QLV)qBuild();
-  if(FPS_ON){var fe=$('fps');fe.style.display='block';fe.textContent=fpsV+' fps · '+L('calidad ','quality ')+(QMAX-qI)+'/'+QMAX+' · '+renderer.info.render.triangles+' tri';}
+  if(FPS_ON){var fe=$('fps');fe.style.display='block';fe.textContent=fpsV+' fps · '+L('calidad ','quality ')+(QMAX-qI)+'/'+QMAX+' · '+renderer.info.render.triangles+' tri'+gxFps();}
   if(QLOCK)return;
   /* tope de 30 cuadros del sistema (modo de bajo consumo): ningun cuadro sale rapido y bajar la calidad no ayuda */
   if(avg>31.5&&avg<35.5&&mn>29){qGood=0;return;}
-  if(avg>19){qSet(qI+(avg>27?2:1));qGood=0;if(qProbe>0){qWait=Math.min(120,qWait*2);qProbe=0;}return;}
+  if(avg>19){if(!(qI===0&&gxDown()))qSet(qI+(avg>27?2:1));qGood=0;if(qProbe>0){qWait=Math.min(120,qWait*2);qProbe=0;}return;}
   if(qProbe>0)qProbe--;
-  if(avg<17.4){qGood+=avg*0.06;if(qGood>=qWait&&qI>0){qSet(qI-1);qGood=0;qProbe=3;}}else qGood=0;}
+  if(GX.sl>0)GX.sl=Math.max(0,GX.sl-15);
+  if(avg<17.4){qGood+=avg*0.06;if(qI===0)gxPromo(avg);if(qGood>=qWait){if(qI>0){qSet(qI-1);qGood=0;qProbe=3;}else if(gxUp()){qGood=0;qProbe=3;}}}else qGood=0;}
 /* paso fijo (0.4.0): el juego avanza siempre en pasos de 1/60 s, igual en cualquier telefono. Si el cuadro cae justo en 1, 2 o 3 pasos
    se dibuja el estado al dia; si no, se acumula el tiempo y se dibuja mezclando el paso anterior con el actual. */
 var H60=1/60,ACC=0,IPL=[],ipOn=false,hudDt=0,TKN=0;
@@ -3109,8 +3245,8 @@ function frame(now){var rdt=Math.min(0.1,Math.max(0,(now-last)/1000));last=now;
       for(var i=0;i<n;i++){ipSave();tick(H60);}
       if(BVtg===tG&&!REP.on){_bsim.copy(ball.position);ball.position.copy(BVIS);bvSw=true;}
       if(REAL_VIS){if(!bvSw){_bsim.copy(ball.position);bvSw=true;}ball.position.y-=BALL_R-0.105;}
-      if(hudDt>0){hudFrame(hudDt);hudDt=0;}crowdFrame(rdt);if(al<0.999)ipBlend(al);if(rdt<0.05)quality(rdt*1000);}
-    if(!NOREND)renderer.render(scene,camera);if(ready){sndFrame(rdt);narrFrame();}}catch(e){if(window.console)console.error(e);}
+      if(hudDt>0){hudFrame(hudDt);hudDt=0;}crowdFrame(rdt);if(al<0.999)ipBlend(al);if(rdt<0.05)quality(rdt*1000);else gxLento();}
+    if(!NOREND)gxDraw();if(ready){sndFrame(rdt);narrFrame();}}catch(e){if(window.console)console.error(e);}
   requestAnimationFrame(frame);}
 
 /* ======================= CARGA ======================= */
@@ -3126,7 +3262,9 @@ function cargar(){var jobs=[],done=0,total=0,SRC={};
   function tick(){done++;$('load').textContent=L('Cargando la cancha… ','Loading the court… ')+Math.round(done*100/total)+'%';}
   Object.keys(CLIP_LIST).forEach(function(n){total++;jobs.push(loadGLB((CLIP_LIST[n].b6?B6:B3)+'clips/'+n+'.glb').then(function(g){CLIPS[n]=prepClip(n,g,CLIP_LIST[n]);tick();},function(e){if(CLIP_LIST[n].b6){tick();return;}throw e;}));});
   /* 0.9.0: la arena de la marca entra en la misma carga; si falla, el juego sigue con la arena dibujada por codigo */
-  if(ARENA_ON){total++;jobs.push(Promise.all([loadGLB(B6+'arena/arena_'+CFG.brand+'.glb'),loadTexC(B6+'arena/cancha_'+CFG.brand+'.webp').then(null,function(){return null;})]).then(function(r){arenaBuild(r[0],r[1]);tick();},function(e){try{console.warn('arena',e);}catch(e2){}tick();}));}
+  if(ARENA_ON){total++;jobs.push(Promise.all([gxArena(),loadTexC(B6+'arena/cancha_'+CFG.brand+'.webp').then(null,function(){return null;}),gxPisoLoad()]).then(function(r){arenaBuild(r[0],r[1],r[2]);tick();},function(e){try{console.warn('arena',e);}catch(e2){}tick();}));}
+  /* 0.15.0: la luz de entorno del HDRI entra en la misma carga; si falla se queda la luz pintada */
+  if(GX.motor&&GX.lv>=1&&GX.hdri){total++;jobs.push(gxEnvLoad().then(function(){tick();}));}
   ['j3','j5','j7'].forEach(function(id){total++;jobs.push(Promise.all([loadGLB(B3+id+'_half.glb'),loadTex(B3+id+'_mask.png'),loadGLB(B6+id+'_light.glb')]).then(function(r){
     var mat=null;r[0].scene.traverse(function(o){if(o.isMesh&&!mat)mat=o.material;});SRC[id]={full:r[0].scene,mask:r[1],light:r[2].scene,mat:mat};tick();}));});
   return Promise.all(jobs).then(function(){var BODY=['j3','j5','j7','j7','j5','j3'];
@@ -3134,7 +3272,7 @@ function cargar(){var jobs=[],done=0,total=0,SRC={};
       a.addBody('full',T3.cloneSkinned(s.full),s.mask,kit,s.mat);a.addBody('light',T3.cloneSkinned(s.light),s.mask,kit,s.mat);a.use('full');TEAM[t].pl[i]=a;}});}
 var PRMAX=Math.min(window.devicePixelRatio||1,2);PR=PRMAX;qBuild();
 hudStatic();size();requestAnimationFrame(frame);
-cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ();mvBuild();apBuild();jfInit();
+cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ();gxStart();mvBuild();apBuild();jfInit();
   try{ipAdd(camera,6,'pq');ipAdd(ball,2.5,'p');ipAdd(ballShadow,2.5,'p');ipAdd(ctrlRing,1.2,'p');for(var qi=0;qi<ALL.length;qi++){ipAdd(ALL[qi].root,1.2,'py');ipAdd(ALL[qi].blob,1.2,'p');}
     var q0=parseInt(localStorage.getItem('bb6_q'),10);if(q0>0&&q0<=QMAX)qSet(q0);}catch(e){}$('load').style.display='none';
   G={phase:'menu',tPh:0,serving:0};R={mode:['def','def'],F:null,next:null};setGoals();
@@ -3144,7 +3282,7 @@ cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ()
 },function(e){if(window.console)console.error(e);$('load').textContent=L('No se pudo cargar el juego. Revisa tu conexión y ábrelo otra vez.','Could not load the game. Check your connection and open it again.');});
 
 /* ganchos de prueba (robot que juega solo, para medir rallies y balance) */
-window.BB={version:APP_VERSION,all:function(){return ALL;},salto:function(){var o={s:SALTO,take:TAKE,blk:BLK_LEAD,tkd:TK_D,bkd:BK_D,clips:{}};try{var L2=[['ataque',0.35],['ataque_corto',0.35],['ataque_corto',0.3],['bloqueo_frente',0.28],['bloqueo_der',0.28],['bloqueo_izq',0.28],['saque_salto',0.32]];for(var i=0;i<L2.length;i++){var J=jfOf(CLIPS[L2[i][0]],L2[i][1]);if(J)o.clips[L2[i][0]+'@'+L2[i][1]]={k:J.k,Fc:J.Fc,Fn:J.Fn,H:J.H,fC:J.fC,tc0:J.fC*J.Fc,tc:J.fC*J.Fn};}}catch(e){}return o;},ap:function(v){if(v===true||v===false)AP_ON=v;return {on:AP_ON,t:AP};},mv:function(){return MV;},dbg:function(v){if(v===true)DBG={ev:[],n:0,cur:null,ct:'',cd:0};else if(v===false)DBG=null;return DBG;},
+window.BB={version:APP_VERSION,gx:function(){return GX;},gxSet:function(v){gxSet(v);return GX.lv;},gxDbg:function(){return {scene:scene,camera:camera,renderer:renderer,RF:RF,PP:PP,AR:AR,sun:sun};},gxInfo:function(){try{return {lv:GX.lv,lv0:GX.lv0,top:GX.top,brillo:PP.on,alta:!!GX.alta,madera:!!GX.madera,calls:renderer.info.render.calls,tri:renderer.info.render.triangles,refl:RF.on,rt:RF.rt?[RF.rt.width,RF.rt.height]:null,tex:renderer.info.memory.textures,geo:renderer.info.memory.geometries};}catch(e){return null;}},all:function(){return ALL;},salto:function(){var o={s:SALTO,take:TAKE,blk:BLK_LEAD,tkd:TK_D,bkd:BK_D,clips:{}};try{var L2=[['ataque',0.35],['ataque_corto',0.35],['ataque_corto',0.3],['bloqueo_frente',0.28],['bloqueo_der',0.28],['bloqueo_izq',0.28],['saque_salto',0.32]];for(var i=0;i<L2.length;i++){var J=jfOf(CLIPS[L2[i][0]],L2[i][1]);if(J)o.clips[L2[i][0]+'@'+L2[i][1]]={k:J.k,Fc:J.Fc,Fn:J.Fn,H:J.H,fC:J.fC,tc0:J.fC*J.Fc,tc:J.fC*J.Fn};}}catch(e){}return o;},ap:function(v){if(v===true||v===false)AP_ON=v;return {on:AP_ON,t:AP};},mv:function(){return MV;},dbg:function(v){if(v===true)DBG={ev:[],n:0,cur:null,ct:'',cd:0};else if(v===false)DBG=null;return DBG;},
   q:function(v){if(v==='lock')QLOCK=true;else if(v==='auto')QLOCK=false;else if(typeof v==='number')qSet(v);return {i:qI,max:QMAX,pr:PR,body:qStep,wait:qWait,lv:QLV};},qfeed:function(ms,n){for(var i=0;i<n;i++)quality(ms);return qI;},
   loop:function(ms){var t=last;for(var i=0;i<ms.length;i++){t+=ms[i];NOREND=true;var raf=window.requestAnimationFrame;window.requestAnimationFrame=function(){};try{frame(t);}finally{window.requestAnimationFrame=raf;}}return {acc:ACC,ip:ipOn,ticks:TKN};},render:function(v){NOREND=!v;},net:NET,nLobby:function(){nLobby();},nCreate:function(c){nCreate(c);},nJoin:function(c){nJoin(c);},cam:function(a){CAMDBG=a||null;},hold:function(v){HOLD=!!v;last=performance.now();},adv:function(sec){ipRestore();bvOut();var n=Math.max(1,Math.round(sec*60));for(var i=0;i<n;i++){var rdt=1/60;freezeT=0;if(TUT.hold){if(TUT.hold==='cho'&&(Math.abs(JX)>0.35||Math.abs(JZ)>0.35))tutRelease();}else tutCheck();if(TUT.hold){hudFrame(rdt);continue;}TS+=(tsGoal-TS)*Math.min(1,rdt*14);step(rdt*TS,rdt);camUpdate(rdt,false);hudFrame(rdt);crowdFrame(rdt);}return ctxNow();},joy:function(x,z){JX=x;JZ=z;},state:function(){return {G:G,R:R,CTRL:CTRL,tG:tG,TS:TS,REP:REP,tAll:tAll};},bot:BOT,press:function(){actionPress();},
   /* 0.14.0: ganchos de prueba de tiempos y cambios */
