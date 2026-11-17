@@ -29,7 +29,7 @@ with r as (
   from m
   cross join lateral (values ('h', m->>'home', m->'box'->'h'), ('a', m->>'away', m->'box'->'a')) as s(lado, equipo, filas)
   cross join lateral jsonb_array_elements(coalesce(s.filas, '[]'::jsonb)) x
-  where s.equipo is not null and exists (select 1 from p where p.id = m->>'id')
+  where s.equipo is not null
   on conflict (partido_id, lado, num) do update set equipo = excluded.equipo, nombre = excluded.nombre, sitio_id = excluded.sitio_id,
     sp = excluded.sp, k = excluded.k, e = excluded.e, ta = excluded.ta, a = excluded.a, sta = excluded.sta, sa = excluded.sa, se = excluded.se,
     sva = excluded.sva, re = excluded.re, rta = excluded.rta, dig = excluded.dig, bs = excluded.bs, be = excluded.be, bhe = excluded.bhe, pts = excluded.pts
