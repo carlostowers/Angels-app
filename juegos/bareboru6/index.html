@@ -73,7 +73,7 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
 #safe{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 #fps{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;background:rgba(14,17,22,0.8);display:none}
 #cred{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);font-size:10px;color:rgba(242,239,232,0.45)}
-#load{position:absolute;left:0;right:0;top:46%;text-align:center;font-size:14px;color:rgba(242,239,232,0.8)}
+#load{position:absolute;inset:0;z-index:7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0E1116;font-size:14px;color:rgba(242,239,232,0.8);opacity:1;transition:opacity 0.5s ease} #load img{width:min(46%,360px);height:auto} #load .lc{position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:12px;color:rgba(242,239,232,0.45)} @media (prefers-reduced-motion:reduce){#load{transition:none}}
 #app.rot #ov{backdrop-filter:none;-webkit-backdrop-filter:none;-webkit-overflow-scrolling:auto;background:rgba(14,17,22,0.8)}
 #ov{position:absolute;inset:0;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:10px 0;box-sizing:border-box;background:rgba(14,17,22,0.62);backdrop-filter:blur(3px);z-index:5}
 .card{margin:auto;background:rgba(14,17,22,0.94);border:1px solid rgba(242,239,232,0.14);border-radius:18px;padding:14px 18px;width:calc(100% - 32px);max-width:740px;box-sizing:border-box}
@@ -172,7 +172,7 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
   <button id="btnA" type="button"></button>
   <div id="fps"></div>
   <div id="cred">VOLEII · by Carlos Torres</div>
-  <div id="load"></div>
+  <div id="load"><img alt="BAREBORU" src="/juegos/bareboru6/assets/bareboru_logo.svg?v=2"><span id="loadT"></span><span class="lc">VOLEII · by Carlos Torres</span></div>
 </div>
 <div id="ov"></div>
 <div id="ent"><img alt="BAREBORU" src="/juegos/bareboru6/assets/bareboru_logo.svg?v=2"><div class="vs"></div><div class="sk"></div></div>
@@ -186,7 +186,7 @@ try{if(!(window.VOLEII&&window.VOLEII.T3)){window.BB6_MOTOR=false;document.write
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.17.1',ASSET_V='2';
+var APP_VERSION='0.17.2',ASSET_V='2';
 /* BAREBORU by VOLEII 6x6: voleibol seis contra seis contra la maquina, a 15 con ventaja de 2.
    Sistema 5-1 con libero y las seis rotaciones del Playbook de Vaqueros (formaciones de recepcion, target, defensa Middle/Middle y cobertura).
    Sale del motor del 3x3 (juegos/bareboru): mismos cuerpos, clips y controles. Controlas al jugador que le toca jugar el balon; los demas van solos.
@@ -686,10 +686,10 @@ function sndPoint(w){var c=SB.pt||{};SB.pt=null;if(!SB.a||BOT.sim||!G)return;try
   if(d1>0)SB.duck=SB.a.currentTime+tot+0.2;}catch(e){}}
 function sndHide(h){try{if(!ac)return;if(h)ac.suspend();else ac.resume();}catch(e){}}
 
-$('load').textContent=L('Cargando la cancha…','Loading the court…');
-if(!THREE){$('load').textContent=L('Este juego necesita un navegador mas nuevo.','This game needs a newer browser.');return;}
+$('loadT').textContent=L('Cargando la cancha…','Loading the court…');
+if(!THREE){$('loadT').textContent=L('Este juego necesita un navegador mas nuevo.','This game needs a newer browser.');return;}
 function webglOK(){try{var c=document.createElement('canvas');return !!(c.getContext('webgl2')||c.getContext('webgl'));}catch(e){return false;}}
-if(!webglOK()){$('load').textContent=L('Este juego necesita graficos 3D (WebGL), que este navegador tiene apagados.','This game needs 3D graphics (WebGL), which this browser has turned off.');return;}
+if(!webglOK()){$('loadT').textContent=L('Este juego necesita graficos 3D (WebGL), que este navegador tiene apagados.','This game needs 3D graphics (WebGL), which this browser has turned off.');return;}
 
 /* ======================= ESCENA ======================= */
 var V3=THREE.Vector3,Q4=THREE.Quaternion;
@@ -1054,14 +1054,20 @@ var UT_LIST=[{f:'silla_arbitro',x:6.05,z:0,ry:Math.PI,s:[1,1,1],sh:true},{f:'mes
   {f:'banca',x:-8.15,z:6.4,ry:0,s:[1,1,1]},{f:'banca',x:-8.15,z:-6.4,ry:0,s:[1,1,1]},
   {f:'camara_tv',x:-8,z:-13.2,ry:Math.atan2(8,13.2),s:[1,1,1]},{f:'camara_tv',x:8,z:13.2,ry:Math.atan2(-8,-13.2),s:[1,1,1]},
   {f:'carro_balones',x:7.3,z:-11.4,ry:0.35,s:[1,1,1]},{f:'marcador',x:0,z:-21.0,y:12.6,ry:-Math.PI/2,s:[5,5,5],scr:true}];
-function utLoad(){if(!AR||!ARENA_ON)return;var cache={};
+function utLoadP(){try{if(!AR||!ARENA_ON)return Promise.resolve(null);var cache={},ps=[];
   UT_LIST.forEach(function(u){try{if(!cache[u.f])cache[u.f]=loadGLB(B6+'utileria/'+u.f+'.glb');
-    cache[u.f].then(function(g){try{var o=AR_UT.indexOf(g.scene)>=0?T3.cloneSkinned(g.scene):g.scene;AR_UT.push(o);
+    ps.push(cache[u.f].then(function(g){try{var o=AR_UT.indexOf(g.scene)>=0?T3.cloneSkinned(g.scene):g.scene;AR_UT.push(o);
       o.rotation.y=u.ry;o.scale.set(u.s[0],u.s[1],u.s[2]);o.position.set(u.x,0,u.z);o.updateMatrixWorld(true);
       var mn=1e9,v=new V3();o.traverse(function(q){if(!q.isMesh)return;q.castShadow=!!u.sh;var pa=q.geometry.attributes.position;for(var k=0;k<pa.count;k+=3){v.fromBufferAttribute(pa,k).applyMatrix4(q.matrixWorld);if(v.y<mn)mn=v.y;}});
       if(u.y!=null)o.position.y=u.y;else if(mn<1e8)o.position.y=-mn;AR.g.add(o);
       /* el marcador de pared trae los digitos apagados: encima va la pantalla con el marcador del partido */
-      if(u.scr&&scoreTex){var sp=new THREE.Mesh(new THREE.PlaneGeometry(0.76*u.s[2],0.27*u.s[1]),new THREE.MeshBasicMaterial({map:scoreTex}));sp.position.set(u.x,o.position.y,u.z+0.07*u.s[0]+0.02);AR.g.add(sp);}}catch(e){}},function(){});}catch(e){}});}
+      if(u.scr&&scoreTex){var sp=new THREE.Mesh(new THREE.PlaneGeometry(0.76*u.s[2],0.27*u.s[1]),new THREE.MeshBasicMaterial({map:scoreTex}));sp.position.set(u.x,o.position.y,u.z+0.07*u.s[0]+0.02);AR.g.add(sp);}}catch(e){}},function(){}));}catch(e){}});return Promise.all(ps);}catch(e0){return Promise.resolve(null);}}
+function utLoad(){try{utLoadP();}catch(e){}}
+/* 0.17.2 (Carlos, 18 nov.): la pantalla de carga tapa todo hasta que la arena nueva y la utileria estan listas; se compila y se
+   dibuja la escena debajo y despues se destapa con un fundido, para que nunca se vea la cancha vieja ni aparezca nada de golpe */
+function loadFin(){try{var c=$('load');if(!c)return;try{renderer.compile(scene,camera);}catch(e1){}
+  requestAnimationFrame(function(){requestAnimationFrame(function(){try{c.style.opacity='0';setTimeout(function(){try{c.style.display='none';}catch(e3){}},560);}catch(e2){c.style.display='none';}});});}
+  catch(e){try{$('load').style.display='none';}catch(e4){}}}
 function arScore(a,b,sv){if(!AR_SCR)return;try{var g=AR_SCR.getContext('2d'),w=1024,h=512;g.fillStyle='#070a10';g.fillRect(0,0,w,h);g.textBaseline='middle';g.textAlign='center';
   g.font='800 58px Archivo, sans-serif';g.fillStyle=CFG.acc;g.fillText(CFG.team.toUpperCase(),256,92);g.fillStyle='#F2EFE8';g.fillText((CFG.rival||'RIVAL').toUpperCase(),768,92);
   g.font='800 230px Archivo, sans-serif';g.fillStyle=CFG.acc;g.fillText(''+a,256,272);g.fillStyle='#F2EFE8';g.fillText(''+b,768,272);
@@ -3479,7 +3485,7 @@ function frame(now){var rdt=Math.min(0.1,Math.max(0,(now-last)/1000));last=now;
       if(BVtg===tG&&!REP.on){_bsim.copy(ball.position);ball.position.copy(BVIS);bvSw=true;}
       if(REAL_VIS){if(!bvSw){_bsim.copy(ball.position);bvSw=true;}ball.position.y-=BALL_R-0.105;}
       if(hudDt>0){hudFrame(hudDt);hudDt=0;}crowdFrame(rdt);if(al<0.999)ipBlend(al);if(rdt<0.05)quality(rdt*1000);else gxLento();}
-    if(!NOREND)gxDraw();if(ready){sndFrame(rdt);narrFrame();}}catch(e){if(window.console)console.error(e);}
+    if(!NOREND&&ready)gxDraw();if(ready){sndFrame(rdt);narrFrame();}}catch(e){if(window.console)console.error(e);}
   requestAnimationFrame(frame);}
 
 /* ======================= CARGA ======================= */
@@ -3492,10 +3498,10 @@ var CLIP_LIST={espera:{},espera_defensa:{},desplaza_lateral:{},desplaza_frente_a
   bloqueo_izq:{takeoff:0.7169,landing:0.8382,contact:0.75},bloqueo_der:{takeoff:0.5363,landing:0.7039,contact:0.6201},voleo_izq:{contact:0.5812},voleo_der:{contact:0.3},
   plancha_izq:{contact:0.3348},plancha_der:{contact:0.3012},celebra_3:{},lamenta_2:{},ataque_corto:{takeoff:0.4555,landing:0.6545,contact:0.5602,b6:1}};
 function cargar(){var jobs=[],done=0,total=0,SRC={};
-  function tick(){done++;$('load').textContent=L('Cargando la cancha… ','Loading the court… ')+Math.round(done*100/total)+'%';}
+  function tick(){done++;$('loadT').textContent=L('Cargando la cancha… ','Loading the court… ')+Math.round(done*100/total)+'%';}
   Object.keys(CLIP_LIST).forEach(function(n){total++;jobs.push(loadGLB((CLIP_LIST[n].b6?B6:B3)+'clips/'+n+'.glb').then(function(g){CLIPS[n]=prepClip(n,g,CLIP_LIST[n]);tick();},function(e){if(CLIP_LIST[n].b6){tick();return;}throw e;}));});
   /* 0.9.0: la arena de la marca entra en la misma carga; si falla, el juego sigue con la arena dibujada por codigo */
-  if(ARENA_ON){total++;jobs.push(Promise.all([gxArena(),loadTexC(B6+'arena/cancha_'+CFG.brand+'.webp').then(null,function(){return null;}),gxPisoLoad()]).then(function(r){arenaBuild(r[0],r[1],r[2]);tick();},function(e){try{console.warn('arena',e);}catch(e2){}tick();}));}
+  if(ARENA_ON){total++;if(!HOLD)total++;jobs.push(Promise.all([gxArena(),loadTexC(B6+'arena/cancha_'+CFG.brand+'.webp').then(null,function(){return null;}),gxPisoLoad()]).then(function(r){arenaBuild(r[0],r[1],r[2]);tick();if(HOLD)return null;return utLoadP().then(function(){tick();},function(){tick();});},function(e){try{console.warn('arena',e);}catch(e2){}tick();if(!HOLD)tick();}));}
   /* 0.15.0: la luz de entorno del HDRI entra en la misma carga; si falla se queda la luz pintada */
   if(GX.motor&&GX.lv>=1&&GX.hdri){total++;jobs.push(gxEnvLoad().then(function(){tick();}));}
   ['j3','j5','j7'].forEach(function(id){total++;jobs.push(Promise.all([loadGLB(B3+id+'_half.glb'),loadTex(B3+id+'_mask.png'),loadGLB(B6+id+'_light.glb')]).then(function(r){
@@ -3507,12 +3513,12 @@ var PRMAX=Math.min(window.devicePixelRatio||1,2);PR=PRMAX;qBuild();
 hudStatic();size();requestAnimationFrame(frame);
 cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ();gxStart();mvBuild();apBuild();jfInit();
   try{ipAdd(camera,6,'pq');ipAdd(ball,2.5,'p');ipAdd(ballShadow,2.5,'p');ipAdd(ctrlRing,1.2,'p');for(var qi=0;qi<ALL.length;qi++){ipAdd(ALL[qi].root,1.2,'py');ipAdd(ALL[qi].blob,1.2,'p');}
-    var q0=parseInt(localStorage.getItem('bb6_q'),10);if(q0>0&&q0<=QMAX)qSet(q0);gxLadder();}catch(e){}zurMide();$('load').style.display='none';
+    var q0=parseInt(localStorage.getItem('bb6_q'),10);if(q0>0&&q0<=QMAX)qSet(q0);gxLadder();}catch(e){}zurMide();
   G={phase:'menu',tPh:0,serving:0};R={mode:['def','def'],F:null,next:null};setGoals();
   for(var i=0;i<ALL.length;i++){var p=ALL[i];p.x=p.gx;p.z=p.gz;p.fn=0;}
-  ball.position.set(0.6,BALL_R,3.2);ready=true;menu();window.BB_READY=true;
-  try{if(!HOLD)setTimeout(utLoad,1200);if(!HOLD)setTimeout(narrCat,1500);}catch(e){}
-},function(e){if(window.console)console.error(e);$('load').textContent=L('No se pudo cargar el juego. Revisa tu conexión y ábrelo otra vez.','Could not load the game. Check your connection and open it again.');});
+  ball.position.set(0.6,BALL_R,3.2);ready=true;menu();window.BB_READY=true;loadFin();
+  try{if(!HOLD)setTimeout(narrCat,1500);}catch(e){}
+},function(e){if(window.console)console.error(e);$('loadT').textContent=L('No se pudo cargar el juego. Revisa tu conexión y ábrelo otra vez.','Could not load the game. Check your connection and open it again.');});
 
 /* ganchos de prueba (robot que juega solo, para medir rallies y balance) */
 window.BB={version:APP_VERSION,zur:function(){return {Z:ZUR,on:ZUR_ON,todos:ZUR_TODOS,es:zurEs,tab:zurTab,pon:zurPon,pone:zurPone,quita:zurQuita,clips:CLIPS,clipPose:clipPose,newPose:newPose,lista:snLista,ros:SN_ROS,dibuja:function(){gxDraw();}};},gx:function(){return GX;},gxSet:function(v){gxSet(v);return GX.lv;},gxDbg:function(){return {scene:scene,camera:camera,renderer:renderer,RF:RF,PP:PP,AR:AR,sun:sun,ALL:ALL};},gxInfo:function(){try{return {lv:GX.lv,lv0:GX.lv0,top:GX.top,ui:GX.ui,un:GX.U?GX.U.length:0,U:GX.U,S:GX.S,cur:GX.cur,pr:PR,prmax:PRMAX,wE:GX.wE,qt:qTxt(),rk:RF.k,pf:PP.f,brillo:PP.on,alta:!!GX.alta,madera:!!GX.madera,calls:renderer.info.render.calls,tri:renderer.info.render.triangles,refl:RF.on,rt:RF.rt?[RF.rt.width,RF.rt.height]:null,tex:renderer.info.memory.textures,geo:renderer.info.memory.geometries};}catch(e){return null;}},all:function(){return ALL;},salto:function(){var o={s:SALTO,take:TAKE,blk:BLK_LEAD,tkd:TK_D,bkd:BK_D,clips:{}};try{var L2=[['ataque',0.35],['ataque_corto',0.35],['ataque_corto',0.3],['bloqueo_frente',0.28],['bloqueo_der',0.28],['bloqueo_izq',0.28],['saque_salto',0.32]];for(var i=0;i<L2.length;i++){var J=jfOf(CLIPS[L2[i][0]],L2[i][1]);if(J)o.clips[L2[i][0]+'@'+L2[i][1]]={k:J.k,Fc:J.Fc,Fn:J.Fn,H:J.H,fC:J.fC,tc0:J.fC*J.Fc,tc:J.fC*J.Fn};}}catch(e){}return o;},ap:function(v){if(v===true||v===false)AP_ON=v;return {on:AP_ON,t:AP};},mv:function(){return MV;},dbg:function(v){if(v===true)DBG={ev:[],n:0,cur:null,ct:'',cd:0};else if(v===false)DBG=null;return DBG;},
