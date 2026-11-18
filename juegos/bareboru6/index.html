@@ -186,7 +186,7 @@ try{if(!(window.VOLEII&&window.VOLEII.T3)){window.BB6_MOTOR=false;document.write
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.17.0',ASSET_V='2';
+var APP_VERSION='0.17.1',ASSET_V='2';
 /* BAREBORU by VOLEII 6x6: voleibol seis contra seis contra la maquina, a 15 con ventaja de 2.
    Sistema 5-1 con libero y las seis rotaciones del Playbook de Vaqueros (formaciones de recepcion, target, defensa Middle/Middle y cobertura).
    Sale del motor del 3x3 (juegos/bareboru): mismos cuerpos, clips y controles. Controlas al jugador que le toca jugar el balon; los demas van solos.
@@ -3168,7 +3168,7 @@ function menu(){MODO=null;if(NET.on||NET.tx)nLeave(false);tcCierra();REP.on=fals
   STYLES.forEach(function(r,k){bind('st'+k,function(){if(r.lv>L0)return false;PREF.style=r.id;});});
   KITS.forEach(function(r,k){bind('kt'+k,function(){if(r.lv>L0)return false;PREF.kit=r.id;});});
   function go(t){try{ov.style.display='none';audio();ambStart();musStart();if(!sndGo())sWhistle(false);newMatch(t);if(!t)entStart();}catch(er){if(window.console)console.error(er);}}
-  tap($('jugar'),function(ev){if(!PREF.tut){PREF.tut=true;savePref();go(true);}else go(false);});
+  /* 0.17.1 (Carlos, 18 nov.): Jugar va siempre directo al partido; el tutorial solo se abre con su boton */   tap($('jugar'),function(ev){go(false);});
   tap($('tuto'),function(ev){go(true);});
   tap($('onl'),function(ev){if(PLAY&&!TOKEN){playApodo();return;}audio();nLobby();});
   tap($('mCq'),function(){CQ=null;cuadroCard();});tap($('mCopa'),function(){copaCard();});tap($('mTemp'),function(){tempCard();});

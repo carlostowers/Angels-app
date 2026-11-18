@@ -151,7 +151,7 @@ try{if(!(window.VOLEII&&window.VOLEII.T3)){window.BB3_MOTOR=false;document.write
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.6.0',ASSET_V='2';
+var APP_VERSION='0.6.1',ASSET_V='2';
 /* BAREBORU by VOLEII: voleibol 3v3 contra la maquina, a 15 con ventaja de 2.
    Cuerpos y clips de VOLEII Action 3.0 (j3, j5, j7 a mitad de triangulos, repetidos en los dos equipos con uniforme distinto).
    Mundo: X de -4.5 a 4.5 (derecha de la camara positiva), Z = distancia a la malla (nuestro lado positivo), Y arriba.
@@ -2668,7 +2668,7 @@ function menu(){MODO=null;if(NET.on||NET.tx)nLeave(false);REP.on=false;REP.arm=f
   STYLES.forEach(function(r,k){bind('st'+k,function(){if(r.lv>L0)return false;PREF.style=r.id;});});
   KITS.forEach(function(r,k){bind('kt'+k,function(){if(r.lv>L0)return false;PREF.kit=r.id;});});
   function go(t){try{ov.style.display='none';audio();ambStart();musStart();if(!sndGo())sWhistle(false);newMatch(t);if(!t)entStart();}catch(er){if(window.console)console.error(er);}}
-  tap($('jugar'),function(ev){if(!PREF.tut){PREF.tut=true;savePref();go(true);}else go(false);});
+  /* 0.6.1 (Carlos, 18 nov.): Jugar va siempre directo al partido; el tutorial solo se abre con su boton */   tap($('jugar'),function(ev){go(false);});
   tap($('tuto'),function(ev){go(true);});
   tap($('onl'),function(ev){if(PLAY&&!TOKEN){playApodo();return;}audio();nLobby();});
   tap($('mTr'),function(){TQ=null;trioCard();});tap($('mCopa'),function(){copaCard();});tap($('mTemp'),function(){tempCard();});
