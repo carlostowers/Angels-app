@@ -9,7 +9,7 @@ Página **Buzzer** de Angels app (v4.22.0). Pedido de Carlos, 17 nov. 2026.
 ## Cargar después de cada juego
 
 1. `sh bajar.sh /tmp/bb` (baja las 32 páginas de partido).
-2. `python3 -I bb_parse.py /tmp/bb datos/buzzer-2026.json`
+2. `python3 -I bb_parse.py /tmp/bb datos/buzzer-2026.json` y después `python3 -I bb_fases.py /tmp/bb datos/buzzer-2026.json` (K1, first ball side-out y K2).
 3. Commit y push del JSON.
 4. En Supabase, `cargar.sql` (paso 1 con el SHA del commit, paso 2 con el id que devuelve). Es upsert: no borra nada.
 

@@ -8,17 +8,17 @@ with r as (
   select x as m from r, jsonb_array_elements(r.d) x
 ), p as (
   insert into angels.buzzer_partidos (id, slug, ronda, ronda_es, ronda_orden, llave, jugado_at, cancha, local, visitante, estado,
-                                      sets, sets_local, sets_visita, orden_saque, video, puntos, completo, updated_at)
+                                      sets, sets_local, sets_visita, orden_saque, video, puntos, completo, fases, updated_at)
   select m->>'id', m->>'slug', m->>'round', m->>'round_es', (m->>'round_order')::smallint, nullif(m->>'bracket_no', '')::smallint,
          nullif(m->>'played_at', '')::timestamptz, m->>'court', m->>'home', m->>'away', m->>'status',
          coalesce(m->'sets', '[]'::jsonb), coalesce((m->>'home_sets')::smallint, 0), coalesce((m->>'away_sets')::smallint, 0),
          coalesce(m->'order', '{}'::jsonb), case when jsonb_typeof(m->'video') = 'object' then m->'video' end,
-         coalesce(m->'points', '[]'::jsonb), coalesce(m->'complete', '{}'::jsonb), now()
+         coalesce(m->'points', '[]'::jsonb), coalesce(m->'complete', '{}'::jsonb), coalesce(m->'fases', '{}'::jsonb), now()
   from m
   on conflict (id) do update set slug = excluded.slug, ronda = excluded.ronda, ronda_es = excluded.ronda_es, ronda_orden = excluded.ronda_orden,
     llave = excluded.llave, jugado_at = excluded.jugado_at, cancha = excluded.cancha, local = excluded.local, visitante = excluded.visitante,
     estado = excluded.estado, sets = excluded.sets, sets_local = excluded.sets_local, sets_visita = excluded.sets_visita,
-    orden_saque = excluded.orden_saque, video = excluded.video, puntos = excluded.puntos, completo = excluded.completo, updated_at = now()
+    orden_saque = excluded.orden_saque, video = excluded.video, puntos = excluded.puntos, completo = excluded.completo, fases = excluded.fases, updated_at = now()
   returning id
 ), b as (
   insert into angels.buzzer_box (partido_id, lado, equipo, num, nombre, sitio_id, sp, k, e, ta, a, sta, sa, se, sva, re, rta, dig, bs, be, bhe, pts)
