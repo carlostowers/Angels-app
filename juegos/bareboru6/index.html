@@ -186,7 +186,7 @@ try{if(!(window.VOLEII&&window.VOLEII.T3)){window.BB6_MOTOR=false;document.write
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.17.2',ASSET_V='2';
+var APP_VERSION='0.18.0',ASSET_V='2';
 /* BAREBORU by VOLEII 6x6: voleibol seis contra seis contra la maquina, a 15 con ventaja de 2.
    Sistema 5-1 con libero y las seis rotaciones del Playbook de Vaqueros (formaciones de recepcion, target, defensa Middle/Middle y cobertura).
    Sale del motor del 3x3 (juegos/bareboru): mismos cuerpos, clips y controles. Controlas al jugador que le toca jugar el balon; los demas van solos.
@@ -1396,7 +1396,7 @@ function spikeFlight(p0,L,speed){var d=hyp(L.x-p0.x,L.z-p0.z);var F=overNet('spi
 /* ---------- acciones de animacion ---------- */
 function setAct(p,name,tC,o){o=o||{};var c=CLIPS[name];if(!c)return;p.act={clip:c,mark:o.mark!=null?o.mark:(c.marks.contact!=null?c.marks.contact:0.5),tC:tC,lead:o.lead!=null?o.lead:0.45,fin:o.fin||0.18,tail:o.tail!=null?o.tail:0.45,fout:o.fout||0.3,boost:o.boost||0,rate:o.rate||1};p.act.jf=jfOf(c,p.act.boost);
   if(NET.on&&p.team===0&&G&&(G.phase==='live'||G.phase==='windup'||G.phase==='pre'))nSend('act',{i:p.idx,n:name,dt:tC-tG,o:o});}
-function celebrate(w){for(var i=0;i<ALL.length;i++){var p=ALL[i];p.task=null;p.glide=null;if(p.team===w)setAct(p,['celebra_1','celebra_2','celebra_3'][(i+G.sc[0]+G.sc[1])%3],tG+i*0.07,{mark:0.14,lead:0,fin:0.3,tail:1.7,fout:0.4});else setAct(p,(i+G.sc[0])%2?'lamenta_1':'lamenta_2',tG+i*0.05,{mark:0.08,lead:0,fin:0.35,tail:1.6,fout:0.4});}}
+function celebrate(w){for(var i=0;i<ALL.length;i++){var p=ALL[i];p.task=null;p.glide=null;if(p.team===w)setAct(p,['celebra_1','celebra_2','celebra_3'][(i+G.sc[0]+G.sc[1])%3],tG+i*0.07,{mark:0.14,lead:0,fin:0.3,tail:1.7,fout:0.4});else setAct(p,(i+G.sc[0])%2?'lamenta_1':'lamenta_2',tG+i*0.05,{mark:0.08,lead:0,fin:0.35,tail:1.6,fout:0.4});}try{coachPunto(w);}catch(e){}}
 
 /* ---------- partido ---------- */
 var RV=RIVALS[0],STY='eq',TUT={on:false,hold:null,n:{}};
@@ -1770,7 +1770,7 @@ function tcInicia(t,why){try{var c=G.tc;if(!c||c.to[t]>=TC_TO)return false;c.to[
   G.phase='tiempo';G.tPh=0;CTRL=null;hideBubbles();if(REP.on)repEnd();tcBanca(true);
   /* si el tiempo se pidio antes del saque, el balon que tenia el sacador cae al piso */
   if(R&&!R.F){var bp=ball.position.clone();R.F=mkFlight('dead',bp,new V3(bp.x+0.25,BALL_R,bp.z),0.45);R.F.b=2;}
-  var quien=t===0?CFG.team:(CFG.rival||'Rival');sWhistle(false);callout(L('Tiempo','Time-out')+' · '+quien,t===0?CFG.acc:'#ff8a7a');
+  var quien=t===0?CFG.team+(COACH_ON?' · Coach Carlos':''):(CFG.rival||'Rival');sWhistle(false);callout(L('Tiempo','Time-out')+' · '+quien,t===0?CFG.acc:'#ff8a7a');
   if(narrOn()){var ek=t===0?CFG.brand:narrRival(),ok=narrSay('d',(snRnd()<0.5?'tiempo_':'pide_tiempo_')+ek,2.5,0.35,false,2.5);
     if(ok&&c.to[t]>=TC_TO&&snRnd()<0.7)narrSay('d','ultimo_tiempo',2.5,0.25,false,2.5);}
   return true;}catch(e){TC.on=false;if(G&&G.phase==='tiempo')G.phase='dead';return false;}}
@@ -3484,9 +3484,62 @@ function frame(now){var rdt=Math.min(0.1,Math.max(0,(now-last)/1000));last=now;
       for(var i=0;i<n;i++){ipSave();tick(H60);}
       if(BVtg===tG&&!REP.on){_bsim.copy(ball.position);ball.position.copy(BVIS);bvSw=true;}
       if(REAL_VIS){if(!bvSw){_bsim.copy(ball.position);bvSw=true;}ball.position.y-=BALL_R-0.105;}
-      if(hudDt>0){hudFrame(hudDt);hudDt=0;}crowdFrame(rdt);if(al<0.999)ipBlend(al);if(rdt<0.05)quality(rdt*1000);else gxLento();}
+      if(hudDt>0){hudFrame(hudDt);hudDt=0;}crowdFrame(rdt);coachFrame(rdt);if(al<0.999)ipBlend(al);if(rdt<0.05)quality(rdt*1000);else gxLento();}
     if(!NOREND&&ready)gxDraw();if(ready){sndFrame(rdt);narrFrame();}}catch(e){if(window.console)console.error(e);}
   requestAnimationFrame(frame);}
+
+/* ======================= COACHES (0.18.0) =======================
+   Carlos, 18 nov.: un coach por equipo, de pie en la zona libre del mismo lado de la tarima del primer arbitro (asi lo pide Carlos
+   por la regla nueva), detras de la extension de la linea de ataque de su equipo. El de Vaqueros (o Angels) es Coach Carlos; el del
+   rival es un hombre con el color del rival. Mismo cuerpo de los jugadores, en version liviana, con polo y pantalon largo: la
+   mascara del uniforme se repinta al cargar para que las piernas (huesos UpLeg y Leg) sean pantalon. Se anima con los clips que ya
+   tiene el juego (espera, celebra, lamenta), mira el balon y en los tiempos mira hacia su equipo. Es solo imagen: no toca el
+   partido, el robot ni el en linea, y no usa Math.random. ?coach=0 lo quita. */
+var COACH_ON=true;try{if(new URLSearchParams(location.search).get('coach')==='0')COACH_ON=false;}catch(e){}
+var COACH=[],COACH_X=6.75,COACH_Z=3.7,COACH_LEG={LeftUpLeg:1,LeftLeg:1,RightUpLeg:1,RightLeg:1},COACH_ARM={LeftArm:1,RightArm:1};
+var COACH_IDLE={c:'celebra_1',u:0.02,w:1,a:0.008};
+try{var _cq=new URLSearchParams(location.search).get('coachidle');if(_cq){var _cp=_cq.split(':');COACH_IDLE={c:_cp[0],u:parseFloat(_cp[1]||'0.5'),w:parseFloat(_cp[2]||'1'),a:parseFloat(_cp[3]||'0.008')};}}catch(e){}
+function coachKit(t){try{if(t===0)return {jersey:CFG.azul,shorts:'#15181E',trim:CFG.acc};var k=(RV&&RV.kit)||CFG.kitRival;return {jersey:k.jersey,shorts:'#15181E',trim:k.trim||'#F2EFE8'};}catch(e){return {jersey:'#2B2F38',shorts:'#15181E',trim:'#F2EFE8'};}}
+/* pantalon largo y mangas cortas: en una copia de la mascara, los triangulos de las piernas se pintan de pantaloneta y los del brazo de arriba de camisa */
+function coachMask(mesh,mask){try{var img=mask.image,W=img.width||512,H=img.height||512,cv=document.createElement('canvas');cv.width=W;cv.height=H;var g=cv.getContext('2d');g.drawImage(img,0,0,W,H);
+  var geo=mesh.geometry,uv=geo.attributes.uv,si=geo.attributes.skinIndex,sw=geo.attributes.skinWeight,bones=mesh.skeleton.bones,ix=geo.index,n=ix?ix.count:uv.count,i,a,b,c;
+  if(!uv||!si||!sw)return mask;
+  var hueso=function(v){var w=-1,best=-1,j,ww;for(j=0;j<4;j++){ww=sw.getComponent(v,j);if(ww>w){w=ww;best=si.getComponent(v,j);}}var bn=bones[best];return bn?bn.name:'';};var leg=function(v){return !!COACH_LEG[hueso(v)];},arm=function(v){return !!COACH_ARM[hueso(v)];};
+  g.fillStyle='#00ff00';g.strokeStyle='#00ff00';g.lineWidth=1.5;g.lineJoin='round';
+  for(i=0;i+2<n;i+=3){a=ix?ix.getX(i):i;b=ix?ix.getX(i+1):i+1;c=ix?ix.getX(i+2):i+2;var pl=leg(a)&&leg(b)&&leg(c),pm=!pl&&arm(a)&&arm(b)&&arm(c);if(!pl&&!pm)continue;var col=pl?'#00ff00':'#ff0000';g.fillStyle=col;g.strokeStyle=col;
+    g.beginPath();g.moveTo(uv.getX(a)*W,uv.getY(a)*H);g.lineTo(uv.getX(b)*W,uv.getY(b)*H);g.lineTo(uv.getX(c)*W,uv.getY(c)*H);g.closePath();g.fill();g.stroke();}
+  var t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.NoColorSpace;t.flipY=false;t.generateMipmaps=false;t.minFilter=1006;t.magFilter=1006;t.needsUpdate=true;return t;}catch(e){return mask;}}
+function coachBuild(SRC){try{var ids=['j3','j7'];
+  for(var t=0;t<2;t++){var s=SRC[ids[t]];if(!s||!s.light)continue;var body=T3.cloneSkinned(s.light),o={team:t,root:new THREE.Group(),bones:{},rest:{},meshes:[],mats:[],hipRest:null,
+      pose:newPose(),pI:newPose(),pR:newPose(),yaw:-Math.PI/2,re:null,kitK:'',x:COACH_X,z:COACH_Z*(t===0?1:-1),blob:null};
+    var mk=null;body.traverse(function(nd){if(nd.isSkinnedMesh&&!mk)mk=coachMask(nd,s.mask);});
+    body.traverse(function(nd){if(nd.isBone){o.bones[nd.name]=nd;o.rest[nd.name]=nd.quaternion.clone();}
+      if(nd.isMesh){nd.castShadow=false;nd.receiveShadow=false;nd.frustumCulled=false;nd.material=kitMaterial(s.mat||nd.material,mk||s.mask,coachKit(t));nd.layers.set(0);nd.layers.enable(1);o.mats.push(nd.material);o.meshes.push(nd);}});
+    if(!o.bones.Hips)continue;o.hipRest=o.bones.Hips.position.clone();o.root.add(body);o.root.position.set(o.x,0,o.z);o.root.rotation.y=o.yaw;scene.add(o.root);
+    o.blob=decal(blobTex,1.0,0.5);o.blob.position.set(o.x,0.012,o.z);COACH.push(o);}
+}catch(e){try{console.warn('coach',e);}catch(e2){}}}
+function coachSetKit(o){try{var k=coachKit(o.team),key=k.jersey+k.trim;if(key===o.kitK)return;o.kitK=key;for(var i=0;i<o.mats.length;i++){var u=o.mats[i].userData.ku;if(!u)continue;u.kJersey.value.set(k.jersey);u.kShorts.value.set(k.shorts);u.kTrim.value.set(k.trim);}}catch(e){}}
+/* reaccion al punto: no en todos, para que no parezca un robot (sin Math.random: depende del marcador) */
+function coachPunto(w){try{if(!COACH.length||!G||!G.sc||(BOT&&BOT.sim))return;var n=G.sc[0]+G.sc[1];
+  for(var i=0;i<COACH.length;i++){var o=COACH[i],gano=o.team===w,fin=!!G.over;
+    if(!fin&&((n+i*2)%3===2))continue;
+    var nm=gano?['celebra_2','celebra_1','celebra_3'][(n+i)%3]:((n+i)%2?'lamenta_1':'lamenta_2');if(!CLIPS[nm])continue;
+    o.re={c:CLIPS[nm],t:-(0.12+i*0.1),rate:gano?0.92:0.85};}}catch(e){}}
+function coachFrame(rdt){try{if(!COACH.length||(BOT&&BOT.sim))return;var ci=CLIPS[COACH_IDLE.c];if(!ci)return;
+  for(var i=0;i<COACH.length;i++){var o=COACH[i];coachSetKit(o);var s=o.team===0?1:-1;
+    /* pose de espera: un punto fijo del clip, con un vaiven lento para que respire */
+    clipPose(ci,COACH_IDLE.u+COACH_IDLE.a*Math.sin(tAll*0.9+i*1.7),o.pI);
+    if(COACH_IDLE.w<0.999){var ks=o.pI.k;for(var q=0;q<ks.length;q++){var qq=o.pI.q[ks[q]];if(ks[q]==='Hips')continue;_qa.set(0,0,0,1);qq.slerp(_qa,1-COACH_IDLE.w);}o.pI.hy=1+(o.pI.hy-1)*COACH_IDLE.w;}
+    var P=o.pI;
+    if(o.re){var r=o.re,dur=Math.max(0.3,(r.c.dur||1.5)/r.rate);r.t+=rdt;
+      if(r.t>=0){var u=clamp(r.t/dur,0,1),w=clamp(r.t/0.3,0,1)*clamp((dur-r.t)/0.4,0,1);clipPose(r.c,u,o.pR);copyPose(o.pI,o.pose);blendPose(o.pose,o.pR,w*w*(3-2*w),o.pose);P=o.pose;}
+      if(r.t>=dur)o.re=null;}
+    var ks2=P.k;for(var j=0;j<ks2.length;j++){var k=ks2[j],b=o.bones[k];if(!b||!o.rest[k])continue;b.quaternion.copy(P.q[k]).multiply(o.rest[k]);}
+    o.bones.Hips.position.set(o.hipRest.x,o.hipRest.y*P.hy,o.hipRest.z);
+    /* mira el balon; en los tiempos mira hacia la ronda de su equipo */
+    var tx=ball.position.x,tz=ball.position.z;if(TC&&TC.on){tx=TC_BX;tz=TC_BZ*s;}
+    var yt=Math.atan2(tx-o.x,tz-o.z),lim=1.25,base=-Math.PI/2,d=wrapPi(yt-base);yt=base+clamp(d,-lim,lim);
+    o.yaw+=wrapPi(yt-o.yaw)*Math.min(1,rdt*3.2);o.root.rotation.y=o.yaw;}}catch(e){}}
 
 /* ======================= CARGA ======================= */
 var B3='/juegos/bareboru/3d/',B6='/juegos/bareboru6/3d/';
@@ -3508,7 +3561,7 @@ function cargar(){var jobs=[],done=0,total=0,SRC={};
     var mat=null;r[0].scene.traverse(function(o){if(o.isMesh&&!mat)mat=o.material;});SRC[id]={full:r[0].scene,mask:r[1],light:r[2].scene,mat:mat};tick();}));});
   return Promise.all(jobs).then(function(){var BODY=['j3','j5','j7','j7','j5','j3'];
     for(var t=0;t<2;t++)for(var i=0;i<6;i++){var s=SRC[BODY[i]],kit=t===0?CFG.kitUs:CFG.kitRival,a=new Avatar(t,i);
-      a.addBody('full',T3.cloneSkinned(s.full),s.mask,kit,s.mat);a.addBody('light',T3.cloneSkinned(s.light),s.mask,kit,s.mat);a.use('full');TEAM[t].pl[i]=a;}});}
+      a.addBody('full',T3.cloneSkinned(s.full),s.mask,kit,s.mat);a.addBody('light',T3.cloneSkinned(s.light),s.mask,kit,s.mat);a.use('full');TEAM[t].pl[i]=a;}if(COACH_ON)coachBuild(SRC);});}
 var PRMAX=Math.min(window.devicePixelRatio||1,2);PR=PRMAX;qBuild();
 hudStatic();size();requestAnimationFrame(frame);
 cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ();gxStart();mvBuild();apBuild();jfInit();
@@ -3521,7 +3574,7 @@ cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ()
 },function(e){if(window.console)console.error(e);$('loadT').textContent=L('No se pudo cargar el juego. Revisa tu conexión y ábrelo otra vez.','Could not load the game. Check your connection and open it again.');});
 
 /* ganchos de prueba (robot que juega solo, para medir rallies y balance) */
-window.BB={version:APP_VERSION,zur:function(){return {Z:ZUR,on:ZUR_ON,todos:ZUR_TODOS,es:zurEs,tab:zurTab,pon:zurPon,pone:zurPone,quita:zurQuita,clips:CLIPS,clipPose:clipPose,newPose:newPose,lista:snLista,ros:SN_ROS,dibuja:function(){gxDraw();}};},gx:function(){return GX;},gxSet:function(v){gxSet(v);return GX.lv;},gxDbg:function(){return {scene:scene,camera:camera,renderer:renderer,RF:RF,PP:PP,AR:AR,sun:sun,ALL:ALL};},gxInfo:function(){try{return {lv:GX.lv,lv0:GX.lv0,top:GX.top,ui:GX.ui,un:GX.U?GX.U.length:0,U:GX.U,S:GX.S,cur:GX.cur,pr:PR,prmax:PRMAX,wE:GX.wE,qt:qTxt(),rk:RF.k,pf:PP.f,brillo:PP.on,alta:!!GX.alta,madera:!!GX.madera,calls:renderer.info.render.calls,tri:renderer.info.render.triangles,refl:RF.on,rt:RF.rt?[RF.rt.width,RF.rt.height]:null,tex:renderer.info.memory.textures,geo:renderer.info.memory.geometries};}catch(e){return null;}},all:function(){return ALL;},salto:function(){var o={s:SALTO,take:TAKE,blk:BLK_LEAD,tkd:TK_D,bkd:BK_D,clips:{}};try{var L2=[['ataque',0.35],['ataque_corto',0.35],['ataque_corto',0.3],['bloqueo_frente',0.28],['bloqueo_der',0.28],['bloqueo_izq',0.28],['saque_salto',0.32]];for(var i=0;i<L2.length;i++){var J=jfOf(CLIPS[L2[i][0]],L2[i][1]);if(J)o.clips[L2[i][0]+'@'+L2[i][1]]={k:J.k,Fc:J.Fc,Fn:J.Fn,H:J.H,fC:J.fC,tc0:J.fC*J.Fc,tc:J.fC*J.Fn};}}catch(e){}return o;},ap:function(v){if(v===true||v===false)AP_ON=v;return {on:AP_ON,t:AP};},mv:function(){return MV;},dbg:function(v){if(v===true)DBG={ev:[],n:0,cur:null,ct:'',cd:0};else if(v===false)DBG=null;return DBG;},
+window.BB={version:APP_VERSION,coach:function(){return {C:COACH,on:COACH_ON,idle:COACH_IDLE,punto:coachPunto};},zur:function(){return {Z:ZUR,on:ZUR_ON,todos:ZUR_TODOS,es:zurEs,tab:zurTab,pon:zurPon,pone:zurPone,quita:zurQuita,clips:CLIPS,clipPose:clipPose,newPose:newPose,lista:snLista,ros:SN_ROS,dibuja:function(){gxDraw();}};},gx:function(){return GX;},gxSet:function(v){gxSet(v);return GX.lv;},gxDbg:function(){return {scene:scene,camera:camera,renderer:renderer,RF:RF,PP:PP,AR:AR,sun:sun,ALL:ALL};},gxInfo:function(){try{return {lv:GX.lv,lv0:GX.lv0,top:GX.top,ui:GX.ui,un:GX.U?GX.U.length:0,U:GX.U,S:GX.S,cur:GX.cur,pr:PR,prmax:PRMAX,wE:GX.wE,qt:qTxt(),rk:RF.k,pf:PP.f,brillo:PP.on,alta:!!GX.alta,madera:!!GX.madera,calls:renderer.info.render.calls,tri:renderer.info.render.triangles,refl:RF.on,rt:RF.rt?[RF.rt.width,RF.rt.height]:null,tex:renderer.info.memory.textures,geo:renderer.info.memory.geometries};}catch(e){return null;}},all:function(){return ALL;},salto:function(){var o={s:SALTO,take:TAKE,blk:BLK_LEAD,tkd:TK_D,bkd:BK_D,clips:{}};try{var L2=[['ataque',0.35],['ataque_corto',0.35],['ataque_corto',0.3],['bloqueo_frente',0.28],['bloqueo_der',0.28],['bloqueo_izq',0.28],['saque_salto',0.32]];for(var i=0;i<L2.length;i++){var J=jfOf(CLIPS[L2[i][0]],L2[i][1]);if(J)o.clips[L2[i][0]+'@'+L2[i][1]]={k:J.k,Fc:J.Fc,Fn:J.Fn,H:J.H,fC:J.fC,tc0:J.fC*J.Fc,tc:J.fC*J.Fn};}}catch(e){}return o;},ap:function(v){if(v===true||v===false)AP_ON=v;return {on:AP_ON,t:AP};},mv:function(){return MV;},dbg:function(v){if(v===true)DBG={ev:[],n:0,cur:null,ct:'',cd:0};else if(v===false)DBG=null;return DBG;},
   q:function(v){if(v==='lock')QLOCK=true;else if(v==='auto')QLOCK=false;else if(typeof v==='number')qSet(v);return {i:qI,max:QMAX,pr:PR,body:qStep,wait:qWait,lv:QLV};},qfeed:function(ms,n){for(var i=0;i<n;i++)quality(ms);return qI;},
   loop:function(ms){var t=last;for(var i=0;i<ms.length;i++){t+=ms[i];NOREND=true;var raf=window.requestAnimationFrame;window.requestAnimationFrame=function(){};try{frame(t);}finally{window.requestAnimationFrame=raf;}}return {acc:ACC,ip:ipOn,ticks:TKN};},render:function(v){NOREND=!v;},net:NET,nLobby:function(){nLobby();},nCreate:function(c){nCreate(c);},nJoin:function(c){nJoin(c);},cam:function(a){CAMDBG=a||null;},hold:function(v){HOLD=!!v;last=performance.now();},adv:function(sec){ipRestore();bvOut();var n=Math.max(1,Math.round(sec*60));for(var i=0;i<n;i++){var rdt=1/60;freezeT=0;if(TUT.hold){if(TUT.hold==='cho'&&(Math.abs(JX)>0.35||Math.abs(JZ)>0.35))tutRelease();}else tutCheck();if(TUT.hold){hudFrame(rdt);continue;}TS+=(tsGoal-TS)*Math.min(1,rdt*14);step(rdt*TS,rdt);camUpdate(rdt,false);hudFrame(rdt);crowdFrame(rdt);}return ctxNow();},joy:function(x,z){JX=x;JZ=z;},state:function(){return {G:G,R:R,CTRL:CTRL,tG:tG,TS:TS,REP:REP,tAll:tAll};},bot:BOT,press:function(){actionPress();},
   /* 0.14.0: ganchos de prueba de tiempos y cambios */
