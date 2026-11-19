@@ -151,7 +151,7 @@ try{if(!(window.VOLEII&&window.VOLEII.T3)){window.BB3_MOTOR=false;document.write
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.6.2',ASSET_V='2';
+var APP_VERSION='0.6.3',ASSET_V='2';
 /* BAREBORU by VOLEII: voleibol 3v3 contra la maquina, a 15 con ventaja de 2.
    Cuerpos y clips de VOLEII Action 3.0 (j3, j5, j7 a mitad de triangulos, repetidos en los dos equipos con uniforme distinto).
    Mundo: X de -4.5 a 4.5 (derecha de la camara positiva), Z = distancia a la malla (nuestro lado positivo), Y arriba.
@@ -404,7 +404,7 @@ function snClip(f,i,o){var F=SB.f[f];if(!F||!F.b||!SB.a||i==null)return 0;
     s.start(t0,Math.max(0,st),Math.max(0.02,du));if(o.out){o.out.s=s;o.out.g=g;}return du/(o.r||1);}catch(e){return 0;}}
 /* donde suena: paneo y volumen segun la silla del arbitro respecto a la camara */
 var _snv=new THREE.Vector3(),_snr=new THREE.Vector3();
-function snSpace(){var o=SB.sp;try{_snv.set(6.05,2.2,0);_snv.sub(camera.position);var d=_snv.length();
+function snSpace(){var o=SB.sp;try{_snv.set(-6.05,2.2,0);_snv.sub(camera.position);var d=_snv.length();
   _snr.setFromMatrixColumn(camera.matrixWorld,0);o.p=clamp(_snv.dot(_snr)/Math.max(4,d)*0.9,-0.7,0.7);o.v=clamp(1.2-d/32,0.5,1);}catch(e){o.p=0;o.v=1;}return o;}
 function snSilbato(ev,dl){if(!SB.a||!PREF.snd)return false;var F=SB.f.silbatos;if(!F||!F.b)return false;var sp=snSpace();
   return snClip('silbatos',SB.ix.silbatos[ev],{v:(SN_SIL[ev]||0.3)*sp.v,p:sp.p,b:'sfx',dl:dl||0})>0;}
@@ -913,9 +913,9 @@ var BEAMS=[],TIERS=[],ledTex=null,scoreCv=null,scoreTex=null,HYPE=0,cheerT=0,PRO
     var tr=new THREE.Mesh(new THREE.BoxGeometry(22,0.25,0.25),new THREE.MeshBasicMaterial({color:'#1c2332'}));tr.position.set(0,17.3,-15+lb*6);scene.add(tr);}
   /* silla del arbitro */
   var rm=new THREE.MeshStandardMaterial({color:'#e9edf3',roughness:0.6});
-  var rp=new THREE.Mesh(new THREE.BoxGeometry(0.12,2.0,0.12),rm);rp.position.set(5.75,1.0,0);scene.add(rp);
-  var rpl=new THREE.Mesh(new THREE.BoxGeometry(0.7,0.08,0.7),rm);rpl.position.set(5.95,1.45,0);rpl.castShadow=true;scene.add(rpl);
-  var rb=new THREE.Mesh(new THREE.BoxGeometry(0.75,0.08,0.75),rm);rb.position.set(5.95,0.04,0);scene.add(rb);
+  var rp=new THREE.Mesh(new THREE.BoxGeometry(0.12,2.0,0.12),rm);rp.position.set(-5.75,1.0,0);scene.add(rp);
+  var rpl=new THREE.Mesh(new THREE.BoxGeometry(0.7,0.08,0.7),rm);rpl.position.set(-5.95,1.45,0);rpl.castShadow=true;scene.add(rpl);
+  var rb=new THREE.Mesh(new THREE.BoxGeometry(0.75,0.08,0.75),rm);rb.position.set(-5.95,0.04,0);scene.add(rb);
 })();
 PROC=scene.children.slice(PROC0);
 /* ======================= ARENA v3 Y UTILERIA (0.9.0, entrega B) =======================
@@ -974,9 +974,9 @@ function arenaBuild(g,ct,wd){try{if(!BATTR)return false;
   if(G&&G.sc)drawScore(G.sc[0],G.sc[1],G.serving);else drawScore(0,0,0);
   return true;}catch(e){try{console.warn('arena',e);}catch(e2){}return false;}}
 /* utileria, en coordenadas del juego. En sus archivos el frente de cada pieza mira a +X (la camara de TV mira a +Z).
-   Como manda la FIVB, la silla del primer arbitro va junto al poste del lado derecho y la mesa de anotacion y las bancas
-   del otro lado (en la arena venian todas del mismo lado). La mesa venia corta (1.5 m) y se alarga a unos 1.9 m. */
-var UT_LIST=[{f:'silla_arbitro',x:6.05,z:0,ry:Math.PI,s:[1,1,1],sh:true},{f:'mesa_anotacion',x:-7.75,z:0,ry:0,s:[1,1,1.25]},
+   0.6.3 (Carlos, 19 nov., regla nueva): la silla del primer arbitro, la mesa de anotacion, las bancas, los coaches y la ronda
+   del tiempo van todos del mismo lado, el izquierdo. Antes (FIVB) la silla iba sola del lado derecho (en la arena venian todas del mismo lado). La mesa venia corta (1.5 m) y se alarga a unos 1.9 m. */
+var UT_LIST=[{f:'silla_arbitro',x:-6.05,z:0,ry:0,s:[1,1,1],sh:true},{f:'mesa_anotacion',x:-7.75,z:0,ry:0,s:[1,1,1.25]},
   {f:'banca',x:-8.15,z:6.4,ry:0,s:[1,1,1]},{f:'banca',x:-8.15,z:-6.4,ry:0,s:[1,1,1]},
   {f:'camara_tv',x:-8,z:-13.2,ry:Math.atan2(8,13.2),s:[1,1,1]},{f:'camara_tv',x:8,z:13.2,ry:Math.atan2(-8,-13.2),s:[1,1,1]},
   {f:'carro_balones',x:7.3,z:-11.4,ry:0.35,s:[1,1,1]},{f:'marcador',x:0,z:-21.0,y:12.6,ry:-Math.PI/2,s:[5,5,5],scr:true}];
