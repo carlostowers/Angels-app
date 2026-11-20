@@ -151,7 +151,9 @@ try{if(!(window.VOLEII&&window.VOLEII.T3)){window.BB3_MOTOR=false;document.write
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.6.3',ASSET_V='2';
+var APP_VERSION='0.6.4',ASSET_V='2';
+/* 0.6.4 (Carlos, 20 nov.): "pipe" se dice "Paip". Las dos voces lo dicen en su propio archivo (narr_c_pipe y narr_d_pipe); el
+   catalogo ya no trae el pipe viejo de narr_*_base, asi que nunca se oye. */
 /* BAREBORU by VOLEII: voleibol 3v3 contra la maquina, a 15 con ventaja de 2.
    Cuerpos y clips de VOLEII Action 3.0 (j3, j5, j7 a mitad de triangulos, repetidos en los dos equipos con uniforme distinto).
    Mundo: X de -4.5 a 4.5 (derecha de la camara positiva), Z = distancia a la malla (nuestro lado positivo), Y arriba.
@@ -474,14 +476,14 @@ function narrNow(){return typeof NR.clock==='number'?NR.clock:performance.now()/
    jugadores del cuadro; lo de otros partidos se suelta para no gastar memoria. */
 /* 0.14.0: el catalogo se pide con NR_CV; cada archivo con su propia version si la trae (los nuevos de tiempos y cambios, "v":"4"),
    asi los de la 0.13 siguen con ?v=3 y el telefono no los baja otra vez */
-var NR_DIR='/juegos/bareboru6/sonido/narr/',NR_V='3',NR_CV='5';
+var NR_DIR='/juegos/bareboru6/sonido/narr/',NR_V='3',NR_CV='6';
 function narrCat(){try{if(NR.cat||NR.catPend||!SONIDO_ON||!LOC_ON)return;NR.catPend=true;
   fetch(NR_DIR+'_narr.json?v='+NR_CV).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();}).then(function(j){
     var f,i,keys,o,v,b;for(f in j.f){SN_SPR[f]={t:j.f[f].t,k:j.f[f].k,v:(typeof j.f[f].v==='string'&&/^[0-9]{1,3}$/.test(j.f[f].v))?j.f[f].v:null};keys=j.f[f].k.split(' ');o={};v=f.charAt(5);
       for(i=0;i<keys.length;i++){o[keys[i]]=i;b=keys[i].replace(/_[0-9]$/,'');NR.kf[v][b]=f;}SB.ix[f]=o;}
     NR.cat=true;narrCola();}).then(null,function(){NR.catPend=false;});}catch(e){NR.catPend=false;}}
 /* lo que hace falta: base, numeros y equipo propio siempre; el rival y el cuadro del partido */
-function narrHace(){var n=['narr_c_base','narr_d_base','narr_c_num','narr_d_num','narr_c_eq_'+CFG.brand,'narr_d_eq_'+CFG.brand],k,r;
+function narrHace(){var n=['narr_c_base','narr_d_base','narr_c_pipe','narr_d_pipe','narr_c_num','narr_d_num','narr_c_eq_'+CFG.brand,'narr_d_eq_'+CFG.brand],k,r;
   try{if(!NET.on){r=narrRival();if(r)n.push('narr_c_eq_'+r,'narr_d_eq_'+r);}
     if(SB.nom&&SB.nom.j)for(k=0;k<SB.nom.j.length;k++){if(SB.nom.j[k])n.push('narr_c_j_'+SB.nom.j[k],'narr_d_j_'+SB.nom.j[k]);}}catch(e){}
   /* 0.14.0: tiempos y cambios (comentarios, los dos equipos y, al abrir los cambios, "Entra ..." de la categoria). Los que salieron
