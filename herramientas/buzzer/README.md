@@ -19,3 +19,11 @@ Página **Buzzer** de Angels app (v4.22.0). Pedido de Carlos, 17 nov. 2026.
 - **Rotación:** se ancla en cada saque conocido (jugada a jugada y aces) y avanza con cada side-out. En los 32 partidos, 614 de 630 saques conocidos coinciden con la rotación calculada; las diferencias vienen de cambios de jugadores.
 - **R1** = rotación en que saca el colocador (en ADC, Eiden #24): orden de saque como numera Carlos (R1 colocador en Z1, R2 en Z6, R3 en Z5, R4 en Z4, R5 en Z3, R6 en Z2). En los rivales, el colocador es el de más asistencias.
 - Los puntos de antes de que empezara el video no tienen detalle: no cuentan para side-out, break-point ni rotaciones.
+
+## Juntar bajadas de un juego en vivo
+
+El sitio solo publica los últimos 200 toques. Si un juego se baja varias veces mientras se juega (por ejemplo, al terminar cada set), `merge_feed.py` junta las bajadas en una sola página antes de correr `bb_parse.py` y `bb_fases.py`:
+
+`python3 -I merge_feed.py <salida.html> <bajada_final.html> <bajada_anterior.html> <bajada_mas_vieja.html> ...`
+
+La salida reemplaza la página `m_<slug>.html` de ese juego en la carpeta de bajadas.
