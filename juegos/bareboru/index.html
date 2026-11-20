@@ -145,13 +145,21 @@ body{position:fixed;inset:0;overflow:hidden;touch-action:none;-webkit-user-selec
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>/* 0.6.0: el 3x3 usa el three.js r187 del 6x6 (luz HDR, post-procesado y reflejo). ?motor=0 carga el de la 0.5.0. */
 (function(){var m=true;try{if(new URLSearchParams(location.search).get('motor')==='0')m=false;}catch(e){}window.BB3_MOTOR=m;
-try{document.write('<scr'+'ipt src="'+(m?'/juegos/bareboru6/3d/voleii-three-6x6.min.js?v=187.1':'/juegos/bareboru/3d/voleii-three.min.js?v=1')+'"></scr'+'ipt>');}catch(e){}})();</script>
+try{document.write('<scr'+'ipt src="'+(m?'/juegos/bareboru6/3d/voleii-three-6x6.min.js?v=187.2':'/juegos/bareboru/3d/voleii-three.min.js?v=1')+'"></scr'+'ipt>');}catch(e){}})();</script>
 <script>/* si el paquete nuevo no llega, entra el de antes y el motor grafico queda apagado */
 try{if(!(window.VOLEII&&window.VOLEII.T3)){window.BB3_MOTOR=false;document.write('<scr'+'ipt src="/juegos/bareboru/3d/voleii-three.min.js?v=1"></scr'+'ipt>');}}catch(e){}</script>
 <script>
 (function(){
 'use strict';
-var APP_VERSION='0.6.4',ASSET_V='2';
+var APP_VERSION='0.6.8',ASSET_V='2';
+/* 0.6.8 (Carlos, 20 nov.): en el arbitro se asomaba la piel en los hombros (el cuerpo trae camiseta sin mangas): la mascara
+   repintada ahora cubre tambien la parte de arriba de los hombros y de la espalda. El cuello y los antebrazos siguen con piel. */
+/* 0.6.7 (Carlos, 20 nov.): texturas KTX2 de la arena, la utileria, la cancha, el piso y los cuerpos (la tarjeta de video las lee
+   comprimidas); los originales quedan de respaldo. Paquete de three con KTX2Loader (?v=187.2). Ver TEXTURAS KTX2. ?ktx2=0 las quita. */
+/* 0.6.6 (Carlos, 20 nov.): el primer arbitro de pie en la silla, con el cuerpo adulto c1; sigue el balon y marca quien saca.
+   Ver ARBITRO. ?arbitro=0 lo quita. */
+/* 0.6.5 (Carlos, 20 nov.): numeros en el uniforme, espalda y pecho, con el numero real de cada jugador de STATION y de Angels;
+   los rivales de la maquina con numeros fijos. Una sola malla para todos (ver NUMEROS EN EL UNIFORME). ?dorsal=0 los quita. */
 /* 0.6.4 (Carlos, 20 nov.): "pipe" se dice "Paip". Las dos voces lo dicen en su propio archivo (narr_c_pipe y narr_d_pipe); el
    catalogo ya no trae el pipe viejo de narr_*_base, asi que nunca se oye. */
 /* BAREBORU by VOLEII: voleibol 3v3 contra la maquina, a 15 con ventaja de 2.
@@ -687,7 +695,9 @@ function gxSave(v){try{if(!GX.lock&&!GX.robot)localStorage.setItem('bb3_n',Strin
    que brille como un piso barnizado y no como un espejo. Se vuelve a dibujar un cuadro si y uno no (30 veces por segundo): el piso lo
    busca con la matriz del cuadro en que se dibujo, asi que no se corre al mover la camara. ?reflejo=0 lo apaga. */
 var RF={ok:false,on:false,rt:null,cam:null,u:null,n:0,s:0.5,f:0,hecho:false,k:0,kT:0};
-function gxTex(u,color){return new Promise(function(res){try{new THREE.TextureLoader().load(B6+u+'?v='+GX_V,function(t){try{t.flipY=false;t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.RepeatWrapping;
+function gxTex(u,color){var b=u.replace(/\.webp$/,'');return ktTex(B6+b,'.webp',function(t){t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.RepeatWrapping;t.colorSpace=color?THREE.SRGBColorSpace:THREE.NoColorSpace;
+  t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());t.needsUpdate=true;},function(){return gxTex0(u,color);});}
+function gxTex0(u,color){return new Promise(function(res){try{new THREE.TextureLoader().load(B6+u+'?v='+GX_V,function(t){try{t.flipY=false;t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.RepeatWrapping;
   t.colorSpace=color?THREE.SRGBColorSpace:THREE.NoColorSpace;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());}catch(e){}res(t);},undefined,function(){res(null);});}catch(e){res(null);}});}
 function gxPisoLoad(){try{if(!GX.motor||GX.lv<2||!GX.piso)return Promise.resolve(null);
   return Promise.all([gxTex('piso/madera_color_1k.webp',true),gxTex('piso/madera_normal_1k.webp',false),gxTex('piso/madera_rug_1k.webp',false)]).then(function(r){return (r[0]&&r[1]&&r[2])?{c:r[0],n:r[1],r:r[2]}:null;},function(){return null;});}catch(e){return Promise.resolve(null);}}
@@ -715,7 +725,7 @@ function gxTwins(){try{for(var i=0;i<ALL.length;i++){var p=ALL[i];if(p.kind!=='f
    y en los minijuegos. ?completa=0 deja la liviana. */
 function gxArena(){var liv=function(){return loadGLB(B6+'arena/arena_'+CFG.brand+'.glb');};
   try{if(!GX.motor||GX.lv<2||!GX.completa)return liv();
-    return new Promise(function(res,rej){try{var g=new T3.GLTFLoader();g.setMeshoptDecoder(T3.MeshoptDecoder);g.load(B6+'arena/arena_'+CFG.brand+'_alta.glb?v='+GX_V,function(r){GX.alta=true;res(r);},undefined,function(){liv().then(res,rej);});}catch(e){liv().then(res,rej);}});}catch(e){return liv();}}
+    return ktGLB(B6+'arena/arena_'+CFG.brand+'_alta.glb',GX_V).then(function(r){GX.alta=true;return r;},function(){return liv();});}catch(e){return liv();}}
 function gxReflLayers(){try{var i,j,k;scene.traverse(function(o){if(o.isLight)gxLay(o);});
   for(i=0;i<scene.children.length;i++){var o=scene.children[i];if(o.isMesh&&o.geometry&&o.geometry.type==='CylinderGeometry')gxLay(o);}
   gxLay(ball);
@@ -1103,7 +1113,7 @@ function kitMaterial(old,mask,kit){
     try{if(PIEL_ON){sh.fragmentShader=sh.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n'+KIT_NRM).replace('#include <uv_pars_fragment>',KIT_CEN_F);
       sh.vertexShader=sh.vertexShader.replace('#include <uv_pars_vertex>',KIT_CEN_V);}}catch(e){}};
   m.customProgramCacheKey=function(){return PIEL_ON?'bb-kit2':'bb-kit';};m.userData.ku=u;return m;}
-function loadGLB(u){return new Promise(function(res,rej){try{var g=new T3.GLTFLoader();g.setMeshoptDecoder(T3.MeshoptDecoder);g.load(u+'?v='+ASSET_V,res,undefined,rej);}catch(e){rej(e);}});}
+function loadGLB(u){if(typeof KT!=='undefined'&&KT&&KT.on&&KT_RE.test(u))return ktGLB(u,ASSET_V);return new Promise(function(res,rej){try{var g=new T3.GLTFLoader();g.setMeshoptDecoder(T3.MeshoptDecoder);g.load(u+'?v='+ASSET_V,res,undefined,rej);}catch(e){rej(e);}});}
 function loadTexC(u){return new Promise(function(res,rej){new THREE.TextureLoader().load(u+'?v='+ASSET_V,res,undefined,rej);});}
 function loadTex(u){return new Promise(function(res,rej){new THREE.TextureLoader().load(u+'?v='+ASSET_V,function(t){t.colorSpace=THREE.NoColorSpace;t.flipY=false;t.generateMipmaps=false;t.minFilter=1006;t.magFilter=1006;res(t);},undefined,rej);});}
 
@@ -1514,7 +1524,7 @@ function point(w,rs,why){if(NET.on){if(R.ptIn)w=1-R.ptIn.w;else nSend('pt',{w:w,
   if(G.serving!==w){G.serving=w;G.srv[w]=(G.srv[w]+1)%3;}
   var top=Math.max(G.sc[0],G.sc[1]),lead=Math.abs(G.sc[0]-G.sc[1]);G.over=top>=G.win&&lead>=2;
   banner((w===0?L('Punto ','Point ')+CFG.team:L('Punto ','Point ')+CFG.rival),rs+(why?'<br><span style="opacity:.8;font-weight:600">'+why+'</span>':''),w===0?CFG.acc:'#ff8a7a');
-  sWhistle(G.over);if(w===0){sCrowd(G.over?0.18:(R.contacts>=6?0.15:0.09));flash(CFG.acc,0.22);cheerT=1.6;}else cheerT=0.4;
+  sWhistle(G.over);arbPunto(w);if(w===0){sCrowd(G.over?0.18:(R.contacts>=6?0.15:0.09));flash(CFG.acc,0.22);cheerT=1.6;}else cheerT=0.4;
   celebrate(w);hudScore();sndPoint(w);if(BOT.on)BOT.log.push(R.contacts);}
 
 /* ======================= MOVIMIENTO ======================= */
@@ -2946,7 +2956,7 @@ function qBuild(){try{QLV=[];var lo=Math.min(1,PRMAX);for(var i=0;i<QL.length;i+
 function qSet(i){try{if(!QLV)qBuild();i=clamp(i,0,QMAX);if(i===qI)return;qI=i;var l=QLV[i];if(l.b!==qStep){qStep=l.b;applyQ();}
   if(l.pr!==PR){PR=l.pr;renderer.setPixelRatio(PR);renderer.setSize(appW,appH,true);}try{localStorage.setItem('bb3_q',String(qI));}catch(e2){}}catch(e){}}
 function quality(ms){fAcc+=ms;fN++;if(ms<fMin)fMin=ms;if(fN<60)return;var avg=fAcc/fN,mn=fMin;fAcc=0;fN=0;fMin=99;fpsV=Math.round(1000/avg);if(!QLV)qBuild();
-  if(FPS_ON){var fe=$('fps');fe.style.display='block';fe.textContent=fpsV+' fps · '+L('calidad ','quality ')+qTxt()+' · '+renderer.info.render.triangles+' tri · '+Math.round(appW*PR)+'x'+Math.round(appH*PR)+gxFps();}
+  if(FPS_ON){var fe=$('fps');fe.style.display='block';fe.textContent=fpsV+' fps · '+L('calidad ','quality ')+qTxt()+' · '+renderer.info.render.triangles+' tri · '+Math.round(appW*PR)+'x'+Math.round(appH*PR)+gxFps()+ktTxt();}
   if(QLOCK)return;
   /* tope de 30 cuadros del sistema (modo de bajo consumo): ningun cuadro sale rapido y bajar la calidad no ayuda */
   if(avg>31.5&&avg<35.5&&mn>29){qGood=0;return;}
@@ -2976,8 +2986,8 @@ function frame(now){var rdt=Math.min(0.1,Math.max(0,(now-last)/1000));last=now;
       for(var i=0;i<n;i++){ipSave();tick(H60);}
       if(BVtg===tG&&!REP.on){_bsim.copy(ball.position);ball.position.copy(BVIS);bvSw=true;}
       if(REAL_VIS){if(!bvSw){_bsim.copy(ball.position);bvSw=true;}ball.position.y-=BALL_R-0.105;}
-      if(hudDt>0){hudFrame(hudDt);hudDt=0;}crowdFrame(rdt);if(al<0.999)ipBlend(al);if(rdt<0.05)quality(rdt*1000);else gxLento();}
-    if(!NOREND&&ready)gxDraw();if(ready){sndFrame(rdt);narrFrame();}}catch(e){if(window.console)console.error(e);}
+      if(hudDt>0){hudFrame(hudDt);hudDt=0;}crowdFrame(rdt);arbFrame(rdt);if(al<0.999)ipBlend(al);if(rdt<0.05)quality(rdt*1000);else gxLento();}
+    if(!NOREND&&ready){dorsFrame();gxDraw();}if(ready){sndFrame(rdt);narrFrame();}}catch(e){if(window.console)console.error(e);}
   requestAnimationFrame(frame);}
 
 /* ======================= CARGA ======================= */
@@ -2989,21 +2999,194 @@ var CLIP_LIST={espera:{},espera_defensa:{},desplaza_lateral:{},desplaza_frente_a
   saque_flotante:{contact:0.4983},saque_salto:{takeoff:0.6176,landing:0.739,contact:0.6875},celebra_1:{},celebra_2:{},lamenta_1:{},
   bloqueo_izq:{takeoff:0.7169,landing:0.8382,contact:0.75},bloqueo_der:{takeoff:0.5363,landing:0.7039,contact:0.6201},voleo_izq:{contact:0.5812},voleo_der:{contact:0.3},
   plancha_izq:{contact:0.3348},plancha_der:{contact:0.3012},celebra_3:{},lamenta_2:{},ataque_corto:{takeoff:0.4555,landing:0.6545,contact:0.5602,b6:1}};
-function cargar(){var jobs=[],done=0,total=0,SRC={};
+/* ======================= NUMEROS EN EL UNIFORME (0.18.3) =======================
+   Carlos, 20 nov. 2026: el numero real de cada jugador en la espalda y en el pecho (la regla FIVB los pide en los dos lados), con los
+   colores de cada uniforme; los rivales de la maquina con numeros fijos. Los numeros salen de los rosters de STATION y de Angels
+   (station.players y angels.players). En el 3x3 cada uno lleva el suyo aunque se repita en el trio (Carlos, 20 nov.).
+   Como se dibujan: todos los numeros de la cancha son una sola malla (una llamada de dibujo). Cada lado lleva una rejilla de 9 x 7
+   puntos sacada del propio cuerpo (pruebas/bb6/dorsal_tabla.py): el punto queda a unos milimetros de la camisa y lleva los mismos
+   huesos y pesos que la camisa que tiene debajo, asi que se dobla con el torso cuadro a cuadro. Cada cifra es un pedazo de esa rejilla
+   con su letra del atlas. Si cambian los cuerpos hay que volver a sacar las tablas. Solo lee los huesos: no los mueve, no toca el
+   juego ni usa Math.random. ?dorsal=0 los quita. */
+var DORS_ON=true;try{if(new URLSearchParams(location.search).get('dorsal')==='0')DORS_ON=false;}catch(e){}
+var DORS_NUM={vaqueros:{carlitos:'1',gusti:'3',juanmi:'11',marce:'13',fabio:'14',manu:'15',jimbo:'22',el_nene:'24',jotita:'30',diego:'99',
+    fabi:'1',condor:'2',nico:'3',negron:'5',jeriel:'7',gaby:'9',kike:'10',el_zurdo:'23',lukas:'24',kiki:'25',hariam:'99'},
+  angels:{carlos:'1',derek:'2',gabriel:'7',javier:'9',yandier:'10',manuel:'11',ian:'14',johan:'15',eiden:'24',adrian:'28',jomar:'30'}};
+var DORS_RIV={S:'3',OH1:'7',MB1:'11',OPP:'9',OH2:'12',MB2:'15',L:'1'},DORS_RIV3=['3','7','9'];
+var DORS_BN=['Hips','Spine02','Spine01','Spine','neck','LeftShoulder','RightShoulder','LeftArm','RightArm'];
+/* tamano de la rejilla y de la cifra (metros): espalda 20 cm de alto y pecho 15 cm, lo minimo que pide la regla */
+var DORS_G={nx:9,ny:7,lado:[{h:0.23,g:0.20,w:0.26},{h:0.17,g:0.15,w:0.21}]};
+var DORS_T={j3:'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',j5:'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',j7:'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'};
+var DORS={on:false,mesh:null,tex:null,cv:null,dg:[],geo:null,P:null,N:null,U:null,C:null,n:0,KX:4,KY:6,cur:[],tab:{},G:null,GN:null,M:[]};
+function dorsLee(b64){var s=atob(b64),u=new Uint8Array(s.length),i;for(i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return new Int16Array(u.buffer);}
+/* tablas por cuerpo: [completo espalda, completo pecho, liviano espalda, liviano pecho]; por punto x, y, z (1e-4), huesos y pesos */
+function dorsTablas(){var out={},id,k,s,n=DORS_G.nx*DORS_G.ny;for(id in DORS_T){var I=dorsLee(DORS_T[id]),o={full:[],light:[]};
+    for(k=0;k<4;k++){var P=new Float32Array(n*3),B=new Uint8Array(n*4),W=new Float32Array(n*4),j;
+      for(j=0;j<n;j++){var b=(k*n+j)*6;P[j*3]=I[b]/1e4;P[j*3+1]=I[b+1]/1e4;P[j*3+2]=I[b+2]/1e4;var bi=I[b+3]&0xffff;
+        B[j*4]=bi&15;B[j*4+1]=(bi>>4)&15;B[j*4+2]=(bi>>8)&15;B[j*4+3]=(bi>>12)&15;var w01=I[b+4]&0xffff;W[j*4]=(w01&255)/255;W[j*4+1]=(w01>>8)/255;W[j*4+2]=(I[b+5]&255)/255;
+        W[j*4+3]=Math.max(0,1-W[j*4]-W[j*4+1]-W[j*4+2]);}
+      s={P:P,B:B,W:W};(k<2?o.full:o.light).push(s);}
+    out[id]=o;}return out;}
+/* atlas de cifras: 10 casillas de 204 x 256, cifra blanca de Archivo 800 un poco estrecha, ocupando el 92 % del alto */
+function dorsAtlas(){try{var cv=DORS.cv||document.createElement('canvas');cv.width=2048;cv.height=256;var g=cv.getContext('2d'),i;g.clearRect(0,0,2048,256);
+  var fam='800 100px Archivo, "Arial Black", Arial, sans-serif';g.font=fam;var m0=g.measureText('0'),asc=m0.actualBoundingBoxAscent||72,des=m0.actualBoundingBoxDescent||0;
+  var F=Math.floor(256*0.92*100/Math.max(1,asc+des)),sx=0.86;g.font=fam.replace('100px',F+'px');g.fillStyle='#ffffff';g.textBaseline='alphabetic';g.textAlign='center';
+  var base=128+(asc-des)*F/200;DORS.dg=[];
+  for(i=0;i<10;i++){var ch=String(i),m=g.measureText(ch),l=(m.actualBoundingBoxLeft!=null?m.actualBoundingBoxLeft:m.width/2),r=(m.actualBoundingBoxRight!=null?m.actualBoundingBoxRight:m.width/2);
+    var cx=i*204+102;g.save();g.translate(cx,0);g.scale(sx,1);g.fillText(ch,0,base);g.restore();
+    var x0=Math.max(i*204+1,cx-l*sx-6),x1=Math.min(i*204+203,cx+r*sx+6);DORS.dg.push({u0:x0/2048,u1:x1/2048,a:(x1-x0)/256});}
+  if(!DORS.cv){DORS.cv=cv;DORS.tex=new THREE.CanvasTexture(cv);DORS.tex.colorSpace=THREE.SRGBColorSpace;try{DORS.tex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());}catch(e1){}}
+  else DORS.tex.needsUpdate=true;DORS.cur=[];}catch(e){}}
+/* color del numero: el del ribete del uniforme si contrasta; si no, el de la pantaloneta; si no, blanco o tinta */
+function dorsLum(h){var c=new THREE.Color(h);return 0.2126*c.r+0.7152*c.g+0.0722*c.b;}
+function dorsCon(a,b){var x=dorsLum(a),y=dorsLum(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);}
+function dorsColor(k){try{var j=k.jersey,c=[k.trim,k.shorts],i;for(i=0;i<c.length;i++)if(c[i]&&dorsCon(j,c[i])>=2.6)return c[i];
+  return dorsCon(j,'#F7F8FA')>=dorsCon(j,'#0E1116')?'#F7F8FA':'#0E1116';}catch(e){return '#F7F8FA';}}
+function dorsKit(p){try{if(p.lib&&typeof KITL!=='undefined'&&KITL[p.team])return KITL[p.team];if(KITN[p.team])return KITN[p.team];}catch(e){}return p.team===0?CFG.kitUs:CFG.kitRival;}
+function dorsNum(p){try{if(p.team===0){var k=snNom(p),t=DORS_NUM[CFG.brand];if(k&&t&&t[k])return t[k];}return (p.role?DORS_RIV[p.lib?'L':p.role]:DORS_RIV3[p.idx])||String(p.idx+1);}catch(e){return String(p.idx+1);}}
+function dorsBuild(){try{if(!DORS_ON||!DORS_T||!BATTR||!ALL||!ALL.length)return;DORS.tab=dorsTablas();dorsAtlas();if(!DORS.tex)return;
+  var nS=ALL.length*4,vs=(DORS.KX+1)*(DORS.KY+1),nv=nS*vs,i,s,a,b;DORS.n=nS;
+  DORS.P=new Float32Array(nv*3);DORS.N=new Float32Array(nv*3);DORS.U=new Float32Array(nv*2);DORS.C=new Float32Array(nv*3);
+  var I=new (nv>65535?Uint32Array:Uint16Array)(nS*DORS.KX*DORS.KY*6),o=0;
+  for(s=0;s<nS;s++){var v0=s*vs;for(b=0;b<DORS.KY;b++)for(a=0;a<DORS.KX;a++){var q=v0+b*(DORS.KX+1)+a;I[o++]=q;I[o++]=q+DORS.KX+1;I[o++]=q+1;I[o++]=q+1;I[o++]=q+DORS.KX+1;I[o++]=q+DORS.KX+2;}}
+  var geo=new BGEO();geo.setAttribute('position',new BATTR(DORS.P,3));geo.setAttribute('normal',new BATTR(DORS.N,3));geo.setAttribute('uv',new BATTR(DORS.U,2));geo.setAttribute('color',new BATTR(DORS.C,3));geo.setIndex(new BATTR(I,1));
+  ['position','normal','color'].forEach(function(k){try{geo.attributes[k].setUsage(35048);}catch(e2){}});
+  var mat=new THREE.MeshStandardMaterial({map:DORS.tex,transparent:true,depthWrite:false,alphaTest:0.02,vertexColors:true,roughness:0.6,metalness:0,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4});
+  var m=new THREE.Mesh(geo,mat);m.frustumCulled=false;m.castShadow=false;m.receiveShadow=false;m.renderOrder=2;m.matrixAutoUpdate=false;m.layers.set(0);m.name='dorsales';scene.add(m);
+  DORS.geo=geo;DORS.mesh=m;DORS.G=new Float32Array(DORS_G.nx*DORS_G.ny*3);DORS.GN=new Float32Array(DORS_G.nx*DORS_G.ny*3);
+  while(DORS.M.length<DORS_BN.length)DORS.M.push(new THREE.Matrix4());
+  DORS.on=true;try{if(document.fonts&&document.fonts.load)document.fonts.load('800 100px Archivo').then(function(){dorsAtlas();},function(){});}catch(e3){}}catch(e){DORS.on=false;}}
+/* huesos del cuerpo en uso que sigue la rejilla, con su matriz inversa de reposo */
+function dorsSk(p){var k=p.kind,c=p.dsk;if(c&&c.k===k)return c;try{var o=p.v[k],sk=o.meshes[0].skeleton,bb=[],ii=[],j,q;
+    for(j=0;j<DORS_BN.length;j++){var f=-1;for(q=0;q<sk.bones.length;q++)if(sk.bones[q].name===DORS_BN[j]){f=q;break;}bb.push(f>=0?sk.bones[f]:null);ii.push(f>=0?sk.boneInverses[f]:null);}
+    c=p.dsk={k:k,b:bb,i:ii,body:o.body};}catch(e){c=p.dsk=null;}return c;}
+function dorsVacio(s){var vs=(DORS.KX+1)*(DORS.KY+1),v0=s*vs*3,j;for(j=0;j<vs*3;j++)DORS.P[v0+j]=0;}
+/* una cifra: pedazo (ua..ub, va..vb) de la rejilla ya movida, con su casilla del atlas */
+function dorsCifra(s,ua,ub,va,vb,d,col){var KX=DORS.KX,KY=DORS.KY,vs=(KX+1)*(KY+1),v0=s*vs,G=DORS.G,GN=DORS.GN,nx=DORS_G.nx,ny=DORS_G.ny,a,b;
+  for(b=0;b<=KY;b++)for(a=0;a<=KX;a++){var u=ua+(ub-ua)*a/KX,v=va+(vb-va)*b/KY,cf=Math.max(0,Math.min(nx-1.0001,u*(nx-1))),rf=Math.max(0,Math.min(ny-1.0001,v*(ny-1))),
+      c0=Math.floor(cf),r0=Math.floor(rf),fc=cf-c0,fr=rf-r0,i00=(r0*nx+c0)*3,i01=i00+3,i10=i00+nx*3,i11=i10+3,w00=(1-fc)*(1-fr),w01=fc*(1-fr),w10=(1-fc)*fr,w11=fc*fr,o=(v0+b*(KX+1)+a),k;
+    for(k=0;k<3;k++){DORS.P[o*3+k]=G[i00+k]*w00+G[i01+k]*w01+G[i10+k]*w10+G[i11+k]*w11;DORS.N[o*3+k]=GN[i00+k]*w00+GN[i01+k]*w01+GN[i10+k]*w10+GN[i11+k]*w11;}
+    if(col){DORS.U[o*2]=d.u0+(d.u1-d.u0)*a/KX;DORS.U[o*2+1]=1-b/KY;DORS.C[o*3]=col.r;DORS.C[o*3+1]=col.g;DORS.C[o*3+2]=col.b;}}}
+/* la rejilla de un lado, movida con los huesos de este cuadro (piel por CPU: suma de hueso x inversa x punto, con sus pesos) */
+function dorsMat(c){for(var j=0;j<DORS_BN.length;j++){if(c.b[j])DORS.M[j].multiplyMatrices(c.b[j].matrixWorld,c.i[j]);}}
+function dorsRejilla(c,T){var n=DORS_G.nx*DORS_G.ny,G=DORS.G,P=T.P,B=T.B,W=T.W,M=DORS.M,j,q;
+  for(j=0;j<n;j++){var x=P[j*3],y=P[j*3+1],z=P[j*3+2],ox=0,oy=0,oz=0,ws=0;
+    for(q=0;q<4;q++){var w=W[j*4+q];if(w<=0)continue;var bi=B[j*4+q];if(!c.b[bi])continue;var e=M[bi].elements;
+      ox+=w*(e[0]*x+e[4]*y+e[8]*z+e[12]);oy+=w*(e[1]*x+e[5]*y+e[9]*z+e[13]);oz+=w*(e[2]*x+e[6]*y+e[10]*z+e[14]);ws+=w;}
+    if(ws>0){ox/=ws;oy/=ws;oz/=ws;}G[j*3]=ox;G[j*3+1]=oy;G[j*3+2]=oz;}
+  /* normales de la rejilla con los vecinos; hacia afuera del cuerpo (lejos del hueso del pecho) */
+  var nx=DORS_G.nx,ny=DORS_G.ny,GN=DORS.GN,r,cI,sp=c.b[3]||c.b[2],cx=0,cy=0,cz=0;if(sp){var se=sp.matrixWorld.elements;cx=se[12];cy=se[13];cz=se[14];}
+  for(r=0;r<ny;r++)for(cI=0;cI<nx;cI++){var i0=(r*nx+Math.max(0,cI-1))*3,i1=(r*nx+Math.min(nx-1,cI+1))*3,j0=(Math.max(0,r-1)*nx+cI)*3,j1=(Math.min(ny-1,r+1)*nx+cI)*3,
+      ax=G[i1]-G[i0],ay=G[i1+1]-G[i0+1],az=G[i1+2]-G[i0+2],bx=G[j1]-G[j0],by=G[j1+1]-G[j0+1],bz=G[j1+2]-G[j0+2],
+      nX=ay*bz-az*by,nY=az*bx-ax*bz,nZ=ax*by-ay*bx,l=Math.sqrt(nX*nX+nY*nY+nZ*nZ)||1,o=(r*nx+cI)*3;nX/=l;nY/=l;nZ/=l;
+    if(sp&&((G[o]-cx)*nX+(G[o+1]-cy)*nY+(G[o+2]-cz)*nZ)<0){nX=-nX;nY=-nY;nZ=-nZ;}GN[o]=nX;GN[o+1]=nY;GN[o+2]=nZ;}}
+function dorsFrame(){try{if(!DORS.on||!DORS.mesh)return;var i,s,col0,ok;
+  for(i=0;i<ALL.length;i++){var p=ALL[i];ok=p&&p.kind&&p.root&&p.root.visible&&p.bid&&DORS.tab[p.bid];var c=ok?dorsSk(p):null;
+    if(!c||!c.body||!c.body.visible||!c.body.parent){for(s=0;s<4;s++)dorsVacio(i*4+s);DORS.cur[i]='';continue;}
+    var num=dorsNum(p),kit=dorsKit(p),key=num+'|'+(kit&&kit.jersey)+'|'+p.kind,nuevo=DORS.cur[i]!==key;DORS.cur[i]=key;
+    col0=nuevo?new THREE.Color(dorsColor(kit||{jersey:'#00389C',trim:'#FCCC24'})):null;
+    p.root.updateMatrixWorld(true);dorsMat(c);var tb=DORS.tab[p.bid][p.kind==='light'?'light':'full'];
+    for(s=0;s<2;s++){var L=DORS_G.lado[s],hc=L.g/0.92,vh=hc/L.h,va=0.5-vh/2,vb=0.5+vh/2,ds=[],tw=0,k;dorsRejilla(c,tb[s]);
+      for(k=0;k<num.length&&k<2;k++){var d=DORS.dg[num.charCodeAt(k)-48];if(!d)continue;ds.push(d);tw+=d.a*hc;}
+      var gap=ds.length>1?0.05*hc:0,uw=(tw+gap)/L.w,u=0.5-uw/2;
+      for(k=0;k<2;k++){var slot=i*4+s*2+k;if(k>=ds.length){dorsVacio(slot);continue;}var du=ds[k].a*hc/L.w;dorsCifra(slot,u,u+du,va,vb,ds[k],col0);u+=du+gap/L.w;}}}
+  var g=DORS.geo;g.attributes.position.needsUpdate=true;g.attributes.normal.needsUpdate=true;g.attributes.uv.needsUpdate=true;g.attributes.color.needsUpdate=true;}catch(e){}}
+/* ======================= ARBITRO (0.18.4) =======================
+   Carlos, 20 nov. 2026: el primer arbitro en la silla. Cuerpo adulto c1 del paquete de cuerpos 3.0 (aprobado), en version liviana
+   (pruebas/bb6/arbitro/cuerpo_arbitro.mjs: unos 11,000 triangulos, color a 512 y relieve a 256). Va de pie en la plataforma de la
+   silla aprobada (1.10 m del piso), de frente a la cancha, como pide la regla. Polo y pantalon largo oscuros, manga corta
+   (la mascara se repinta como la de los coaches). Sigue el balon con la cabeza y, al terminar cada punto, extiende el brazo hacia el
+   equipo que va a sacar (senal oficial FIVB). Solo se dibuja: no toca el juego, no usa Math.random y no corre en el robot. Si el
+   telefono baja al nivel grafico mas bajo se esconde. ?arbitro=0 lo quita. */
+var ARB_ON=true;try{if(new URLSearchParams(location.search).get('arbitro')==='0')ARB_ON=false;}catch(e){}
+var ARB_SILLA={x:-6.05,z:0},ARB_PIE={dx:0.22,y:1.10},ARB_KIT={jersey:'#1E2229',shorts:'#121418',trim:'#1E2229'};
+var ARB=null,ARB_LEG={LeftUpLeg:1,LeftLeg:1,RightUpLeg:1,RightLeg:1},ARB_ARM={LeftArm:1,RightArm:1,LeftShoulder:1,RightShoulder:1,Spine:1,Spine01:1};
+var _ad=new V3(),_ae=new V3(),_af=new V3(),_ag=new V3(),_aq=new Q4(),_ar=new Q4(),_as=new Q4();
+/* pantalon largo y manga corta: en una copia de la mascara, las piernas se pintan de pantaloneta y el brazo de arriba, los hombros
+   y la parte alta de la espalda de camisa (0.18.6: el cuerpo trae camiseta sin mangas y ahi se asomaba la piel) */
+function arbMask(mesh,mask){try{var img=mask.image,W=img.width||512,H=img.height||512,cv=document.createElement('canvas');cv.width=W;cv.height=H;var g=cv.getContext('2d');g.drawImage(img,0,0,W,H);
+  var geo=mesh.geometry,uv=geo.attributes.uv,si=geo.attributes.skinIndex,sw=geo.attributes.skinWeight,bones=mesh.skeleton.bones,ix=geo.index,n=ix?ix.count:uv.count,i,a,b,c;
+  if(!uv||!si||!sw)return mask;
+  var hueso=function(v){var w=-1,best=-1,j,ww;for(j=0;j<4;j++){ww=sw.getComponent(v,j);if(ww>w){w=ww;best=si.getComponent(v,j);}}var bn=bones[best];return bn?bn.name:'';};
+  var leg=function(v){return !!ARB_LEG[hueso(v)];},arm=function(v){return !!ARB_ARM[hueso(v)];};g.lineWidth=1.5;g.lineJoin='round';
+  for(i=0;i+2<n;i+=3){a=ix?ix.getX(i):i;b=ix?ix.getX(i+1):i+1;c=ix?ix.getX(i+2):i+2;var pl=leg(a)&&leg(b)&&leg(c),pm=!pl&&arm(a)&&arm(b)&&arm(c);if(!pl&&!pm)continue;var col=pl?'#00ff00':'#ff0000';g.fillStyle=col;g.strokeStyle=col;
+    g.beginPath();g.moveTo(uv.getX(a)*W,uv.getY(a)*H);g.lineTo(uv.getX(b)*W,uv.getY(b)*H);g.lineTo(uv.getX(c)*W,uv.getY(c)*H);g.closePath();g.fill();g.stroke();}
+  var t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.NoColorSpace;t.flipY=false;t.generateMipmaps=false;t.minFilter=1006;t.magFilter=1006;t.needsUpdate=true;return t;}catch(e){return mask;}}
+function arbBuild(g,mask){try{if(!ARB_ON||!ARENA_ON||!g||!g.scene)return;var body=g.scene,o={root:new THREE.Group(),bones:{},rest:{},pose:newPose(),hipRest:null,sigT:0,sigW:0,yy:0,pp:0};
+  var mk=null;body.traverse(function(nd){if(nd.isSkinnedMesh&&!mk)mk=arbMask(nd,mask);});
+  body.traverse(function(nd){if(nd.isBone){o.bones[nd.name]=nd;o.rest[nd.name]=nd.quaternion.clone();}
+    if(nd.isMesh){nd.castShadow=false;nd.receiveShadow=false;nd.frustumCulled=false;nd.material=kitMaterial(nd.material,mk||mask,ARB_KIT);nd.layers.set(0);nd.layers.enable(1);}});
+  if(!o.bones.Hips||!o.bones.Head)return;o.hipRest=o.bones.Hips.position.clone();o.root.add(body);
+  o.root.position.set(ARB_SILLA.x+ARB_PIE.dx,ARB_PIE.y,ARB_SILLA.z);o.root.rotation.y=Math.PI/2;o.root.name='arbitro';scene.add(o.root);ARB=o;}catch(e){ARB=null;}}
+/* gira un hueso (en el mundo) para que la linea hueso-hijo apunte a dir, mezclado con su giro de la pose por w */
+function arbApunta(b,c,dir,w){if(!b||!c||!b.parent||w<=0)return;b.getWorldPosition(_ad);c.getWorldPosition(_ae);_af.subVectors(_ae,_ad);if(_af.lengthSq()<1e-12)return;_af.normalize();
+  _aq.setFromUnitVectors(_af,dir);b.getWorldQuaternion(_ar);_aq.multiply(_ar);b.parent.getWorldQuaternion(_as);_as.invert().multiply(_aq);b.quaternion.slerp(_as,Math.min(1,w));b.updateMatrixWorld(true);}
+function arbPunto(w){try{if(!ARB||(BOT&&BOT.sim))return;ARB.sigW=w;ARB.sigT=2.2;}catch(e){}}
+function arbFrame(rdt){try{if(!ARB||(BOT&&BOT.sim))return;var vis=!GX.motor||GX.lv>=1;ARB.root.visible=vis;if(!vis)return;var ci=CLIPS.celebra_1;if(!ci)return;
+  clipPose(ci,0.02+0.008*Math.sin(tAll*0.8),ARB.pose);var ks=ARB.pose.k,i,B=ARB.bones;
+  for(i=0;i<ks.length;i++){var k=ks[i],b=B[k];if(!b||!ARB.rest[k])continue;b.quaternion.copy(ARB.pose.q[k]).multiply(ARB.rest[k]);}
+  B.Hips.position.set(ARB.hipRest.x,ARB.hipRest.y*ARB.pose.hy,ARB.hipRest.z);ARB.root.updateMatrixWorld(true);
+  /* senal: el brazo del lado del equipo que saca, extendido y un poco arriba del hombro. El arbitro mira a +X: nuestro lado (Z
+     positivo) le queda a la derecha */
+  if(ARB.sigT>0){ARB.sigT=Math.max(0,ARB.sigT-rdt);var e=2.2-ARB.sigT,w=Math.min(1,e/0.3,ARB.sigT/0.4);w=w*w*(3-2*w);var sd=ARB.sigW===0?1:-1;
+    var arm=sd>0?B.RightArm:B.LeftArm,fore=sd>0?B.RightForeArm:B.LeftForeArm,hand=sd>0?B.RightHand:B.LeftHand;_ag.set(0,0.14,sd).normalize();
+    arbApunta(arm,fore,_ag,w);arbApunta(fore,hand,_ag,w);}
+  /* cabeza: sigue el balon, con tope y suave */
+  var hd=B.Head,hf=B.headfront;if(hd&&hf&&ball){hd.getWorldPosition(_ad);_ae.copy(ball.position).sub(_ad);
+    var yw=clamp(Math.atan2(_ae.z,_ae.x),-1.05,1.05),pt=clamp(Math.atan2(_ae.y,Math.max(0.5,Math.sqrt(_ae.x*_ae.x+_ae.z*_ae.z))),-0.45,0.3),kk=Math.min(1,rdt*5);
+    ARB.yy+=(yw-ARB.yy)*kk;ARB.pp+=(pt-ARB.pp)*kk;_ag.set(Math.cos(ARB.pp)*Math.cos(ARB.yy),Math.sin(ARB.pp),Math.cos(ARB.pp)*Math.sin(ARB.yy));
+    arbApunta(hd,hf,_ag,0.85);}}catch(e){}}
+/* ======================= TEXTURAS KTX2 (0.18.5) =======================
+   Carlos, 20 nov. 2026: las imagenes de la arena, la utileria, la cancha, el piso de madera y los cuerpos van tambien en KTX2 (Basis Universal),
+   que la tarjeta de video lee comprimidas: en el iPhone la arena y la utileria quedan en ETC2 (4 bits por pixel) y la cancha y el
+   relieve de la madera en ASTC, en vez de abrirse a 32 bits por pixel. Baja la memoria de video y el telefono no tiene que abrir las
+   imagenes grandes al cargar. Cada archivo KTX2 tiene nombre nuevo al lado del original (X.glb -> X_k.glb, X.webp -> X.ktx2; los
+   arma pruebas/bb6/ktx2/ktx2_texturas.mjs): los originales siguen igual para los minijuegos, para ?ktx2=0 y para el telefono que no
+   lea ningun formato comprimido. Si un KTX2 falla, entra el original de siempre. El transcodificador es el oficial de three r187
+   (juegos/bareboru6/3d/basis/). ?fps=1 muestra la memoria de texturas. */
+var KT_ON=true;try{if(new URLSearchParams(location.search).get('ktx2')==='0')KT_ON=false;}catch(e){}
+var KT_V='1',KT={on:false,ld:null,n:0,f:0,fmt:'',mb:0,mbT:0};
+/* archivos que tienen copia KTX2: arena, utileria y cuerpos (en captura de cerca no se distinguen de los de antes) */
+var KT_RE=/(\/arena\/arena_(vaqueros|angels)(_alta)?|\/utileria\/[a-z_]+|\/(j3|j5|j7)_half|\/c1_arbitro)\.glb$/;
+function ktInit(){try{if(KT.ld||!KT_ON||!T3||!T3.KTX2Loader)return;var l=new T3.KTX2Loader();l.setTranscoderPath(B6+'basis/');l.detectSupport(renderer);
+  var c=l.workerConfig||{},ok=c.astcSupported||c.etc2Supported||c.etc1Supported||c.bptcSupported||c.dxtSupported||c.pvrtcSupported;
+  if(!ok){try{l.dispose();}catch(e1){}return;}
+  KT.ld=l;KT.on=true;KT.fmt=[c.astcSupported?'astc':'',c.etc2Supported?'etc2':'',c.bptcSupported?'bc7':'',c.dxtSupported?'dxt':''].join(' ').replace(/\s+/g,' ').trim();}catch(e){KT.on=false;KT.ld=null;}}
+/* un .glb: primero su copia KTX2; si falla, el original con su ?v= de siempre */
+function ktGLB(u,v){return new Promise(function(res,rej){var plain=function(){try{var g=new T3.GLTFLoader();g.setMeshoptDecoder(T3.MeshoptDecoder);g.load(u+'?v='+v,res,undefined,rej);}catch(e){rej(e);}};
+  try{if(!KT.on||!KT_RE.test(u)){plain();return;}var g=new T3.GLTFLoader();g.setMeshoptDecoder(T3.MeshoptDecoder);g.setKTX2Loader(KT.ld);
+    g.load(u.replace(/\.glb$/,'_k.glb')+'?v='+KT_V,function(r){KT.n++;res(r);},undefined,function(){KT.f++;plain();});}catch(e){plain();}});}
+/* una imagen suelta (cancha, piso): primero el .ktx2; si falla, la de siempre con su cargador */
+function ktTex(u,ext,listo,plain){return new Promise(function(res){var vuelta=function(){try{plain(u+ext).then(res,function(){res(null);});}catch(e){res(null);}};
+  try{if(!KT.on){vuelta();return;}KT.ld.load(u+'.ktx2?v='+KT_V,function(t){try{KT.n++;listo(t);}catch(e1){}res(t);},undefined,function(){KT.f++;vuelta();});}catch(e){vuelta();}});}
+/* memoria de texturas en la tarjeta de video (MB): las comprimidas por sus datos reales; las demas, 4 bytes por pixel y un tercio mas
+   si llevan mipmaps. No cuenta los buffers de dibujo (pantalla, reflejo, brillo). */
+function ktMem(){try{var seen={},tot=0,nk=0,n=0;function add(t){if(!t||!t.isTexture||seen[t.uuid])return;seen[t.uuid]=1;n++;var im=t.image||{},w=im.width||0,h=im.height||0,b=0,i;
+    if(t.isCompressedTexture&&t.mipmaps&&t.mipmaps.length){for(i=0;i<t.mipmaps.length;i++)b+=(t.mipmaps[i].data&&t.mipmaps[i].data.byteLength)||0;nk++;}
+    else if(t.isDataTexture&&im.data)b=im.data.byteLength*(t.generateMipmaps?1.333:1);
+    else b=w*h*4*((t.generateMipmaps!==false&&t.minFilter!==1006&&t.minFilter!==1003)?1.333:1);tot+=b;}
+  var K=['map','emissiveMap','normalMap','roughnessMap','metalnessMap','aoMap','alphaMap','lightMap','bumpMap'];
+  scene.traverse(function(o){var ms=o.material?(Array.isArray(o.material)?o.material:[o.material]):[];ms.forEach(function(m){K.forEach(function(k){add(m[k]);});
+    if(m.userData&&m.userData.ku&&m.userData.ku.kitMask)add(m.userData.ku.kitMask.value);});});
+  KT.mb=Math.round(tot/1048576);return {mb:Math.round(tot/104857.6)/10,texturas:n,ktx2:nk,on:KT.on,fmt:KT.fmt,cargadas:KT.n,fallas:KT.f};}catch(e){return null;}}
+function ktTxt(){try{var t=performance.now();if(t-KT.mbT>2000){KT.mbT=t;ktMem();}return ' · tex '+KT.mb+' MB'+(KT.on?' ktx2':'');}catch(e){return '';}}
+function cargar(){try{ktInit();}catch(eK){}var jobs=[],done=0,total=0,SRC={};
   function tick(){done++;$('loadT').textContent=L('Cargando la cancha… ','Loading the court… ')+Math.round(done*100/total)+'%';}
   Object.keys(CLIP_LIST).forEach(function(n){total++;jobs.push(loadGLB((CLIP_LIST[n].b6?B6:B3)+'clips/'+n+'.glb').then(function(g){CLIPS[n]=prepClip(n,g,CLIP_LIST[n]);tick();},function(e){if(CLIP_LIST[n].b6){tick();return;}throw e;}));});
   /* 0.9.0: la arena de la marca entra en la misma carga; si falla, el juego sigue con la arena dibujada por codigo */
-  if(ARENA_ON){total++;if(!HOLD)total++;jobs.push(Promise.all([gxArena(),loadTexC(B6+'arena/cancha_'+CFG.brand+'.webp').then(null,function(){return null;}),gxPisoLoad()]).then(function(r){arenaBuild(r[0],r[1],r[2]);tick();if(HOLD)return null;return utLoadP().then(function(){tick();},function(){tick();});},function(e){try{console.warn('arena',e);}catch(e2){}tick();if(!HOLD)tick();}));}
+  if(ARENA_ON){total++;if(!HOLD)total++;jobs.push(Promise.all([gxArena(),ktTex(B6+'arena/cancha_'+CFG.brand,'.webp',function(){},loadTexC).then(null,function(){return null;}),gxPisoLoad()]).then(function(r){arenaBuild(r[0],r[1],r[2]);tick();if(HOLD)return null;return utLoadP().then(function(){tick();},function(){tick();});},function(e){try{console.warn('arena',e);}catch(e2){}tick();if(!HOLD)tick();}));}
   /* 0.15.0: la luz de entorno del HDRI entra en la misma carga; si falla se queda la luz pintada */
   if(GX.motor&&GX.lv>=1&&GX.hdri){total++;jobs.push(gxEnvLoad().then(function(){tick();}));}
   ['j3','j5','j7'].forEach(function(id){total++;jobs.push(Promise.all([loadGLB(B3+id+'_half.glb'),loadTex(B3+id+'_mask.png'),loadGLB(B6+id+'_light.glb')]).then(function(r){
     var mat=null;r[0].scene.traverse(function(o){if(o.isMesh&&!mat)mat=o.material;});SRC[id]={full:r[0].scene,mask:r[1],light:r[2].scene,mat:mat};tick();}));});
+  /* 0.18.4: el arbitro entra en la misma carga; si falla, el juego sigue sin el */
+  if(ARB_ON&&ARENA_ON){total++;jobs.push(Promise.all([loadGLB(B3+'c1_arbitro.glb'),loadTex(B3+'c1_mask.png')]).then(function(r){arbBuild(r[0],r[1]);tick();},function(){tick();}));}
   return Promise.all(jobs).then(function(){var BODY=['j3','j5','j7'];
-    for(var t=0;t<2;t++)for(var i=0;i<3;i++){var s=SRC[BODY[i]],kit=t===0?CFG.kitUs:CFG.kitRival,a=new Avatar(t,i);
+    for(var t=0;t<2;t++)for(var i=0;i<3;i++){var s=SRC[BODY[i]],kit=t===0?CFG.kitUs:CFG.kitRival,a=new Avatar(t,i);a.bid=BODY[i];
       a.addBody('full',T3.cloneSkinned(s.full),s.mask,kit,s.mat);a.addBody('light',T3.cloneSkinned(s.light),s.mask,kit,s.mat);a.use('full');TEAM[t].pl[i]=a;}});}
 var PRMAX=Math.min(window.devicePixelRatio||1,2);PR=PRMAX;qBuild();
 hudStatic();size();requestAnimationFrame(frame);
-cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);labelsMake();applyQ();gxStart();mvBuild();apBuild();jfInit();
+cargar().then(function(){ALL=TEAM[0].pl.concat(TEAM[1].pl);try{dorsBuild();}catch(eD){}labelsMake();applyQ();gxStart();mvBuild();apBuild();jfInit();
   try{ipAdd(camera,6,'pq');ipAdd(ball,2.5,'p');ipAdd(ballShadow,2.5,'p');ipAdd(ctrlRing,1.2,'p');for(var qi=0;qi<ALL.length;qi++){ipAdd(ALL[qi].root,1.2,'py');ipAdd(ALL[qi].blob,1.2,'p');}
     var q0=parseInt(localStorage.getItem('bb3_q'),10);if(q0>0&&q0<=QMAX)qSet(q0);gxLadder();}catch(e){}zurMide();
   
@@ -3026,6 +3209,7 @@ window.BB={version:APP_VERSION,nom:function(){return SB.nom;},zurEs:function(i){
       if(G.sc[0]>G.sc[1])out.wins++;else out.losses++;out.pts[0]+=G.sc[0];out.pts[1]+=G.sc[1];out.secs+=tG-t0;out.rallies+=G.st.rallies;out.contacts+=G.st.contacts;for(var k in out.st)out.st[k]+=G.st[k];}
     BOT.log.forEach(function(c){var b=c>=8?'8+':(''+c);out.hist[b]=(out.hist[b]||0)+1;});
     BOT.on=false;BOT.sim=false;PREF.snd=snd;out.avgContacts=out.contacts/Math.max(1,out.rallies);out.avgSecs=out.secs/matches;menu();return out;}};
+try{window.BB.dors=function(){dorsFrame();return DORS;};window.BB.arbitro=function(){arbFrame(1/60);return ARB;};window.BB.tex=function(){return ktMem();};}catch(eB){}
 })();
 </script>
 </body>
