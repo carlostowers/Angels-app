@@ -6,9 +6,9 @@ def items(path):
     b=h.index('<div class="bz-actions">',a)
     body=h[a:b]
     out=[]; cur=None
-    for m in re.finditer(r'<div class="bz-inning-hd">([^<]*)</div>|(<div class="bz-feed-item">.*?<div class="bz-feed-side">\s*([^<]*?)\s*</div>\s*</div>)', body, re.S):
+    for m in re.finditer(r'<div class="bz-inning-hd">([^<]*)</div>|(<div class="bz-feed-item">\s*<div class="bz-feed-main">.*?</div>\s*<div class="bz-feed-side">(.*?)</div>\s*</div>)', body, re.S):
         if m.group(1) is not None: cur=m.group(1).strip(); continue
-        blk=m.group(2); st=re.search(r'<strong>(.*?)</strong>',blk).group(1); sc=m.group(3).strip()
+        blk=m.group(2); st=re.search(r'<strong>(.*?)</strong>',blk).group(1); sc=m.group(3).split('<')[0].strip()
         nm=re.search(r'<span>(.*?)</span>',blk,re.S); nm=re.sub(r'<[^>]+>','',nm.group(1)).strip() if nm else ''
         out.append(((cur,st,sc,nm),blk))
     return h,a,b,out
